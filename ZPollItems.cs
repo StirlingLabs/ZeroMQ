@@ -1,12 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ZeroMQ
 {
-	using lib;
-	using System;
-	using System.Collections.Generic;
-	using System.Linq;
-
 	public static partial class ZPollItems
 	{
 #pragma warning disable 649
@@ -107,7 +104,7 @@ namespace ZeroMQ
 		{
 			message = null;
 
-			if (((ZPoll)item.ReadyEvents & ZPoll.In) == ZPoll.In)
+			if ((item.ReadyEvents & ZPoll.In) == ZPoll.In)
 			{
 
 				ZError recvWorkerE;
@@ -127,7 +124,7 @@ namespace ZeroMQ
 
 		internal static bool OnSendMessage(ZSocket socket, ZPollItem item, ZMessage message)
 		{
-			if (((ZPoll)item.ReadyEvents & ZPoll.Out) == ZPoll.Out)
+			if ((item.ReadyEvents & ZPoll.Out) == ZPoll.Out)
 			{
 
 				ZError sendWorkerE;
@@ -196,7 +193,7 @@ namespace ZeroMQ
 				var item = items.ElementAt(i);
 				var message = send ? messages[i] : null;
 
-				if (ZPollItems.PollSingleResult(socket, item, pollEvents, ref message))
+				if (PollSingleResult(socket, item, pollEvents, ref message))
 				{
 					++readyCount;
 				}

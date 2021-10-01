@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading;
-
+using Examples.PP;
 using ZeroMQ;
 
 namespace Examples
 {
-	using PP;
-
 	//
 	// Paranoid Pirate queue
 	//
@@ -56,7 +52,7 @@ namespace Examples
 			{
 				Identity = identity;
 
-				this.Expiry = DateTime.UtcNow + TimeSpan.FromMilliseconds(
+				Expiry = DateTime.UtcNow + TimeSpan.FromMilliseconds(
 					PPP_HEARTBEAT_INTERVAL.Milliseconds * PPP_HEARTBEAT_LIVENESS
 				);
 			}

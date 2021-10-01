@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using ZeroMQ;
 
@@ -25,7 +23,7 @@ namespace Examples
                 Console.WriteLine();
                 Console.WriteLine("    Name   Your name. Default: World");
                 Console.WriteLine();
-                args = new string[] { "World" };
+                args = new[] { "World" };
             }
 
             var name = args[0];
@@ -39,9 +37,9 @@ namespace Examples
                 actor.Start();
                 // send CURVE settings to ZAuth
                 actor.Frontend.Send(new ZFrame("VERBOSE"));
-                actor.Frontend.Send(new ZMessage(new List<ZFrame>()
+                actor.Frontend.Send(new ZMessage(new List<ZFrame>
                     { new ZFrame("ALLOW"), new ZFrame("127.0.0.1") } ));
-                actor.Frontend.Send(new ZMessage(new List<ZFrame>()
+                actor.Frontend.Send(new ZMessage(new List<ZFrame>
                     { new ZFrame("CURVE"), new ZFrame(".curve") }));
 
                 responder.CurvePublicKey = serverCert.PublicKey;

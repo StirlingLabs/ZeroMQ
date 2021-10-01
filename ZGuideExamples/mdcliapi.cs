@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -165,12 +164,12 @@ namespace Examples
                         request.Dispose();
                         return msg;
                     }
-                    else if (Equals(error, ZError.ETERM))
+                    if (Equals(error, ZError.ETERM))
                     {
                         cancellor.Cancel();
                         break; // Interrupted
                     }
-                    else if (Equals(error, ZError.EAGAIN))
+                    if (Equals(error, ZError.EAGAIN))
                     {
                         if (--retriesLeft > 0)
                         {

@@ -1,8 +1,8 @@
-﻿namespace ZeroMQ.lib
-{
-	using System;
-	using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
+namespace ZeroMQ.lib
+{
 	public static unsafe class zmq
 	{
 		private const CallingConvention CCCdecl = CallingConvention.Cdecl;

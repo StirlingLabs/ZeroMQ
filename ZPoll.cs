@@ -1,7 +1,7 @@
-﻿namespace ZeroMQ
-{
-	using System;
+﻿using System;
 
+namespace ZeroMQ
+{
 	[Flags]
 	public enum ZPoll : short
 	{

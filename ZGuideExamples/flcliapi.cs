@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -38,19 +36,19 @@ namespace Examples
 			public FreelanceClient()
 			{
 				// Constructor
-				this.context = new ZContext();
+				context = new ZContext();
 
-				this.Actor = new ZActor(this.context, FreelanceClient.Agent);
-				this.Actor.Start();
+				Actor = new ZActor(context, Agent);
+				Actor.Start();
 			}
 
 			~FreelanceClient()
-				=> this.Dispose(false);
+				=> Dispose(false);
 
 			public void Dispose()
 			{
 				GC.SuppressFinalize(this);
-				this.Dispose(true);
+				Dispose(true);
 			}
 
 			protected void Dispose(bool disposing)
@@ -59,17 +57,17 @@ namespace Examples
 				{
 					// Destructor
 
-					if (this.Actor != null)
+					if (Actor != null)
 					{
-						this.Actor.Dispose();
-						this.Actor = null;
+						Actor.Dispose();
+						Actor = null;
 					}
-					if (this.context != null)
+					if (context != null)
 					{
 						// Do context.Dispose()
 
-						this.context.Dispose();
-						this.context = null;
+						context.Dispose();
+						context = null;
 					}
 				}
 			}
@@ -87,7 +85,7 @@ namespace Examples
 					message.Add(new ZFrame("CONNECT"));
 					message.Add(new ZFrame(endpoint));
 
-					this.Actor.Frontend.Send(message);
+					Actor.Frontend.Send(message);
 				}
 
 				Thread.Sleep(64);	// Allow connection to come up
@@ -100,11 +98,11 @@ namespace Examples
 
 				request.Prepend(new ZFrame("REQUEST"));
 
-				this.Actor.Frontend.Send(request);
+				Actor.Frontend.Send(request);
 
 				ZMessage reply;
 				ZError error;
-				if (null != (reply = this.Actor.Frontend.ReceiveMessage(out error))) 
+				if (null != (reply = Actor.Frontend.ReceiveMessage(out error))) 
 				{
 					var status = reply.PopString();
 					if (status == "FAILED")
@@ -252,31 +250,31 @@ namespace Examples
 				: this (context, default(string), pipe)
 			{
 				var rnd = new Random();
-				this.Router.IdentityString = "CLIENT" + rnd.Next();
+				Router.IdentityString = "CLIENT" + rnd.Next();
 			}
 
 			public Agent(ZContext context, string name, ZSocket pipe)
 			{
 				// Constructor
-				this.Pipe = pipe;
+				Pipe = pipe;
 
-				this.Router = new ZSocket(context, ZSocketType.ROUTER);
+				Router = new ZSocket(context, ZSocketType.ROUTER);
 				if (name != null)
 				{
-					this.Router.IdentityString = name;
+					Router.IdentityString = name;
 				}
 
-				this.Servers = new HashSet<Server>();
-				this.Actives = new List<Server>();
+				Servers = new HashSet<Server>();
+				Actives = new List<Server>();
 			}
 
 			~Agent()
-				=> this.Dispose(false);
+				=> Dispose(false);
 
 			public void Dispose()
 			{
 				GC.SuppressFinalize(this);
-				this.Dispose(true);
+				Dispose(true);
 			}
 
 			protected void Dispose(bool disposing)
@@ -285,13 +283,13 @@ namespace Examples
 				{
 					// Destructor
 
-					this.Servers = null;
-					this.Actives = null;
+					Servers = null;
+					Actives = null;
 
-					if (this.Request != null)
+					if (Request != null)
 					{
-						this.Request.Dispose();
-						this.Request = null;
+						Request.Dispose();
+						Request = null;
 					}
 					/* if (this.reply != null)
 					{
@@ -299,10 +297,10 @@ namespace Examples
 						this.reply = null;
 					} */
 
-					if (this.Router != null)
+					if (Router != null)
 					{
-						this.Router.Dispose();
-						this.Router = null;
+						Router.Dispose();
+						Router = null;
 					}
 				}
 			}
@@ -319,15 +317,15 @@ namespace Examples
 					var endpoint = msg.PopString();
 					Console.WriteLine("I: connecting to {0}...", endpoint);
 
-					this.Router.Connect(endpoint);
+					Router.Connect(endpoint);
 
 					var server = new Server(endpoint);
-					this.Servers.Add(server);
-					this.Actives.Add(server);
+					Servers.Add(server);
+					Actives.Add(server);
 				}
 				else if (command == "REQUEST")
 				{
-					if (this.Request != null)
+					if (Request != null)
 					{
 						// Strict request-reply cycle
 						throw new InvalidOperationException();
@@ -337,10 +335,10 @@ namespace Examples
 					msg.Prepend(new ZFrame(++sequence));
 
 					// Take ownership of request message
-					this.Request = msg.Duplicate();
+					Request = msg.Duplicate();
 
 					// Request expires after global timeout
-					this.Expires = DateTime.UtcNow + GLOBAL_TIMEOUT;
+					Expires = DateTime.UtcNow + GLOBAL_TIMEOUT;
 				}
 			}
 
@@ -351,10 +349,10 @@ namespace Examples
 
 				// Frame 0 is server that replied
 				var endpoint = reply.PopString();
-				var server = this.Servers.Single(s => s.Endpoint == endpoint);
+				var server = Servers.Single(s => s.Endpoint == endpoint);
 				if (!server.Alive)
 				{
-					this.Actives.Add(server);
+					Actives.Add(server);
 					server.Refresh(true);
 				}
 
@@ -364,10 +362,10 @@ namespace Examples
 				{
 					reply.Prepend(new ZFrame("OK"));
 
-					this.Pipe.Send(reply);
+					Pipe.Send(reply);
 
-					this.Request.Dispose();
-					this.Request = null;
+					Request.Dispose();
+					Request = null;
 				}
 			}
 		}
@@ -394,17 +392,17 @@ namespace Examples
 
 			public Server(string endpoint)
 			{
-				this.Endpoint = endpoint;
-				this.Refresh(true);
+				Endpoint = endpoint;
+				Refresh(true);
 			}
 
 			public void Refresh(bool alive)
 			{
-				this.Alive = alive;
+				Alive = alive;
 				if (alive)
 				{
-					this.PingAt = DateTime.UtcNow + PING_INTERVAL;
-					this.Expires = DateTime.UtcNow + SERVER_TTL;
+					PingAt = DateTime.UtcNow + PING_INTERVAL;
+					Expires = DateTime.UtcNow + SERVER_TTL;
 				}
 			}
 
@@ -420,7 +418,7 @@ namespace Examples
 						socket.Send(outgoing);
 					}
 
-					this.PingAt = DateTime.UtcNow + PING_INTERVAL;
+					PingAt = DateTime.UtcNow + PING_INTERVAL;
 				}
 			}
 

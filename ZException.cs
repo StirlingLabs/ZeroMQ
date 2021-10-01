@@ -1,11 +1,8 @@
-﻿namespace ZeroMQ
+﻿using System;
+using System.Runtime.Serialization;
+
+namespace ZeroMQ
 {
-	using System;
-	using System.Runtime.Serialization;
-
-	using lib;
-	using System.Runtime.InteropServices;
-
 	/// <summary>
 	/// An exception thrown by the result of libzmq.
 	/// </summary>
@@ -61,7 +58,7 @@
 
 		public ZException(ZError errorSymbol, string message, Exception inner)
 			: base(MakeMessage(errorSymbol, message), inner)
-			=> this._error = errorSymbol;
+			=> _error = errorSymbol;
 
 		static string MakeMessage(ZError error, string additionalMessage)
 			=> error != null

@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
+using Examples.MDCliApi2;
 using ZeroMQ;
 
 namespace Examples
 {
-    using MDCliApi2; // Let us build this source without creating a library
+    // Let us build this source without creating a library
     static partial class Program
     {
         //  Majordomo Protocol client example

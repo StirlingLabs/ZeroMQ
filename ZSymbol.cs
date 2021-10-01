@@ -1,21 +1,21 @@
 ﻿// using System.Runtime.Remoting.Messaging;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using ZeroMQ.lib;
+
 namespace ZeroMQ
 {
-	using System;
-	using System.Collections.Generic;
-	using System.Linq;
-	using System.Reflection;
-	using System.Runtime.InteropServices;
-	using lib;
-
-    /// <summary>
+	/// <summary>
     /// TODO merge this with its sole subclass, ZError
     /// </summary>
     public class ZSymbol
 	{
 		internal protected ZSymbol(int errno)
-			=> this._num = errno;
+			=> _num = errno;
 
 		private int _num;
 		public int Number => _num;
@@ -89,11 +89,11 @@ namespace ZeroMQ
 				.Where(s => s.Value != null && (s.Value.StartsWith(ns) && s.Key._num == num)).Select(x => x.Key);
 
 		public override bool Equals(object obj)
-			=> ZSymbol.Equals(this, obj);
+			=> Equals(this, obj);
 
 		public new static bool Equals(object a, object b)
 	    {
-	        if (object.ReferenceEquals(a, b))
+	        if (ReferenceEquals(a, b))
 	        {
 	            return true;
 	        }

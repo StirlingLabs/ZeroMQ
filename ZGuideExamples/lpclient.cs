@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -46,7 +41,7 @@ namespace Examples
 				Console.WriteLine();
 				Console.WriteLine("    Name   Your name. Default: People");
 				Console.WriteLine();
-				args = new string[] { "People" };
+				args = new[] { "People" };
 			}
 
 			var name = args[0];
@@ -107,10 +102,7 @@ namespace Examples
 										retries_left = LPClient_RequestRetries;
 										break;
 									}
-									else
-									{
-										Console_WriteZMessage("E: malformed reply from server", incoming);
-									}
+									Console_WriteZMessage("E: malformed reply from server", incoming);
 								}
 							}
 							else

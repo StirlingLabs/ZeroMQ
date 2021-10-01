@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -23,7 +20,7 @@ namespace Examples
 			var rnd = new Random();
 			if (args == null || args.Length < 1)
 			{
-				args = new string[] { "World" + rnd.Next() };
+				args = new[] { "World" + rnd.Next() };
 			}
 			var name = args[0];
 
@@ -63,7 +60,7 @@ namespace Examples
 							Console.WriteLine("I: ({0}) simulating a crash", name);
 							return;
 						}
-						else if (cycles > 3 && rnd.Next(5) == 0)
+						if (cycles > 3 && rnd.Next(5) == 0)
 						{
 							Console.WriteLine("I: ({0}) simulating CPU overload", name);
 							Thread.Sleep(500);

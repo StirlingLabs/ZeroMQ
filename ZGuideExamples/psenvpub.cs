@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -34,7 +30,7 @@ namespace Examples
 					{
 						published++;
 						message.Add(new ZFrame(string.Format("A {0}", published)));
-						message.Add(new ZFrame(string.Format(" We don't like to see this.")));
+						message.Add(new ZFrame(" We don't like to see this."));
 						Thread.Sleep(1000);
 
 						Console_WriteZMessage("Publishing ", message);
@@ -45,7 +41,7 @@ namespace Examples
 					{
 						published++;
 						message.Add(new ZFrame(string.Format("B {0}", published)));
-						message.Add(new ZFrame(string.Format(" We do like to see this.")));
+						message.Add(new ZFrame(" We do like to see this."));
 						Thread.Sleep(1000);
 
 						Console_WriteZMessage("Publishing ", message);

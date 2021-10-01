@@ -1,9 +1,9 @@
-﻿namespace ZeroMQ
-{
-	using System;
-    using System.Diagnostics;
-    using System.Threading;
+﻿using System;
+using System.Diagnostics;
+using System.Threading;
 
+namespace ZeroMQ
+{
 	public abstract class ZThread : IDisposable
 	{
 		public CancellationTokenSource Cancellor { get; protected set; }
@@ -11,12 +11,6 @@
 		protected Thread _thread;
 
 		protected bool _disposed;
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="ZThread"/> class.
-		/// </summary>
-		protected ZThread()
-		{ }
 
 		/// <summary>
 		/// Finalizes an instance of the <see cref="ZThread"/> class.

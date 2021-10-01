@@ -1,7 +1,7 @@
+using System;
+
 namespace ZeroMQ.Monitoring
 {
-	using System;
-
 	public struct ZMonitorEventData
 	{
 		public ZMonitorEvents Event;

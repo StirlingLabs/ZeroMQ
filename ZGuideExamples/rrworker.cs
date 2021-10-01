@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -30,9 +26,9 @@ namespace Examples
 				Console.WriteLine("              Default is tcp://127.0.0.1:5560");
 				Console.WriteLine();
 				if (args.Length < 1) {
-					args = new string[] { "World", "tcp://127.0.0.1:5560" };
+					args = new[] { "World", "tcp://127.0.0.1:5560" };
 				} else {
-					args = new string[] { args[0], "tcp://127.0.0.1:5560" };
+					args = new[] { args[0], "tcp://127.0.0.1:5560" };
 				}
 			}
 

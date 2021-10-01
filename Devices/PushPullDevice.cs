@@ -1,7 +1,7 @@
-﻿namespace ZeroMQ.Devices
-{
-	using System;
+﻿using System;
 
+namespace ZeroMQ.Devices
+{
 	/// <summary>
 	/// Queuing Push-Pull Device
 	/// </summary>

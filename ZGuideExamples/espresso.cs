@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Security.Cryptography;
 using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -56,7 +53,7 @@ namespace Examples
 				{
 					var frame = ZFrame.Create(8);
 					var bytes = new byte[8];
-					using (var rng = new System.Security.Cryptography.RNGCryptoServiceProvider())
+					using (var rng = new RNGCryptoServiceProvider())
 					{
 						rng.GetBytes(bytes);
 					}

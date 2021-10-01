@@ -1,10 +1,10 @@
-﻿namespace ZeroMQ
-{
-	using System;
-	using System.Collections.Generic;
-	using System.Linq.Expressions;
-	using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
 
+namespace ZeroMQ
+{
 	/// <summary>
 	/// Defines a fluent interface for configuring device sockets.
 	/// </summary>

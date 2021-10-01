@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -16,7 +13,7 @@ namespace Examples
 
 			if (args == null || args.Length < 1)
 			{
-				args = new string[] { "Hello World!" };
+				args = new[] { "Hello World!" };
 			}
 
 			var txt = args[0];
@@ -32,7 +29,7 @@ namespace Examples
 
 			if (args == null || args.Length < 1)
 			{
-				args = new string[] { "nm=QNzY&b1A+]nf" };
+				args = new[] { "nm=QNzY&b1A+]nf" };
 			}
 
 			var txt = args[0];

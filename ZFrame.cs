@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
-
 using ZeroMQ.lib;
 
 namespace ZeroMQ
@@ -20,7 +17,7 @@ namespace ZeroMQ
 			stream.Position = i;
 			if (l == 0) return new ZFrame();
 
-			var frame = ZFrame.Create(l);
+			var frame = Create(l);
 			var buf = new byte[65535];
 			int bufLen, remaining, current = -1;
 			do {
@@ -66,43 +63,43 @@ namespace ZeroMQ
 
 		public ZFrame(byte[] buffer)
 			: this (CreateNative(buffer.Length), buffer.Length)
-			=> this.Write(buffer, 0, buffer.Length);
+			=> Write(buffer, 0, buffer.Length);
 
 		public ZFrame(byte[] buffer, int offset, int count)
 			: this(CreateNative(count), count)
-			=> this.Write(buffer, offset, count);
+			=> Write(buffer, offset, count);
 
 		public ZFrame(byte value)
 			: this(CreateNative(1), 1)
-			=> this.Write(value);
+			=> Write(value);
 
 		public ZFrame(Int16 value)
 			: this(CreateNative(2), 2)
-			=> this.Write(value);
+			=> Write(value);
 
 		public ZFrame(UInt16 value)
 			: this(CreateNative(2), 2)
-			=> this.Write(value);
+			=> Write(value);
 
 		public ZFrame(Char value)
 			: this(CreateNative(2), 2)
-			=> this.Write(value);
+			=> Write(value);
 
 		public ZFrame(Int32 value)
 			: this(CreateNative(4), 4)
-			=> this.Write(value);
+			=> Write(value);
 
 		public ZFrame(UInt32 value)
 			: this(CreateNative(4), 4)
-			=> this.Write(value);
+			=> Write(value);
 
 		public ZFrame(Int64 value)
 			: this(CreateNative(8), 8)
-			=> this.Write(value);
+			=> Write(value);
 
 		public ZFrame(UInt64 value)
 			: this(CreateNative(8), 8)
-			=> this.Write(value);
+			=> Write(value);
 
 		public ZFrame(string str)
 			: this(str, ZContext.Encoding)
@@ -120,7 +117,6 @@ namespace ZeroMQ
 		{ } */
 
 		internal ZFrame(DispoIntPtr frameIntPtr, int size)
-			: base()
 		{
 			framePtr = frameIntPtr;
 			length = size;
@@ -323,7 +319,7 @@ namespace ZeroMQ
 			{
 				return -1;
 			}
-			Marshal.Copy(DataPtr() + position, buffer, offset, (int)remaining);
+			Marshal.Copy(DataPtr() + position, buffer, offset, remaining);
 
 			position += remaining;
 			return remaining;
@@ -334,7 +330,7 @@ namespace ZeroMQ
 			if (position + 1 > Length)
 				return -1;
 
-			int byt = Marshal.ReadByte(DataPtr() + (int)position);
+			int byt = Marshal.ReadByte(DataPtr() + position);
 			++position;
 			return byt;
 		}
@@ -456,7 +452,7 @@ namespace ZeroMQ
 
 			unsafe
 			{
-				var bytes = (byte*)(this.DataPtr() + position);
+				var bytes = (byte*)(DataPtr() + position);
 
 				var dec = encoding.GetDecoder();
 				var charCount = dec.GetCharCount(bytes, remaining, false);
@@ -513,7 +509,7 @@ namespace ZeroMQ
 
 			unsafe
 			{
-				var bytes = (byte*)(this.DataPtr() + position);
+				var bytes = (byte*)(DataPtr() + position);
 
 				var dec = encoding.GetDecoder();
 				var charCount = dec.GetCharCount(bytes, remaining, false);
@@ -647,9 +643,9 @@ namespace ZeroMQ
 			{
 				if (create)
 				{
-					this.framePtr = CreateNative(0);
-					this.length = 0;
-					this.position = 0;
+					framePtr = CreateNative(0);
+					length = 0;
+					position = 0;
 				}
 				return;
 			}
@@ -663,18 +659,18 @@ namespace ZeroMQ
 
 				if (create)
 				{
-					this.framePtr = CreateNative(byteCount);
-					this.length = byteCount;
-					this.position = 0;
+					framePtr = CreateNative(byteCount);
+					length = byteCount;
+					position = 0;
 				}
-				else if (this.position + byteCount > this.Length)
+				else if (position + byteCount > Length)
 				{
 					// fail if frame is too small
 					throw new InvalidOperationException();
 				}
 
-				byteCount = enc.GetBytes(strP, charCount, (byte*)(this.DataPtr() + this.position), byteCount, true);
-				this.position += byteCount;
+				byteCount = enc.GetBytes(strP, charCount, (byte*)(DataPtr() + position), byteCount, true);
+				position += byteCount;
 			}
 		}
 
@@ -775,7 +771,7 @@ namespace ZeroMQ
 			error = ZError.None;
 
 			int result;
-			if (-1 == (result = zmq.msg_get(this.framePtr, (Int32)property)))
+			if (-1 == (result = zmq.msg_get(framePtr, (Int32)property)))
 			{
 				error = ZError.GetLastErr();
 				return -1;
@@ -804,15 +800,12 @@ namespace ZeroMQ
 			using (var propertyPtr = DispoIntPtr.AllocString(property))
 			{
 				IntPtr resultPtr;
-				if (IntPtr.Zero == (resultPtr = zmq.msg_gets(this.framePtr, propertyPtr)))
+				if (IntPtr.Zero == (resultPtr = zmq.msg_gets(framePtr, propertyPtr)))
 				{
 					error = ZError.GetLastErr();
 					return null;
 				}
-				else
-				{
-					result = Marshal.PtrToStringAnsi(resultPtr);
-				}
+				result = Marshal.PtrToStringAnsi(resultPtr);
 			}
 			return result;
 		}
@@ -824,8 +817,8 @@ namespace ZeroMQ
 
 		public ZFrame Duplicate()
 		{
-			var frame = ZFrame.CreateEmpty();
-			this.CopyZeroTo(frame);
+			var frame = CreateEmpty();
+			CopyZeroTo(frame);
 			return frame;
 		}
 

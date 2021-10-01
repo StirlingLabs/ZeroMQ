@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -30,8 +25,8 @@ namespace Examples
 				subscriber.Connect("tcp://127.0.0.1:5556");
 				subscriber.SetOption(ZSocketOption.SUBSCRIBE, "10001 ");
 
-				var sockets = new ZSocket[] { receiver, subscriber };
-				var polls = new ZPollItem[] { ZPollItem.CreateReceiver(), ZPollItem.CreateReceiver() };
+				var sockets = new[] { receiver, subscriber };
+				var polls = new[] { ZPollItem.CreateReceiver(), ZPollItem.CreateReceiver() };
 
 				// Process messages from both sockets
 				ZError error;

@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -118,7 +115,7 @@ namespace Examples
 			{
 				if (args != null && args.Length == 1)
 				{
-					args = new string[] { args[0], "Me", "You" };
+					args = new[] { args[0], "Me", "You" };
 				}
 				else
 				{
@@ -187,7 +184,7 @@ namespace Examples
 				while (true)
 				{
 					// If we have no workers, wait indefinitely
-					wait = workers.Count > 0 ? (TimeSpan?)TimeSpan.FromMilliseconds(1000) : null;
+					wait = workers.Count > 0 ? TimeSpan.FromMilliseconds(1000) : null;
 
 					// Poll localBackend
 					if (localBackend.PollIn(poll, out incoming, out error, wait))

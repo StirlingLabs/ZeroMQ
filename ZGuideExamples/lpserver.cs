@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -50,7 +46,7 @@ namespace Examples
 							Console.WriteLine("I: simulating a crash");
 							break;
 						}
-						else if (cycles > 4 && rnd.Next(4) == 0)
+						if (cycles > 4 && rnd.Next(4) == 0)
 						{
 							Console.WriteLine("I: simulating CPU overload");
 							Thread.Sleep(1000);

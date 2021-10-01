@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-// using System.Runtime.Remoting.Messaging;
-using System.Text;
 using System.Threading;
+using Examples.MDCliApi;
 using ZeroMQ;
+
+// using System.Runtime.Remoting.Messaging;
 
 namespace Examples
 {
     //  Lets us build this source without creating a library
-    using MDCliApi;
-
     static partial class Program
     {
         //  MMI echo query example

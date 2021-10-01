@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
+using Examples.MDWrkApi;
 using ZeroMQ;
 
 namespace Examples
 {
-	using MDWrkApi; // Let us build this source without creating a library
+	// Let us build this source without creating a library
 
 	static partial class Program
 	{

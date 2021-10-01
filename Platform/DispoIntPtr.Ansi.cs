@@ -1,17 +1,14 @@
-﻿using System.Threading;
+﻿using System;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace ZeroMQ.lib
 {
-	using System;
-	using System.Text;
-	using System.Threading;
-	using System.Runtime.InteropServices;
-
 	internal sealed partial class DispoIntPtr : IDisposable
 	{
 		public static class Ansi
 		{
-			unsafe internal static DispoIntPtr AllocStringNative(string str, out int byteCount)
+			internal static DispoIntPtr AllocStringNative(string str, out int byteCount)
 			{
 				// use builtin allocation
 				var dispPtr = new DispoIntPtr();

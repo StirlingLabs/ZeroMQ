@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace ZeroMQ
@@ -275,7 +273,7 @@ namespace ZeroMQ
 
 		void ICollection<ZFrame>.CopyTo(ZFrame[] array, int arrayIndex)
 		{
-			int i = 0, count = this.Count;
+			int i = 0, count = Count;
 			foreach (var frame in this)
 			{
 				array[arrayIndex + i] = ZFrame.CopyFrom(frame);

@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading;
-
 using ZeroMQ.lib;
 
 namespace ZeroMQ
@@ -327,7 +325,7 @@ namespace ZeroMQ
 			var pinPtr = pin.AddrOfPinnedObject() + offset;
 
 			int length;
-			while (-1 == (length = zmq.recv(this.SocketPtr, pinPtr, count, (int)flags)))
+			while (-1 == (length = zmq.recv(SocketPtr, pinPtr, count, (int)flags)))
 			{
 				error = ZError.GetLastErr();
 				if (error == ZError.EINTR)
@@ -529,7 +527,7 @@ namespace ZeroMQ
 				}
 				frames.Add(frame);
 
-			} while (--framesToReceive > 0 && this.ReceiveMore);
+			} while (--framesToReceive > 0 && ReceiveMore);
 
 			return true;
 		}
@@ -743,7 +741,7 @@ namespace ZeroMQ
 			{
 				do
 				{
-					while (-1 == zmq.msg_recv(msg.Ptr, this.SocketPtr, (int)ZSocketFlags.None))
+					while (-1 == zmq.msg_recv(msg.Ptr, SocketPtr, (int)ZSocketFlags.None))
 					{
 						error = ZError.GetLastErr();
 
@@ -791,12 +789,12 @@ namespace ZeroMQ
 				if (IntPtr.Size == 4)
 					Marshal.WriteInt32(optionLengthP.Ptr, optionLength);
 				else if (IntPtr.Size == 8)
-					Marshal.WriteInt64(optionLengthP.Ptr, (long)optionLength);
+					Marshal.WriteInt64(optionLengthP.Ptr, optionLength);
 				else
 					throw new PlatformNotSupportedException();
 
 				ZError error;
-				while (-1 == zmq.getsockopt(this._socketPtr, (int)option, optionValue, optionLengthP.Ptr))
+				while (-1 == zmq.getsockopt(_socketPtr, (int)option, optionValue, optionLengthP.Ptr))
 				{
 					error = ZError.GetLastErr();
 
@@ -971,7 +969,7 @@ namespace ZeroMQ
 			EnsureNotDisposed();
 
 			ZError error;
-			while (-1 == zmq.setsockopt(this._socketPtr, (int)option, optionValue, optionLength))
+			while (-1 == zmq.setsockopt(_socketPtr, (int)option, optionValue, optionLength))
 			{
 				error = ZError.GetLastErr();
 

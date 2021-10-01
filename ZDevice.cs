@@ -1,9 +1,8 @@
-﻿namespace ZeroMQ
-{
-	using System;
-	using System.Threading;
-	using System.Collections.Generic;
+﻿using System;
+using System.Threading;
 
+namespace ZeroMQ
+{
 	/// <summary>
 	/// Forwards messages received by a front-end socket to a back-end socket, from which
 	/// they are then sent.
@@ -42,7 +41,6 @@
 		{ }
 
 		protected ZDevice(ZContext context)
-			: base()
 			=> Context = context;
 
 		/// <summary>
@@ -71,7 +69,6 @@
 		/// </param>
 		/// <param name="mode">The <see cref="DeviceMode"/> for the current device.</param>
 		protected ZDevice(ZContext context, ZSocketType frontendType, ZSocketType backendType)
-			: base()
 		{
 			Context = context;
 
@@ -163,30 +160,30 @@
 			ZPollItem[] polls;
 			if (FrontendSocket != null && BackendSocket != null)
 			{
-				sockets = new ZSocket[] {
+				sockets = new[] {
 					FrontendSocket,
 					BackendSocket
 				};
-				polls = new ZPollItem[] {
+				polls = new[] {
 					ZPollItem.Create(FrontendHandler),
 					ZPollItem.Create(BackendHandler)
 				};
 			}
 			else if (FrontendSocket != null)
 			{
-				sockets = new ZSocket[] {
+				sockets = new[] {
 					FrontendSocket
 				}; 
-				polls = new ZPollItem[] {
+				polls = new[] {
 					ZPollItem.Create(FrontendHandler)
 				};
 			}
 			else
 			{
-				sockets = new ZSocket[] {
+				sockets = new[] {
 					BackendSocket
 				};
-				polls = new ZPollItem[] {
+				polls = new[] {
 					ZPollItem.Create(BackendHandler)
 				};
 			}

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -170,7 +169,7 @@ namespace Examples
 
                     return msg;
                 }
-                else if (Equals(error, ZError.ETERM))
+                if (Equals(error, ZError.ETERM))
                 {
                     "W: interrupt received, killing client...\n".DumpString();
                     cancellor.Cancel();

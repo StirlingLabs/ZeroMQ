@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -31,7 +26,7 @@ namespace Examples
 				Console.WriteLine("    Endpoint  Where FLClient1 should connect to.");
 				Console.WriteLine("              Default is tcp://127.0.0.1:7780");
 				Console.WriteLine();
-				args = new string[] { "tcp://127.0.0.1:7780" };
+				args = new[] { "tcp://127.0.0.1:7780" };
 			}
 
 			// The client uses a Lazy Pirate strategy if it only has one server to talk

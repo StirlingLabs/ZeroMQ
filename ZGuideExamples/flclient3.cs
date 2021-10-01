@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-
+using Examples.FLCliApi;
 using ZeroMQ;
 
 namespace Examples
 {
-	using FLCliApi;		// Lets us build this source without creating a library
+	// Lets us build this source without creating a library
 
 	static partial class Program
 	{
@@ -32,9 +28,9 @@ namespace Examples
 				Console.WriteLine("              Default: tcp://127.0.0.1:5555");
 				Console.WriteLine();
 				if (args.Length < 1)
-					args = new string[] { "World", "tcp://127.0.0.1:5555" };
+					args = new[] { "World", "tcp://127.0.0.1:5555" };
 				else
-					args = new string[] { args[0], "tcp://127.0.0.1:5555" };
+					args = new[] { args[0], "tcp://127.0.0.1:5555" };
 			}
 
 			var name = args[0];

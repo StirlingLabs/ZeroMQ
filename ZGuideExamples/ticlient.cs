@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
-// using System.Runtime.Remoting.Messaging;
-using System.Text;
 using System.Threading;
+using Examples.MDCliApi;
 using ZeroMQ;
+
+// using System.Runtime.Remoting.Messaging;
 
 namespace Examples
 {
@@ -14,8 +12,6 @@ namespace Examples
 	//  Implements client side of http://rfc.zeromq.org/spec:9
 
 	//  Lets us build this source without creating a library
-	using MDCliApi;
-
 	static partial class Program
 	{
 
@@ -68,11 +64,8 @@ namespace Examples
 						reply.Dispose();
 						break;
 					}
-					else
-					{
-						"I: no reply yet, trying again...\n".DumpString();
-						Thread.Sleep(5000); // try again in 5 seconds
-					}
+					"I: no reply yet, trying again...\n".DumpString();
+					Thread.Sleep(5000); // try again in 5 seconds
 				}
 			}
 		}
@@ -90,7 +83,7 @@ namespace Examples
 					{
 						return reply.Duplicate();
 					}
-					else if (status.Equals("400"))
+					if (status.Equals("400"))
 					{
 						"E: client fatal error, aborting".DumpString();
 						cts.Cancel();

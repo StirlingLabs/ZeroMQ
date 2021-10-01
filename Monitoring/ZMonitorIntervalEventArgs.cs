@@ -7,7 +7,7 @@ namespace ZeroMQ.Monitoring
 	{
 		internal ZMonitorIntervalEventArgs(ZMonitor monitor, ZMonitorEventData data)
 			: base(monitor, data)
-			=> this.Interval = data.EventValue;
+			=> Interval = data.EventValue;
 
 		/// <summary>
 		/// Gets the computed reconnect interval.

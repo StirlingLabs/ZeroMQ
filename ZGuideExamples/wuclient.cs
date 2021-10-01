@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-
 using ZeroMQ;
 
 namespace Examples
@@ -29,9 +25,9 @@ namespace Examples
 				Console.WriteLine("              Default is tcp://127.0.0.1:5556");
 				Console.WriteLine();
 				if (args.Length < 1)
-					args = new string[] { "72622", "tcp://127.0.0.1:5556" };
+					args = new[] { "72622", "tcp://127.0.0.1:5556" };
 				else
-					args = new string[] { args[0], "tcp://127.0.0.1:5556" };
+					args = new[] { args[0], "tcp://127.0.0.1:5556" };
 			}
 
 			var endpoint = args[1];

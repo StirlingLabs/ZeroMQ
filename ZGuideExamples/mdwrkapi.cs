@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -220,7 +215,7 @@ namespace Examples
 									//  return it to the caller application:
 									return msg.Duplicate();
 								}
-								else if (command.StrHexEq(MdpCommon.MdpwCmd.HEARTBEAT))
+								if (command.StrHexEq(MdpCommon.MdpwCmd.HEARTBEAT))
 								{
 									// Do nothing for heartbeats
 								}

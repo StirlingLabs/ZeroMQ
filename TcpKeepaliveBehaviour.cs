@@ -3,7 +3,7 @@ namespace ZeroMQ
 	/// <summary>
 	/// Keep-alive packets behavior for a <see cref="ZSocket"/> connection.
 	/// </summary>
-	public enum TcpKeepaliveBehaviour : int
+	public enum TcpKeepaliveBehaviour
 	{
 		/// <summary>
 		/// Use Operating System default behavior.

@@ -145,8 +145,8 @@ namespace ZeroMQ
             PublicTxt = publicTxt;
             SecretTxt = secretTxt;
 
-            publicKey = Z85.ToZ85DecodedBytes(PublicTxt);
-            secretKey = Z85.ToZ85DecodedBytes(SecretTxt);
+            publicKey = PublicTxt.ToZ85DecodedBytes();
+            secretKey = SecretTxt.ToZ85DecodedBytes();
 
         }
 
@@ -291,7 +291,7 @@ namespace ZeroMQ
                         var metadata = Split(str);
                         if (metadata.Length == 2)
                         {
-                            c.SetMeta(metadata[0].Trim(), metadata[1].Trim(new char[] { '"', ' ', '\t' }));
+                            c.SetMeta(metadata[0].Trim(), metadata[1].Trim('"', ' ', '\t'));
                         }
                     };
                 }
@@ -303,9 +303,9 @@ namespace ZeroMQ
                         if (key.Length == 2)
                         {
                             if (key[0].Trim() == "public-key")
-                                c.PublicTxt = key[1].Trim(new char[] { '"', ' ', '\t' });
+                                c.PublicTxt = key[1].Trim('"', ' ', '\t');
                             if (key[0].Trim() == "secret-key")
-                                c.SecretTxt = key[1].Trim(new char[] { '"', ' ', '\t' });
+                                c.SecretTxt = key[1].Trim('"', ' ', '\t');
                         }
                     };
                 }
@@ -361,7 +361,7 @@ namespace ZeroMQ
         public void SavePublic(string filename)
         {
             var lines = GetMetadataAll(filename,
-                new List<string>()
+                new List<string>
                 {
                     "#   ****  Generated on " + DateTime.Now.ToLongDateString(),
                     "#   ZeroMQ CURVE Public Certificate",
@@ -381,7 +381,7 @@ namespace ZeroMQ
         public void SaveSecret(string filename)
         {
             var lines = GetMetadataAll(filename,
-                new List<string>()
+                new List<string>
                 {
                     "#   ****  Generated on " + DateTime.Now.ToLongDateString(),
                     "#   ZeroMQ CURVE **Secret** Certificate",

@@ -1,8 +1,8 @@
-﻿namespace ZeroMQ.lib
-{
-	using System;
-	using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
+namespace ZeroMQ.lib
+{
 	[StructLayout(LayoutKind.Sequential)]
 	public struct zmq_pollitem_windows_t // : zmq_pollitem_i
 	{

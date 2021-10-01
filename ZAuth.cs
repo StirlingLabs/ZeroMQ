@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace ZeroMQ
 {
@@ -103,7 +104,7 @@ namespace ZeroMQ
                     Principal = request.Pop().ReadLine();
 
                 if (Verbose)
-                    ZAuth.Info(string.Format("zauth: ZAP request mechanism={0} ipaddress={1}", Mechanism, Address));
+                    Info(string.Format("zauth: ZAP request mechanism={0} ipaddress={1}", Mechanism, Address));
             }
 
             /// <summary>
@@ -116,7 +117,7 @@ namespace ZeroMQ
             public int RequestReply(string status_code, string status_text, byte[] metadata)
             {
                 if (Verbose)
-                    ZAuth.Info(string.Format("zauth: - ZAP reply status_code={0} status_text={1}", status_code, status_text));
+                    Info(string.Format("zauth: - ZAP reply status_code={0} status_text={1}", status_code, status_text));
 
                 var msg = new ZMessage();
                 msg.Add(new ZFrame("1.0"));
@@ -187,14 +188,14 @@ namespace ZeroMQ
         {
             if (context != null)
             {
-                sockets = new ZSocket[] { pipe, new ZSocket(context, ZSocketType.REP) };
+                sockets = new[] { pipe, new ZSocket(context, ZSocketType.REP) };
             }
             else
             {
-                sockets = new ZSocket[] { pipe, new ZSocket(ZSocketType.REP) };
+                sockets = new[] { pipe, new ZSocket(ZSocketType.REP) };
             }
             sockets[HANDLER].Bind(ZAP_ENDPOINT);
-            pollers = new ZPollItem[] { ZPollItem.CreateReceiver(), ZPollItem.CreateReceiver() };
+            pollers = new[] { ZPollItem.CreateReceiver(), ZPollItem.CreateReceiver() };
             allowAny = true;
             verbose = false;
             Terminated = false;
@@ -218,7 +219,7 @@ namespace ZeroMQ
         /// <param name="cancellor">Thread cancellation called when ZActor is disposed.</param>
         /// <param name="args">Arguments given to the ZActor. If the first object in this list is a a ZCertStore 
         /// this ZCertStore is used for ZCert handling.</param>
-        public static void Action(ZContext context, ZSocket backend, System.Threading.CancellationTokenSource cancellor, object[] args)
+        public static void Action(ZContext context, ZSocket backend, CancellationTokenSource cancellor, object[] args)
         {
             var certStore = args != null && args.Length > 0 && args[0] is ZCertStore ? args[0] as ZCertStore : null;
             using (var self = new ZAuth(context, backend, certStore))
@@ -234,7 +235,7 @@ namespace ZeroMQ
         /// <param name="cancellor">Thread cancellation called when ZActor is disposed.</param>
         /// <param name="args">Arguments given to the ZActor. If the first object in this list is a a ZCertStore 
         /// this ZCertStore is used for ZCert handling.</param>
-        public static void Action0(ZSocket backend, System.Threading.CancellationTokenSource cancellor, object[] args)
+        public static void Action0(ZSocket backend, CancellationTokenSource cancellor, object[] args)
         {
             var certStore = args != null && args.Length > 0 && args[0] is ZCertStore ? args[0] as ZCertStore : null;
             using (var self = new ZAuth(backend, certStore))
@@ -243,7 +244,7 @@ namespace ZeroMQ
             }
         }
 
-        private static void Run(System.Threading.CancellationTokenSource cancellor, ZAuth self)
+        private static void Run(CancellationTokenSource cancellor, ZAuth self)
         {
             while (!self.Terminated && !cancellor.IsCancellationRequested)
             {
@@ -377,7 +378,6 @@ namespace ZeroMQ
                     Info("zauth: - allowed (CURVE allow any client)");
                 return true;
             }
-            else
             if (certStore != null)
             {
                 var cert = certStore.Lookup(request.ClientTxt);
@@ -392,14 +392,14 @@ namespace ZeroMQ
                     }
 
                     if (verbose)
-                        Info("zauth: - allowed (CURVE) client_key=" + request.ClientTxt.ToString());
+                        Info("zauth: - allowed (CURVE) client_key=" + request.ClientTxt);
                     request.UserId = request.ClientTxt;
                     return true;
                 }
             }
 
             if (verbose)
-                Info("zauth: - denied (CURVE) client_key=" + request.ClientTxt.ToString());
+                Info("zauth: - denied (CURVE) client_key=" + request.ClientTxt);
             return false;
         }
 
@@ -434,20 +434,14 @@ namespace ZeroMQ
                            request.Username, request.Password));
                     return true;
                 }
-                else
-                {
-                    if (verbose)
-                        Info(string.Format("zauth: - denied (PLAIN) username={0} password={1}",
-                               request.Username, request.Password));
-                    return false;
-                }
-            }
-            else
-            {
                 if (verbose)
-                    Info("zauth: - denied (PLAIN) no password file defined");
+                    Info(string.Format("zauth: - denied (PLAIN) username={0} password={1}",
+                        request.Username, request.Password));
                 return false;
             }
+            if (verbose)
+                Info("zauth: - denied (PLAIN) no password file defined");
+            return false;
         }
 
         private int HandlePipe(ZMessage request)

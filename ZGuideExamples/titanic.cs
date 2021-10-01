@@ -5,13 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Xml.Serialization;
+using Examples.MDCliApi;
+using Examples.MDWrkApi;
 using ZeroMQ;
 
 namespace Examples
 {
-	using MDWrkApi;
-	using MDCliApi;
-
 	public static class TitanicCommon
 	{
 		public static readonly string TITANIC_DIR = ".titanic";

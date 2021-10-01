@@ -1,13 +1,10 @@
-﻿namespace ZeroMQ
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using ZeroMQ.lib;
+
+namespace ZeroMQ
 {
-	using System;
-	using System.Collections.Generic;
-	using System.Diagnostics;
-	using System.Linq;
-	using System.Threading;
-
-	using lib;
-
 	public static partial class ZPollItems // : IDisposable, IList<ZmqPollItem>
 	{
 		public static class Win32

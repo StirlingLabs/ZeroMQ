@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Text;
-using System.Threading;
-
 using ZeroMQ.lib;
 
 namespace ZeroMQ
@@ -11,7 +9,7 @@ namespace ZeroMQ
 	/// </summary>
 	public sealed class ZContext : IDisposable
 	{
-		static Encoding _encoding = System.Text.Encoding.UTF8;
+		static Encoding _encoding = Encoding.UTF8;
 
 		/// <summary>
 		/// Gets and protected sets the default Encoding.

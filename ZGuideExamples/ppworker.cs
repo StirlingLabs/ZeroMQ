@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-
+using Examples.PP;
 using ZeroMQ;
 
 namespace Examples
 {
-	using PP;
-
 	//
 	// Paranoid Pirate worker
 	//
@@ -55,7 +50,7 @@ namespace Examples
 				Console.WriteLine();
 				Console.WriteLine("    Name   Your name. Default: World");
 				Console.WriteLine();
-				args = new string[] { "World" };
+				args = new[] { "World" };
 			}
 			var name = args[0];
 

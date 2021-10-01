@@ -1,7 +1,7 @@
+using System;
+
 namespace ZeroMQ.Monitoring
 {
-	using System;
-
 	/// <summary>
 	/// Socket transport events (for TCP and IPC sockets) that can be monitored.
 	/// </summary>

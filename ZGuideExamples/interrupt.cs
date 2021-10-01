@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -20,7 +16,7 @@ namespace Examples
 
 			if (args == null || args.Length == 0)
 			{
-				args = new string[] { "World" };
+				args = new[] { "World" };
 			}
 
 			var name = args[0];

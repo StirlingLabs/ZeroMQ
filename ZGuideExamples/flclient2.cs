@@ -1,15 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-
+using Examples.FLClient2;
 using ZeroMQ;
 
 namespace Examples
 {
-	using FLClient2;
-
 	//
 	// Freelance client - Model 2
 	// Uses DEALER socket to blast one or more services
@@ -102,11 +96,11 @@ namespace Examples
 					request.Prepend(new ZFrame());
 
 					// Blast the request to all connected servers
-					for (var server = 0; server < this.servers; ++server)
+					for (var server = 0; server < servers; ++server)
 					{
 						using (var outgoing = request.Duplicate())
 						{
-							this.socket.Send(outgoing);
+							socket.Send(outgoing);
 						}
 					}
 
@@ -117,7 +111,7 @@ namespace Examples
 					var poll = ZPollItem.CreateReceiver();
 					while (endtime > DateTime.UtcNow)
 					{
-						if (this.socket.PollIn(poll, out reply, out error, endtime - DateTime.UtcNow))
+						if (socket.PollIn(poll, out reply, out error, endtime - DateTime.UtcNow))
 						{
 							// Reply is [empty][sequence][OK]
 							if (reply.Count < 3)
@@ -165,7 +159,7 @@ namespace Examples
 				Console.WriteLine("    Endpoint  Where FLClient2 should connect to.");
 				Console.WriteLine("              Default is tcp://127.0.0.1:7781");
 				Console.WriteLine();
-				args = new string[] { "tcp://127.0.0.1:7781" };
+				args = new[] { "tcp://127.0.0.1:7781" };
 			}
 
 			// Create new freelance client object

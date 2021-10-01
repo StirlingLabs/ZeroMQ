@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -27,7 +22,7 @@ namespace Examples
 				Console.WriteLine("    Endpoint  Where PathoSub should connect to.");
 				Console.WriteLine("              Default is tcp://127.0.0.1:5556");
 				Console.WriteLine();
-				args = new string[] { "tcp://127.0.0.1:5556" };
+				args = new[] { "tcp://127.0.0.1:5556" };
 			}
 
 			using (var context = new ZContext())

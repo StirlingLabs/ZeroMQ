@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
-
-namespace ZeroMQ
+﻿namespace ZeroMQ
 {
-	public enum ZSocketOption : int
+	public enum ZSocketOption
 	{
 		AFFINITY = 4,
 		IDENTITY = 5,

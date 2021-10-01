@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
-using System.Runtime.Serialization;
-using System.Threading;
 
 namespace Examples
 {
@@ -120,7 +120,7 @@ namespace Examples
 			{
 				if (method.Name == "Main")
 					continue;
-				if (0 < method.GetCustomAttributes(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute), true).Length)
+				if (0 < method.GetCustomAttributes(typeof(CompilerGeneratedAttribute), true).Length)
 					continue;
 
 				Console.WriteLine("    {0}", method.Name);
@@ -135,8 +135,8 @@ namespace Examples
 	internal static class DebugStackTrace<TException>
 		where TException : Exception
 	{
-		[System.Diagnostics.DebuggerNonUserCode]
-		[System.Diagnostics.DebuggerStepThrough]
+		[DebuggerNonUserCode]
+		[DebuggerStepThrough]
 		public static object Invoke(MethodInfo method, object target, params object[] args)
 		{
 			try

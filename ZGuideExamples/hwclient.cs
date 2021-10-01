@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-
 using ZeroMQ;
 
 namespace Examples
@@ -26,7 +21,7 @@ namespace Examples
 				Console.WriteLine("    Endpoint  Where HWClient should connect to.");
 				Console.WriteLine("              Default is tcp://127.0.0.1:5555");
 				Console.WriteLine();
-				args = new string[] { "tcp://127.0.0.1:5555" };
+				args = new[] { "tcp://127.0.0.1:5555" };
 			}
 
 			var endpoint = args[0];

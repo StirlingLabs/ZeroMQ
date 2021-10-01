@@ -1,11 +1,8 @@
-﻿namespace ZeroMQ.Devices
-{
-	using lib;
-	// using lib.sys;
+﻿using ZeroMQ.lib;
 
-	using System;
-	using System.Net;
-	using System.Threading;
+namespace ZeroMQ.Devices
+{
+	// using lib.sys;
 
 	/// <summary>
 	/// The Stream to Dealer is a Device for reading 

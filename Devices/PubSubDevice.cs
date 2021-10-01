@@ -1,7 +1,5 @@
 ﻿namespace ZeroMQ.Devices
 {
-	using System;
-
 	/// <summary>
 	/// Device for a Publisher and Subscribers
 	/// </summary>

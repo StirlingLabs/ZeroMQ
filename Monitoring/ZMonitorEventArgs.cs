@@ -1,7 +1,7 @@
+using System;
+
 namespace ZeroMQ.Monitoring
 {
-	using System;
-
 	/// <summary>
 	/// A base class for the all ZmqMonitor events.
 	/// </summary>
@@ -14,8 +14,8 @@ namespace ZeroMQ.Monitoring
 		/// <param name="address">The peer address.</param>
 		public ZMonitorEventArgs(ZMonitor monitor, ZMonitorEventData ed)
 		{
-			this.Monitor = monitor;
-			this.Event = ed;
+			Monitor = monitor;
+			Event = ed;
 		}
 
 		public ZMonitorEventData Event { get; private set; }
