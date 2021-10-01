@@ -19,21 +19,15 @@ namespace Examples
 		public static readonly string QUEUE_LINEFORMAT = "-{0}\n";
 
 		public static Guid GenerateUuid()
-		{
-			return Guid.NewGuid();
-		}
+			=> Guid.NewGuid();
 
 		//  Returns request filename for given UUID
 		public static string RequestFilename(Guid uuid)
-		{
-			return string.Format("{0}/{1}.req", TITANIC_DIR, uuid);
-		}
+			=> string.Format("{0}/{1}.req", TITANIC_DIR, uuid);
 
 		//  Returns reply filename for given UUID
 		public static string ReplyFilename(Guid uuid)
-		{
-			return string.Format("{0}/{1}.rep", TITANIC_DIR, uuid);
-		}
+			=> string.Format("{0}/{1}.rep", TITANIC_DIR, uuid);
 
 		public static void SerializeToXml<T>(this T obj, String path)
 			where T : ZMessage

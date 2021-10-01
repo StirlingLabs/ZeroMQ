@@ -83,10 +83,8 @@ namespace Examples
 
 		public static class Workers
 		{
-			public static void Ready(this IList<Worker> workers, Worker worker) 
-			{
-				workers.Add(worker);
-			}
+			public static void Ready(this IList<Worker> workers, Worker worker)
+				=> workers.Add(worker);
 
 			public static ZFrame Next(this IList<Worker> workers) 
 			{

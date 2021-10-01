@@ -26,26 +26,26 @@
 
 		public IntPtr SocketPtr
 		{
-			get { return socketPtr; }
-			set { socketPtr = value; }
+			get => socketPtr;
+			set => socketPtr = value;
 		}
 
 		public int FileDescriptor
 		{
-			get { return fileDescriptor; }
-			set { fileDescriptor = value; }
+			get => fileDescriptor;
+			set => fileDescriptor = value;
 		}
 
 		public short Events
 		{
-			get { return events; }
-			set { events = value; }
+			get => events;
+			set => events = value;
 		}
 
 		public short ReadyEvents
 		{
-			get { return readyEvents; }
-			set { readyEvents = value; }
+			get => readyEvents;
+			set => readyEvents = value;
 		}
 	}
 }

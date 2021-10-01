@@ -22,17 +22,12 @@
 		/// Finalizes an instance of the <see cref="ZThread"/> class.
 		/// </summary>
 		~ZThread()
-		{
-			Dispose(false);
-		}
+			=> Dispose(false);
 
 		/// <summary>
 		/// Gets a value indicating whether the device loop is running.
 		/// </summary>
-		public bool IsCancellationRequested
-		{
-			get { return Cancellor.IsCancellationRequested; }
-		}
+		public bool IsCancellationRequested => Cancellor.IsCancellationRequested;
 
 		public virtual void Start()
 		{

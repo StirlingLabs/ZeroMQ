@@ -50,16 +50,12 @@
 		/// Forwards requests from the frontend socket to the backend socket.
 		/// </summary>
 		protected override bool FrontendHandler(ZSocket args, out ZMessage message, out ZError error)
-		{
-			return FrontendSocket.Forward(BackendSocket, out message, out error);
-		}
+			=> FrontendSocket.Forward(BackendSocket, out message, out error);
 
 		/// <summary>
 		/// Forwards replies from the backend socket to the frontend socket.
 		/// </summary>
 		protected override bool BackendHandler(ZSocket args, out ZMessage message, out ZError error)
-		{
-			return BackendSocket.Forward(FrontendSocket, out message, out error);
-		}
+			=> BackendSocket.Forward(FrontendSocket, out message, out error);
 	}
 }

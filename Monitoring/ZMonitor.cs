@@ -54,9 +54,7 @@ namespace ZeroMQ.Monitoring
 		}
 
 		public static ZMonitor Create(string endpoint)
-		{
-			return Create(ZContext.Current, endpoint);
-		}
+			=> Create(ZContext.Current, endpoint);
 
 		public static ZMonitor Create(ZContext context, string endpoint)
 		{
@@ -75,9 +73,7 @@ namespace ZeroMQ.Monitoring
 		/// <param name="socketType">A <see cref="ZSocketType"/> value for the socket.</param>
 		/// <returns>A <see cref="ZSocket"/> instance with the current context and the specified socket type.</returns>
 		public static ZMonitor Create(string endpoint, out ZError error)
-		{
-			return Create(ZContext.Current, endpoint, out error);
-		}
+			=> Create(ZContext.Current, endpoint, out error);
 
 		/// <summary>
 		/// Create a socket with the current context and the specified socket type.
@@ -161,10 +157,7 @@ namespace ZeroMQ.Monitoring
 		/// <summary>
 		/// Gets the endpoint to which the monitor socket is connected.
 		/// </summary>
-		public string Endpoint
-		{
-			get { return _endpoint; }
-		}
+		public string Endpoint => _endpoint;
 
 		// private static readonly int sizeof_MonitorEventData = Marshal.SizeOf(typeof(ZMonitorEventData));
 

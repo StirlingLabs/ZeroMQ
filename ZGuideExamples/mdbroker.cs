@@ -65,9 +65,7 @@ namespace Examples
             }
 
             ~Broker()
-            {
-                Dispose(false);
-            }
+                => Dispose(false);
 
             public void Dispose()
             {
@@ -353,9 +351,7 @@ namespace Examples
             }
 
             ~Service()
-            {
-                Dispose(false);
-            }
+                => Dispose(false);
 
             public void Dispose()
             {
@@ -432,9 +428,7 @@ namespace Examples
                 Identity = identity.Duplicate();
             }
             ~Worker()
-            {
-                Dispose(false);
-            }
+                => Dispose(false);
 
             public void Dispose()
             {

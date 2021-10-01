@@ -27,9 +27,7 @@
 		/// </summary>
 		public PubSubDevice(ZContext context)
 			: base(context, FrontendType, BackendType)
-		{
-			BackendSetup.SubscribeAll();
-		}
+			=> BackendSetup.SubscribeAll();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PubSubDevice"/> class.
@@ -53,16 +51,12 @@
 		/// Forwards requests from the frontend socket to the backend socket.
 		/// </summary>
 		protected override bool FrontendHandler(ZSocket socket, out ZMessage message, out ZError error)
-		{
-			return FrontendSocket.Forward(BackendSocket, out message, out error);
-		}
+			=> FrontendSocket.Forward(BackendSocket, out message, out error);
 
 		/// <summary>
 		/// PubSub Forwards the Subscription messages
 		/// </summary>
 		protected override bool BackendHandler(ZSocket args, out ZMessage message, out ZError error)
-		{
-			return BackendSocket.Forward(FrontendSocket, out message, out error);
-		}
+			=> BackendSocket.Forward(FrontendSocket, out message, out error);
 	}
 }

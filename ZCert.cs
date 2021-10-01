@@ -34,8 +34,8 @@ namespace ZeroMQ
         /// </summary>
         public byte[] PublicKey
         {
-            get { return publicKey; }
-            private set { publicKey = value; }
+            get => publicKey;
+            private set => publicKey = value;
         }
 
         /// <summary>
@@ -43,8 +43,8 @@ namespace ZeroMQ
         /// </summary>
         public byte[] SecretKey
         {
-            get { return secretKey; }
-            private set { secretKey = value; }
+            get => secretKey;
+            private set => secretKey = value;
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace ZeroMQ
         /// </summary>
         public string PublicTxt
         {
-            get { return new string(publicTxt); }
+            get => new string(publicTxt);
             private set
             {
                 publicTxt = value.ToCharArray();
@@ -67,7 +67,7 @@ namespace ZeroMQ
         /// </summary>
         public string SecretTxt
         {
-            get { return new string(secretTxt); }
+            get => new string(secretTxt);
             private set
             {
                 secretTxt = value.ToCharArray();
@@ -156,9 +156,7 @@ namespace ZeroMQ
         /// <param name="name">Name of meta data.</param>
         /// <param name="value">Value of meta data.</param>
         public void SetMeta(string name, string value)
-        {
-            metadata[name] = value;
-        }
+            => metadata[name] = value;
 
         /// <summary>
         /// Remove a meta data from the certificate.
@@ -187,7 +185,7 @@ namespace ZeroMQ
             }
         }
 
-        public Dictionary<string, string> MetaData { get { return metadata.ToDictionary(entry => entry.Key, entry => entry.Value); } }
+        public Dictionary<string, string> MetaData => metadata.ToDictionary(entry => entry.Key, entry => entry.Value);
 
         /// <summary>
         /// Apply certificate to the given socket. This will set the CurveSecretKey equal to this certificate secret key and
@@ -250,9 +248,7 @@ namespace ZeroMQ
         /// </summary>
         /// <returns>Hash code of public key.</returns>
         public override int GetHashCode()
-        {
-            return PublicTxt != null ? PublicTxt.GetHashCode() : 0;
-        }
+            => PublicTxt != null ? PublicTxt.GetHashCode() : 0;
 
 
         private delegate void LineRead(string line, ZCert cert);

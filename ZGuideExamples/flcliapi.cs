@@ -44,10 +44,8 @@ namespace Examples
 				this.Actor.Start();
 			}
 
-			~FreelanceClient() 
-			{
-				this.Dispose(false);
-			}
+			~FreelanceClient()
+				=> this.Dispose(false);
 
 			public void Dispose()
 			{
@@ -272,10 +270,8 @@ namespace Examples
 				this.Actives = new List<Server>();
 			}
 
-			~Agent() 
-			{
-				this.Dispose(false);
-			}
+			~Agent()
+				=> this.Dispose(false);
 
 			public void Dispose()
 			{
@@ -429,9 +425,7 @@ namespace Examples
 			}
 
 			public override int GetHashCode()
-			{
-				return Endpoint.GetHashCode();
-			}
+				=> Endpoint.GetHashCode();
 		}
 	}
 }

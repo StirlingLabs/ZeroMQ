@@ -38,9 +38,7 @@ namespace ZeroMQ
 		}
 
 		public static ZFrame CopyFrom(ZFrame frame)
-		{
-			return frame.Duplicate();
-		}
+			=> frame.Duplicate();
 
 		public static ZFrame Create(int size) 
 		{
@@ -52,9 +50,7 @@ namespace ZeroMQ
 		}
 
 		public static ZFrame CreateEmpty()
-		{
-			return new ZFrame(CreateEmptyNative(), -1);
-		}
+			=> new ZFrame(CreateEmptyNative(), -1);
 
 		public const int DefaultFrameSize = 4096;
 
@@ -70,72 +66,50 @@ namespace ZeroMQ
 
 		public ZFrame(byte[] buffer)
 			: this (CreateNative(buffer.Length), buffer.Length)
-		{
-			this.Write(buffer, 0, buffer.Length);
-		}
+			=> this.Write(buffer, 0, buffer.Length);
 
 		public ZFrame(byte[] buffer, int offset, int count)
 			: this(CreateNative(count), count)
-		{
-			this.Write(buffer, offset, count);
-		}
+			=> this.Write(buffer, offset, count);
 
 		public ZFrame(byte value)
 			: this(CreateNative(1), 1)
-		{ 
-			this.Write(value);
-		}
+			=> this.Write(value);
 
 		public ZFrame(Int16 value)
 			: this(CreateNative(2), 2)
-		{ 
-			this.Write(value);
-		}
+			=> this.Write(value);
 
 		public ZFrame(UInt16 value)
 			: this(CreateNative(2), 2)
-		{ 
-			this.Write(value);
-		}
+			=> this.Write(value);
 
 		public ZFrame(Char value)
 			: this(CreateNative(2), 2)
-		{ 
-			this.Write(value);
-		}
+			=> this.Write(value);
 
 		public ZFrame(Int32 value)
 			: this(CreateNative(4), 4)
-		{ 
-			this.Write(value);
-		}
+			=> this.Write(value);
 
 		public ZFrame(UInt32 value)
 			: this(CreateNative(4), 4)
-		{ 
-			this.Write(value);
-		}
+			=> this.Write(value);
 
 		public ZFrame(Int64 value)
 			: this(CreateNative(8), 8)
-		{ 
-			this.Write(value);
-		}
+			=> this.Write(value);
 
 		public ZFrame(UInt64 value)
 			: this(CreateNative(8), 8)
-		{ 
-			this.Write(value);
-		}
+			=> this.Write(value);
 
 		public ZFrame(string str)
 			: this(str, ZContext.Encoding)
 		{ }
 
 		public ZFrame(string str, Encoding encoding)
-		{
-			WriteStringNative(str, encoding, true);
-		}
+			=> WriteStringNative(str, encoding, true);
 
 		public ZFrame()
 			: this(CreateNative(0), 0)
@@ -154,9 +128,7 @@ namespace ZeroMQ
 		}
 
 		~ZFrame()
-		{
-			Dispose(false);
-		}
+			=> Dispose(false);
 
 		internal static DispoIntPtr CreateEmptyNative()
 		{
@@ -252,18 +224,15 @@ namespace ZeroMQ
 			GC.SuppressFinalize(this);
 		}
 
-		public bool IsDismissed
-		{
-			get { return framePtr == null; }
-		}
+		public bool IsDismissed => framePtr == null;
 
-		public override bool CanRead { get { return true; } }
+		public override bool CanRead => true;
 
-		public override bool CanSeek { get { return true; } }
+		public override bool CanSeek => true;
 
-		public override bool CanTimeout { get { return false; } }
+		public override bool CanTimeout => false;
 
-		public override bool CanWrite { get { return true; } }
+		public override bool CanWrite => true;
 
 		private void EnsureCapacity()
 		{
@@ -287,20 +256,15 @@ namespace ZeroMQ
 		}
 
 		public override void SetLength(long length)
-		{
-			throw new NotSupportedException();
-		}
+			=> throw new NotSupportedException();
 
 		public override long Position
 		{
-			get { return position; }
-			set
-			{
-				Seek(value, SeekOrigin.Begin);
-			}
+			get => position;
+			set => Seek(value, SeekOrigin.Begin);
 		}
 
-		public IntPtr Ptr { get { return framePtr; } }
+		public IntPtr Ptr => framePtr;
 
 		public IntPtr DataPtr()
 		{
@@ -470,19 +434,13 @@ namespace ZeroMQ
 		}
 
 		public string ReadString()
-		{
-			return ReadString(ZContext.Encoding);
-		}
+			=> ReadString(ZContext.Encoding);
 
 		public string ReadString(Encoding encoding)
-		{
-			return ReadString( /* byteCount */ (int)Length - position, encoding);
-		}
+			=> ReadString( /* byteCount */ (int)Length - position, encoding);
 
 		public string ReadString(int length)
-		{
-			return ReadString(/* byteCount */ length, ZContext.Encoding);
-		}
+			=> ReadString(/* byteCount */ length, ZContext.Encoding);
 
 		public string ReadString(int byteCount, Encoding encoding)
 		{
@@ -536,14 +494,10 @@ namespace ZeroMQ
 		}
 
 		public string ReadLine()
-		{
-			return ReadLine((int)Length - position, ZContext.Encoding);
-		}
+			=> ReadLine((int)Length - position, ZContext.Encoding);
 
 		public string ReadLine(Encoding encoding)
-		{
-			return ReadLine((int)Length - position, encoding);
-		}
+			=> ReadLine((int)Length - position, encoding);
 
 		public string ReadLine(int byteCount, Encoding encoding)
 		{
@@ -627,9 +581,7 @@ namespace ZeroMQ
 		}
 
 		public override void WriteByte(byte value)
-		{
-			Write(value);
-		}
+			=> Write(value);
 
 		public void Write(Int16 value)
 		{
@@ -642,14 +594,10 @@ namespace ZeroMQ
 		}
 
 		public void Write(UInt16 value)
-		{
-			Write((Int16)value);
-		}
+			=> Write((Int16)value);
 
 		public void Write(Char value)
-		{
-			Write((Int16)value);
-		}
+			=> Write((Int16)value);
 
 		public void Write(Int32 value)
 		{
@@ -662,9 +610,7 @@ namespace ZeroMQ
 		}
 
 		public void Write(UInt32 value)
-		{
-			Write((Int32)value);
-		}
+			=> Write((Int32)value);
 
 		public void Write(Int64 value)
 		{
@@ -677,29 +623,19 @@ namespace ZeroMQ
 		}
 
 		public void Write(UInt64 value)
-		{
-			Write((Int64)value);
-		}
+			=> Write((Int64)value);
 
 		public void Write(string str)
-		{
-			Write(str, ZContext.Encoding);
-		}
+			=> Write(str, ZContext.Encoding);
 
 		public void Write(string str, Encoding encoding)
-		{
-			WriteStringNative(str, encoding, false);
-		}
+			=> WriteStringNative(str, encoding, false);
 
 		public void WriteLine(string str)
-		{
-			WriteLine(str, ZContext.Encoding);
-		}
+			=> WriteLine(str, ZContext.Encoding);
 
 		public void WriteLine(string str, Encoding encoding)
-		{
-			WriteStringNative(string.Format("{0}\r\n", str), encoding, false);
-		}
+			=> WriteStringNative(string.Format("{0}\r\n", str), encoding, false);
 
 		unsafe internal void WriteStringNative(string str, Encoding encoding, bool create)
 		{
@@ -743,9 +679,7 @@ namespace ZeroMQ
 		}
 
 		public override void Flush()
-		{
-			throw new NotSupportedException();
-		}
+			=> throw new NotSupportedException();
 
 		public override void Close()
 		{
@@ -886,9 +820,7 @@ namespace ZeroMQ
 		#region ICloneable implementation
 
 		public object Clone()
-		{
-			return Duplicate();
-		}
+			=> Duplicate();
 
 		public ZFrame Duplicate()
 		{
@@ -900,9 +832,7 @@ namespace ZeroMQ
 		#endregion
 
 		public override string ToString()
-		{
-			return ToString(ZContext.Encoding);
-		}
+			=> ToString(ZContext.Encoding);
 
 		public string ToString(Encoding encoding)
 		{

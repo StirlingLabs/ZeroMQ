@@ -18,9 +18,7 @@ namespace ZeroMQ
 		/// </summary>
 		/// <returns><see cref="ZSocket"/></returns>
 		public static ZSocket Create(ZContext context, ZSocketType socketType)
-		{
-			return new ZSocket(context, socketType);
-		}
+			=> new ZSocket(context, socketType);
 
 		/// <summary>
 		/// Create a <see cref="ZSocket"/> instance.
@@ -86,9 +84,7 @@ namespace ZeroMQ
 		/// Finalizes an instance of the <see cref="ZSocket"/> class.
 		/// </summary>
 		~ZSocket()
-		{
-			Dispose(false);
-		}
+			=> Dispose(false);
 
 		public void Dispose()
 		{
@@ -138,20 +134,14 @@ namespace ZeroMQ
 			return true;
 		}
 
-		public ZContext Context
-		{
-			get { return _context; }
-		}
+		public ZContext Context => _context;
 
-		public IntPtr SocketPtr
-		{
-			get { return _socketPtr; }
-		}
+		public IntPtr SocketPtr => _socketPtr;
 
 		/// <summary>
 		/// Gets the <see cref="ZeroMQ.ZSocketType"/> value for the current socket.
 		/// </summary>
-		public ZSocketType SocketType { get { return _socketType; } }
+		public ZSocketType SocketType => _socketType;
 
 		/// <summary>
 		/// Bind the specified endpoint.
@@ -402,25 +392,19 @@ namespace ZeroMQ
 		/// <summary>
 		/// Sends HARD bytes from a byte[n]. Please don't use SendBytes, use instead SendFrame.
 		/// </summary>
-		public bool Send(byte[] buffer, int offset, int count) {
-			return SendBytes(buffer, offset, count);
-		} // just Send*
+		public bool Send(byte[] buffer, int offset, int count)
+			=> SendBytes(buffer, offset, count); // just Send*
 		/// <summary>
 		/// Sends HARD bytes from a byte[n]. Please don't use SendBytes, use instead SendFrame.
 		/// </summary>
-		public bool Send(byte[] buffer, int offset, int count, ZSocketFlags flags, out ZError error) {
-			return SendBytes(buffer, offset, count, flags, out error);
-		} // just Send*
+		public bool Send(byte[] buffer, int offset, int count, ZSocketFlags flags, out ZError error)
+			=> SendBytes(buffer, offset, count, flags, out error); // just Send*
 
 		public ZMessage ReceiveMessage()
-		{
-			return ReceiveMessage(ZSocketFlags.None);
-		}
+			=> ReceiveMessage(ZSocketFlags.None);
 
 		public ZMessage ReceiveMessage(out ZError error)
-		{
-			return ReceiveMessage(ZSocketFlags.None, out error);
-		}
+			=> ReceiveMessage(ZSocketFlags.None, out error);
 
 		public ZMessage ReceiveMessage(ZSocketFlags flags)
 		{
@@ -441,9 +425,7 @@ namespace ZeroMQ
 		}
 
 		public bool ReceiveMessage(ref ZMessage message, out ZError error)
-		{
-			return ReceiveMessage(ref message, ZSocketFlags.None, out error);
-		}
+			=> ReceiveMessage(ref message, ZSocketFlags.None, out error);
 
 		public bool ReceiveMessage(ref ZMessage message, ZSocketFlags flags, out ZError error)
 		{
@@ -465,9 +447,7 @@ namespace ZeroMQ
 		}
 
 		public ZFrame ReceiveFrame(out ZError error)
-		{
-			return ReceiveFrame(ZSocketFlags.None, out error);
-		}
+			=> ReceiveFrame(ZSocketFlags.None, out error);
 
 		public ZFrame ReceiveFrame(ZSocketFlags flags, out ZError error)
 		{
@@ -483,9 +463,7 @@ namespace ZeroMQ
 		}
 
 		public IEnumerable<ZFrame> ReceiveFrames(int framesToReceive)
-		{
-			return ReceiveFrames(framesToReceive, ZSocketFlags.None);
-		}
+			=> ReceiveFrames(framesToReceive, ZSocketFlags.None);
 
 		public IEnumerable<ZFrame> ReceiveFrames(int framesToReceive, ZSocketFlags flags)
 		{
@@ -499,9 +477,7 @@ namespace ZeroMQ
 		}
 
 		public IEnumerable<ZFrame> ReceiveFrames(int framesToReceive, out ZError error)
-		{
-			return ReceiveFrames(framesToReceive, ZSocketFlags.None, out error);
-		}
+			=> ReceiveFrames(framesToReceive, ZSocketFlags.None, out error);
 
 		public IEnumerable<ZFrame> ReceiveFrames(int framesToReceive, ZSocketFlags flags, out ZError error)
 		{
@@ -558,67 +534,46 @@ namespace ZeroMQ
 			return true;
 		}
 
-		public virtual void Send(ZMessage msg) {
-			SendMessage(msg);
-		} // just Send*
-		public virtual bool Send(ZMessage msg, out ZError error) {
-			return SendMessage(msg, out error);
-		} // just Send*
-		public virtual void Send(ZMessage msg, ZSocketFlags flags) {
-			SendMessage(msg, flags);
-		} // just Send*
-		public virtual bool Send(ZMessage msg, ZSocketFlags flags, out ZError error) {
-			return SendMessage(msg, flags, out error);
-		} // just Send*
-		public virtual void Send(IEnumerable<ZFrame> frames) {
-			SendFrames(frames);
-		} // just Send*
-		public virtual bool Send(IEnumerable<ZFrame> frames, out ZError error) {
-			return SendFrames(frames, out error);
-		} // just Send*
-		public virtual void Send(IEnumerable<ZFrame> frames, ZSocketFlags flags) {
-			SendFrames(frames, flags);
-		} // just Send*
-		public virtual bool Send(IEnumerable<ZFrame> frames, ZSocketFlags flags, out ZError error) {
-			return SendFrames(frames, flags, out error);
-		} // just Send*
-		public virtual bool Send(IEnumerable<ZFrame> frames, ref int sent, ZSocketFlags flags, out ZError error) {
-			return SendFrames(frames, ref sent, flags, out error);
-		} // just Send*
-		public virtual void Send(ZFrame frame) {
-			SendFrame(frame);
-		} // just Send*
-		public virtual bool Send(ZFrame msg, out ZError error) {
-			return SendFrame(msg, out error);
-		} // just Send*
-		public virtual void SendMore(ZFrame frame) {
-			SendFrameMore(frame);
-		} // just Send*
-		public virtual bool SendMore(ZFrame msg, out ZError error) {
-			return SendFrameMore(msg, out error);
-		} // just Send*
-		public virtual void SendMore(ZFrame frame, ZSocketFlags flags) {
-			SendFrameMore(frame, flags);
-		} // just Send*
-		public virtual bool SendMore(ZFrame msg, ZSocketFlags flags, out ZError error) {
-			return SendFrameMore(msg, flags, out error);
-		} // just Send*
-		public virtual void Send(ZFrame frame, ZSocketFlags flags) {
-			SendFrame(frame, flags);
-		} // just Send*
-		public virtual bool Send(ZFrame frame, ZSocketFlags flags, out ZError error) {
-			return SendFrame(frame, flags, out error);
-		} // just Send*
+		public virtual void Send(ZMessage msg)
+			=> SendMessage(msg); // just Send*
+		public virtual bool Send(ZMessage msg, out ZError error)
+			=> SendMessage(msg, out error); // just Send*
+		public virtual void Send(ZMessage msg, ZSocketFlags flags)
+			=> SendMessage(msg, flags); // just Send*
+		public virtual bool Send(ZMessage msg, ZSocketFlags flags, out ZError error)
+			=> SendMessage(msg, flags, out error); // just Send*
+		public virtual void Send(IEnumerable<ZFrame> frames)
+			=> SendFrames(frames); // just Send*
+		public virtual bool Send(IEnumerable<ZFrame> frames, out ZError error)
+			=> SendFrames(frames, out error); // just Send*
+		public virtual void Send(IEnumerable<ZFrame> frames, ZSocketFlags flags)
+			=> SendFrames(frames, flags); // just Send*
+		public virtual bool Send(IEnumerable<ZFrame> frames, ZSocketFlags flags, out ZError error)
+			=> SendFrames(frames, flags, out error); // just Send*
+		public virtual bool Send(IEnumerable<ZFrame> frames, ref int sent, ZSocketFlags flags, out ZError error)
+			=> SendFrames(frames, ref sent, flags, out error); // just Send*
+		public virtual void Send(ZFrame frame)
+			=> SendFrame(frame); // just Send*
+		public virtual bool Send(ZFrame msg, out ZError error)
+			=> SendFrame(msg, out error); // just Send*
+		public virtual void SendMore(ZFrame frame)
+			=> SendFrameMore(frame); // just Send*
+		public virtual bool SendMore(ZFrame msg, out ZError error)
+			=> SendFrameMore(msg, out error); // just Send*
+		public virtual void SendMore(ZFrame frame, ZSocketFlags flags)
+			=> SendFrameMore(frame, flags); // just Send*
+		public virtual bool SendMore(ZFrame msg, ZSocketFlags flags, out ZError error)
+			=> SendFrameMore(msg, flags, out error); // just Send*
+		public virtual void Send(ZFrame frame, ZSocketFlags flags)
+			=> SendFrame(frame, flags); // just Send*
+		public virtual bool Send(ZFrame frame, ZSocketFlags flags, out ZError error)
+			=> SendFrame(frame, flags, out error); // just Send*
 
 		public virtual void SendMessage(ZMessage msg)
-		{
-			SendMessage(msg, ZSocketFlags.None);
-		}
+			=> SendMessage(msg, ZSocketFlags.None);
 
 		public virtual bool SendMessage(ZMessage msg, out ZError error)
-		{
-			return SendMessage(msg, ZSocketFlags.None, out error);
-		}
+			=> SendMessage(msg, ZSocketFlags.None, out error);
 
 		public virtual void SendMessage(ZMessage msg, ZSocketFlags flags)
 		{
@@ -657,14 +612,10 @@ namespace ZeroMQ
 		}
 
 		public virtual void SendFrames(IEnumerable<ZFrame> frames)
-		{
-			SendFrames(frames, ZSocketFlags.None);
-		}
+			=> SendFrames(frames, ZSocketFlags.None);
 
 		public virtual bool SendFrames(IEnumerable<ZFrame> frames, out ZError error)
-		{
-			return SendFrames(frames, ZSocketFlags.None, out error);
-		}
+			=> SendFrames(frames, ZSocketFlags.None, out error);
 
 		public virtual void SendFrames(IEnumerable<ZFrame> frames, ZSocketFlags flags)
 		{
@@ -724,34 +675,22 @@ namespace ZeroMQ
 		}
 
 		public virtual void SendFrame(ZFrame frame)
-		{
-			SendFrame(frame, ZSocketFlags.None);
-		}
+			=> SendFrame(frame, ZSocketFlags.None);
 
 		public virtual bool SendFrame(ZFrame msg, out ZError error)
-		{
-			return SendFrame(msg, ZSocketFlags.None, out error);
-		}
+			=> SendFrame(msg, ZSocketFlags.None, out error);
 
 		public virtual void SendFrameMore(ZFrame frame)
-		{
-			SendFrame(frame, ZSocketFlags.More);
-		}
+			=> SendFrame(frame, ZSocketFlags.More);
 
 		public virtual bool SendFrameMore(ZFrame msg, out ZError error)
-		{
-			return SendFrame(msg, ZSocketFlags.More, out error);
-		}
+			=> SendFrame(msg, ZSocketFlags.More, out error);
 
 		public virtual void SendFrameMore(ZFrame frame, ZSocketFlags flags)
-		{
-			SendFrame(frame, flags | ZSocketFlags.More);
-		}
+			=> SendFrame(frame, flags | ZSocketFlags.More);
 
 		public virtual bool SendFrameMore(ZFrame msg, ZSocketFlags flags, out ZError error)
-		{
-			return SendFrame(msg, flags | ZSocketFlags.More, out error);
-		}
+			=> SendFrame(msg, flags | ZSocketFlags.More, out error);
 
 		public virtual void SendFrame(ZFrame frame, ZSocketFlags flags)
 		{
@@ -1048,9 +987,7 @@ namespace ZeroMQ
 		}
 
 		public bool SetOptionNull(ZSocketOption option)
-		{
-			return SetOption(option, IntPtr.Zero, 0);
-		}
+			=> SetOption(option, IntPtr.Zero, 0);
 
 		public bool SetOption(ZSocketOption option, byte[] value)
 		{
@@ -1094,9 +1031,7 @@ namespace ZeroMQ
 		}
 
 		public bool SetOption(ZSocketOption option, UInt32 value)
-		{
-			return SetOption(option, (Int32)value);
-		}
+			=> SetOption(option, (Int32)value);
 
 		public bool SetOption(ZSocketOption option, Int64 value)
 		{
@@ -1110,9 +1045,7 @@ namespace ZeroMQ
 		}
 
 		public bool SetOption(ZSocketOption option, UInt64 value)
-		{
-			return SetOption(option, (Int64)value);
-		}
+			=> SetOption(option, (Int64)value);
 
 		/// <summary>
 		/// Subscribe to all messages.
@@ -1121,9 +1054,7 @@ namespace ZeroMQ
 		/// Only applies to <see cref="ZeroMQ.ZSocketType.SUB"/> and <see cref="ZeroMQ.ZSocketType.XSUB"/> sockets.
 		/// </remarks>
 		public void SubscribeAll()
-		{
-			Subscribe(new byte[0]);
-		}
+			=> Subscribe(new byte[0]);
 
 		/// <summary>
 		/// Subscribe to messages that begin with a specified prefix.
@@ -1133,9 +1064,7 @@ namespace ZeroMQ
 		/// </remarks>
 		/// <param name="prefix">Prefix for subscribed messages.</param>
 		public virtual void Subscribe(byte[] prefix)
-		{
-			SetOption(ZSocketOption.SUBSCRIBE, prefix);
-		}
+			=> SetOption(ZSocketOption.SUBSCRIBE, prefix);
 
 		/// <summary>
 		/// Subscribe to messages that begin with a specified prefix.
@@ -1145,9 +1074,7 @@ namespace ZeroMQ
 		/// </remarks>
 		/// <param name="prefix">Prefix for subscribed messages.</param>
 		public virtual void Subscribe(string prefix)
-		{
-			SetOption(ZSocketOption.SUBSCRIBE, ZContext.Encoding.GetBytes(prefix));
-		}
+			=> SetOption(ZSocketOption.SUBSCRIBE, ZContext.Encoding.GetBytes(prefix));
 
 		/// <summary>
 		/// Unsubscribe from all messages.
@@ -1156,9 +1083,7 @@ namespace ZeroMQ
 		/// Only applies to <see cref="ZeroMQ.ZSocketType.SUB"/> and <see cref="ZeroMQ.ZSocketType.XSUB"/> sockets.
 		/// </remarks>
 		public void UnsubscribeAll()
-		{
-			Unsubscribe(new byte[0]);
-		}
+			=> Unsubscribe(new byte[0]);
 
 		/// <summary>
 		/// Unsubscribe from messages that begin with a specified prefix.
@@ -1168,9 +1093,7 @@ namespace ZeroMQ
 		/// </remarks>
 		/// <param name="prefix">Prefix for subscribed messages.</param>
 		public virtual void Unsubscribe(byte[] prefix)
-		{
-			SetOption(ZSocketOption.UNSUBSCRIBE, prefix);
-		}
+			=> SetOption(ZSocketOption.UNSUBSCRIBE, prefix);
 
 		/// <summary>
 		/// Unsubscribe from messages that begin with a specified prefix.
@@ -1180,30 +1103,22 @@ namespace ZeroMQ
 		/// </remarks>
 		/// <param name="prefix">Prefix for subscribed messages.</param>
 		public virtual void Unsubscribe(string prefix)
-		{
-			SetOption(ZSocketOption.UNSUBSCRIBE, ZContext.Encoding.GetBytes(prefix));
-		}
+			=> SetOption(ZSocketOption.UNSUBSCRIBE, ZContext.Encoding.GetBytes(prefix));
 
 		/// <summary>
 		/// Gets a value indicating whether the multi-part message currently being read has more message parts to follow.
 		/// </summary>
-		public bool ReceiveMore
-		{
-			get { return GetOptionInt32(ZSocketOption.RCVMORE) == 1; }
-		}
+		public bool ReceiveMore => GetOptionInt32(ZSocketOption.RCVMORE) == 1;
 
-		public string LastEndpoint
-		{
-			get { return GetOptionString(ZSocketOption.LAST_ENDPOINT); }
-		}
+		public string LastEndpoint => GetOptionString(ZSocketOption.LAST_ENDPOINT);
 
 		/// <summary>
 		/// Gets or sets the I/O thread affinity for newly created connections on this socket.
 		/// </summary>
 		public ulong Affinity
 		{
-			get { return GetOptionUInt64(ZSocketOption.AFFINITY); }
-			set { SetOption(ZSocketOption.AFFINITY, value); }
+			get => GetOptionUInt64(ZSocketOption.AFFINITY);
+			set => SetOption(ZSocketOption.AFFINITY, value);
 		}
 
 		/// <summary>
@@ -1211,76 +1126,76 @@ namespace ZeroMQ
 		/// </summary>
 		public int Backlog
 		{
-			get { return GetOptionInt32(ZSocketOption.BACKLOG); }
-			set { SetOption(ZSocketOption.BACKLOG, value); }
+			get => GetOptionInt32(ZSocketOption.BACKLOG);
+			set => SetOption(ZSocketOption.BACKLOG, value);
 		}
 
 		public byte[] ConnectRID
 		{
-			get { return GetOptionBytes(ZSocketOption.CONNECT_RID); }
-			set { SetOption(ZSocketOption.CONNECT_RID, value); }
+			get => GetOptionBytes(ZSocketOption.CONNECT_RID);
+			set => SetOption(ZSocketOption.CONNECT_RID, value);
 		}
 
 		public bool Conflate
 		{
-			get { return GetOptionInt32(ZSocketOption.CONFLATE) == 1; }
-			set { SetOption(ZSocketOption.CONFLATE, value ? 1 : 0); }
+			get => GetOptionInt32(ZSocketOption.CONFLATE) == 1;
+			set => SetOption(ZSocketOption.CONFLATE, value ? 1 : 0);
 		}
 
 	    public const int BinaryKeySize = 32;
 
 		public byte[] CurvePublicKey
 		{
-			get { return GetOptionBytes(ZSocketOption.CURVE_PUBLICKEY, BinaryKeySize); }
-			set { SetOption(ZSocketOption.CURVE_PUBLICKEY, value); }
+			get => GetOptionBytes(ZSocketOption.CURVE_PUBLICKEY, BinaryKeySize);
+			set => SetOption(ZSocketOption.CURVE_PUBLICKEY, value);
 		}
 
 		public byte[] CurveSecretKey
 		{
-			get { return GetOptionBytes(ZSocketOption.CURVE_SECRETKEY, BinaryKeySize); }
-			set { SetOption(ZSocketOption.CURVE_SECRETKEY, value); }
+			get => GetOptionBytes(ZSocketOption.CURVE_SECRETKEY, BinaryKeySize);
+			set => SetOption(ZSocketOption.CURVE_SECRETKEY, value);
 		}
 
 		public bool CurveServer
 		{
-			get { return GetOptionInt32(ZSocketOption.CURVE_SERVER) == 1; }
-			set { SetOption(ZSocketOption.CURVE_SERVER, value ? 1 : 0); }
+			get => GetOptionInt32(ZSocketOption.CURVE_SERVER) == 1;
+			set => SetOption(ZSocketOption.CURVE_SERVER, value ? 1 : 0);
 		}
 
 		public byte[] CurveServerKey
 		{
-			get { return GetOptionBytes(ZSocketOption.CURVE_SERVERKEY, BinaryKeySize); }
-			set { SetOption(ZSocketOption.CURVE_SERVERKEY, value); }
+			get => GetOptionBytes(ZSocketOption.CURVE_SERVERKEY, BinaryKeySize);
+			set => SetOption(ZSocketOption.CURVE_SERVERKEY, value);
 		}
 
 		public bool GSSAPIPlainText
 		{
-			get { return GetOptionInt32(ZSocketOption.GSSAPI_PLAINTEXT) == 1; }
-			set { SetOption(ZSocketOption.GSSAPI_PLAINTEXT, value ? 1 : 0); }
+			get => GetOptionInt32(ZSocketOption.GSSAPI_PLAINTEXT) == 1;
+			set => SetOption(ZSocketOption.GSSAPI_PLAINTEXT, value ? 1 : 0);
 		}
 
 		public string GSSAPIPrincipal
 		{
-			get { return GetOptionString(ZSocketOption.GSSAPI_PRINCIPAL); }
-			set { SetOption(ZSocketOption.GSSAPI_PRINCIPAL, value); }
+			get => GetOptionString(ZSocketOption.GSSAPI_PRINCIPAL);
+			set => SetOption(ZSocketOption.GSSAPI_PRINCIPAL, value);
 		}
 
 		public bool GSSAPIServer
 		{
-			get { return GetOptionInt32(ZSocketOption.GSSAPI_SERVER) == 1; }
-			set { SetOption(ZSocketOption.GSSAPI_SERVER, value ? 1 : 0); }
+			get => GetOptionInt32(ZSocketOption.GSSAPI_SERVER) == 1;
+			set => SetOption(ZSocketOption.GSSAPI_SERVER, value ? 1 : 0);
 		}
 
 		public string GSSAPIServicePrincipal
 		{
-			get { return GetOptionString(ZSocketOption.GSSAPI_SERVICE_PRINCIPAL); }
-			set { SetOption(ZSocketOption.GSSAPI_SERVICE_PRINCIPAL, value); }
+			get => GetOptionString(ZSocketOption.GSSAPI_SERVICE_PRINCIPAL);
+			set => SetOption(ZSocketOption.GSSAPI_SERVICE_PRINCIPAL, value);
 		}
 
 		public int HandshakeInterval
 		{
-			get { return GetOptionInt32(ZSocketOption.HANDSHAKE_IVL); }
-			set { SetOption(ZSocketOption.HANDSHAKE_IVL, value); }
+			get => GetOptionInt32(ZSocketOption.HANDSHAKE_IVL);
+			set => SetOption(ZSocketOption.HANDSHAKE_IVL, value);
 		}
 
 		/// <summary>
@@ -1289,8 +1204,8 @@ namespace ZeroMQ
 		/// <value>Identity as byte[]</value>
 		public byte[] Identity
 		{
-			get { return GetOptionBytes(ZSocketOption.IDENTITY); }
-			set { SetOption(ZSocketOption.IDENTITY, value); }
+			get => GetOptionBytes(ZSocketOption.IDENTITY);
+			set => SetOption(ZSocketOption.IDENTITY, value);
 		}
 
 		/// <summary>
@@ -1301,20 +1216,20 @@ namespace ZeroMQ
 		/// <value>Identity as string</value>
 		public string IdentityString
 		{
-			get { return ZContext.Encoding.GetString(Identity); }
-			set { Identity = ZContext.Encoding.GetBytes(value); }
+			get => ZContext.Encoding.GetString(Identity);
+			set => Identity = ZContext.Encoding.GetBytes(value);
 		}
 
 		public bool Immediate
 		{
-			get { return GetOptionInt32(ZSocketOption.IMMEDIATE) == 1; }
-			set { SetOption(ZSocketOption.IMMEDIATE, value ? 1 : 0); }
+			get => GetOptionInt32(ZSocketOption.IMMEDIATE) == 1;
+			set => SetOption(ZSocketOption.IMMEDIATE, value ? 1 : 0);
 		}
 
 		public bool IPv6
 		{
-			get { return GetOptionInt32(ZSocketOption.IPV6) == 1; }
-			set { SetOption(ZSocketOption.IPV6, value ? 1 : 0); }
+			get => GetOptionInt32(ZSocketOption.IPV6) == 1;
+			set => SetOption(ZSocketOption.IPV6, value ? 1 : 0);
 		}
 
 		/// <summary>
@@ -1322,8 +1237,8 @@ namespace ZeroMQ
 		/// </summary>
 		public TimeSpan Linger
 		{
-			get { return TimeSpan.FromMilliseconds(GetOptionInt32(ZSocketOption.LINGER)); }
-			set { SetOption(ZSocketOption.LINGER, (int)value.TotalMilliseconds); }
+			get => TimeSpan.FromMilliseconds(GetOptionInt32(ZSocketOption.LINGER));
+			set => SetOption(ZSocketOption.LINGER, (int)value.TotalMilliseconds);
 		}
 
 		/// <summary>
@@ -1331,8 +1246,8 @@ namespace ZeroMQ
 		/// </summary>
 		public long MaxMessageSize
 		{
-			get { return GetOptionInt64(ZSocketOption.MAX_MSG_SIZE); }
-			set { SetOption(ZSocketOption.MAX_MSG_SIZE, value); }
+			get => GetOptionInt64(ZSocketOption.MAX_MSG_SIZE);
+			set => SetOption(ZSocketOption.MAX_MSG_SIZE, value);
 		}
 
 		/// <summary>
@@ -1340,32 +1255,32 @@ namespace ZeroMQ
 		/// </summary>
 		public int MulticastHops
 		{
-			get { return GetOptionInt32(ZSocketOption.MULTICAST_HOPS); }
-			set { SetOption(ZSocketOption.MULTICAST_HOPS, value); }
+			get => GetOptionInt32(ZSocketOption.MULTICAST_HOPS);
+			set => SetOption(ZSocketOption.MULTICAST_HOPS, value);
 		}
 
 		public string PlainPassword
 		{
-			get { return GetOptionString(ZSocketOption.PLAIN_PASSWORD); }
-			set { SetOption(ZSocketOption.PLAIN_PASSWORD, value); }
+			get => GetOptionString(ZSocketOption.PLAIN_PASSWORD);
+			set => SetOption(ZSocketOption.PLAIN_PASSWORD, value);
 		}
 
 		public bool PlainServer
 		{
-			get { return GetOptionInt32(ZSocketOption.PLAIN_SERVER) == 1; }
-			set { SetOption(ZSocketOption.PLAIN_SERVER, value ? 1 : 0); }
+			get => GetOptionInt32(ZSocketOption.PLAIN_SERVER) == 1;
+			set => SetOption(ZSocketOption.PLAIN_SERVER, value ? 1 : 0);
 		}
 
 		public string PlainUserName
 		{
-			get { return GetOptionString(ZSocketOption.PLAIN_USERNAME); }
-			set { SetOption(ZSocketOption.PLAIN_USERNAME, value); }
+			get => GetOptionString(ZSocketOption.PLAIN_USERNAME);
+			set => SetOption(ZSocketOption.PLAIN_USERNAME, value);
 		}
 
 		public bool ProbeRouter
 		{
-			get { return GetOptionInt32(ZSocketOption.PROBE_ROUTER) == 1; }
-			set { SetOption(ZSocketOption.PROBE_ROUTER, value ? 1 : 0); }
+			get => GetOptionInt32(ZSocketOption.PROBE_ROUTER) == 1;
+			set => SetOption(ZSocketOption.PROBE_ROUTER, value ? 1 : 0);
 		}
 
 		/// <summary>
@@ -1373,8 +1288,8 @@ namespace ZeroMQ
 		/// </summary>
 		public int MulticastRate
 		{
-			get { return GetOptionInt32(ZSocketOption.RATE); }
-			set { SetOption(ZSocketOption.RATE, value); }
+			get => GetOptionInt32(ZSocketOption.RATE);
+			set => SetOption(ZSocketOption.RATE, value);
 		}
 
 		/// <summary>
@@ -1382,8 +1297,8 @@ namespace ZeroMQ
 		/// </summary>
 		public int ReceiveBufferSize
 		{
-			get { return GetOptionInt32(ZSocketOption.RCVBUF); }
-			set { SetOption(ZSocketOption.RCVBUF, value); }
+			get => GetOptionInt32(ZSocketOption.RCVBUF);
+			set => SetOption(ZSocketOption.RCVBUF, value);
 		}
 
 		/// <summary>
@@ -1391,8 +1306,8 @@ namespace ZeroMQ
 		/// </summary>
 		public int ReceiveHighWatermark
 		{
-			get { return GetOptionInt32(ZSocketOption.RCVHWM); }
-			set { SetOption(ZSocketOption.RCVHWM, value); }
+			get => GetOptionInt32(ZSocketOption.RCVHWM);
+			set => SetOption(ZSocketOption.RCVHWM, value);
 		}
 
 		/// <summary>
@@ -1400,8 +1315,8 @@ namespace ZeroMQ
 		/// </summary>
 		public TimeSpan ReceiveTimeout
 		{
-			get { return TimeSpan.FromMilliseconds(GetOptionInt32(ZSocketOption.RCVTIMEO)); }
-			set { SetOption(ZSocketOption.RCVTIMEO, (int)value.TotalMilliseconds); }
+			get => TimeSpan.FromMilliseconds(GetOptionInt32(ZSocketOption.RCVTIMEO));
+			set => SetOption(ZSocketOption.RCVTIMEO, (int)value.TotalMilliseconds);
 		}
 
 		/// <summary>
@@ -1409,8 +1324,8 @@ namespace ZeroMQ
 		/// </summary>
 		public TimeSpan ReconnectInterval
 		{
-			get { return TimeSpan.FromMilliseconds(GetOptionInt32(ZSocketOption.RECONNECT_IVL)); }
-			set { SetOption(ZSocketOption.RECONNECT_IVL, (int)value.TotalMilliseconds); }
+			get => TimeSpan.FromMilliseconds(GetOptionInt32(ZSocketOption.RECONNECT_IVL));
+			set => SetOption(ZSocketOption.RECONNECT_IVL, (int)value.TotalMilliseconds);
 		}
 
 		/// <summary>
@@ -1418,8 +1333,8 @@ namespace ZeroMQ
 		/// </summary>
 		public TimeSpan ReconnectIntervalMax
 		{
-			get { return TimeSpan.FromMilliseconds(GetOptionInt32(ZSocketOption.RECONNECT_IVL_MAX)); }
-			set { SetOption(ZSocketOption.RECONNECT_IVL_MAX, (int)value.TotalMilliseconds); }
+			get => TimeSpan.FromMilliseconds(GetOptionInt32(ZSocketOption.RECONNECT_IVL_MAX));
+			set => SetOption(ZSocketOption.RECONNECT_IVL_MAX, (int)value.TotalMilliseconds);
 		}
 
 		/// <summary>
@@ -1427,38 +1342,38 @@ namespace ZeroMQ
 		/// </summary>
 		public TimeSpan MulticastRecoveryInterval
 		{
-			get { return TimeSpan.FromMilliseconds(GetOptionInt32(ZSocketOption.RECOVERY_IVL)); }
-			set { SetOption(ZSocketOption.RECOVERY_IVL, (int)value.TotalMilliseconds); }
+			get => TimeSpan.FromMilliseconds(GetOptionInt32(ZSocketOption.RECOVERY_IVL));
+			set => SetOption(ZSocketOption.RECOVERY_IVL, (int)value.TotalMilliseconds);
 		}
 
 		public bool RequestCorrelate
 		{
-			get { return GetOptionInt32(ZSocketOption.REQ_CORRELATE) == 1; }
-			set { SetOption(ZSocketOption.REQ_CORRELATE, value ? 1 : 0); }
+			get => GetOptionInt32(ZSocketOption.REQ_CORRELATE) == 1;
+			set => SetOption(ZSocketOption.REQ_CORRELATE, value ? 1 : 0);
 		}
 
 		public bool RequestRelaxed
 		{
-			get { return GetOptionInt32(ZSocketOption.REQ_RELAXED) == 1; }
-			set { SetOption(ZSocketOption.REQ_RELAXED, value ? 1 : 0); }
+			get => GetOptionInt32(ZSocketOption.REQ_RELAXED) == 1;
+			set => SetOption(ZSocketOption.REQ_RELAXED, value ? 1 : 0);
 		}
 
 		public bool RouterHandover
 		{
-			get { return GetOptionInt32(ZSocketOption.ROUTER_HANDOVER) == 1; }
-			set { SetOption(ZSocketOption.ROUTER_HANDOVER, value ? 1 : 0); }
+			get => GetOptionInt32(ZSocketOption.ROUTER_HANDOVER) == 1;
+			set => SetOption(ZSocketOption.ROUTER_HANDOVER, value ? 1 : 0);
 		}
 
 		public RouterMandatory RouterMandatory
 		{
-			get { return (RouterMandatory)GetOptionInt32(ZSocketOption.ROUTER_MANDATORY); }
-			set { SetOption(ZSocketOption.ROUTER_MANDATORY, (int)value); }
+			get => (RouterMandatory)GetOptionInt32(ZSocketOption.ROUTER_MANDATORY);
+			set => SetOption(ZSocketOption.ROUTER_MANDATORY, (int)value);
 		}
 
 		public bool RouterRaw
 		{
-			get { return GetOptionInt32(ZSocketOption.ROUTER_RAW) == 1; }
-			set { SetOption(ZSocketOption.ROUTER_RAW, value ? 1 : 0); }
+			get => GetOptionInt32(ZSocketOption.ROUTER_RAW) == 1;
+			set => SetOption(ZSocketOption.ROUTER_RAW, value ? 1 : 0);
 		}
 
 		/// <summary>
@@ -1466,8 +1381,8 @@ namespace ZeroMQ
 		/// </summary>
 		public int SendBufferSize
 		{
-			get { return GetOptionInt32(ZSocketOption.SNDBUF); }
-			set { SetOption(ZSocketOption.SNDBUF, value); }
+			get => GetOptionInt32(ZSocketOption.SNDBUF);
+			set => SetOption(ZSocketOption.SNDBUF, value);
 		}
 
 		/// <summary>
@@ -1475,8 +1390,8 @@ namespace ZeroMQ
 		/// </summary>
 		public int SendHighWatermark
 		{
-			get { return GetOptionInt32(ZSocketOption.SNDHWM); }
-			set { SetOption(ZSocketOption.SNDHWM, value); }
+			get => GetOptionInt32(ZSocketOption.SNDHWM);
+			set => SetOption(ZSocketOption.SNDHWM, value);
 		}
 
 		/// <summary>
@@ -1484,8 +1399,8 @@ namespace ZeroMQ
 		/// </summary>
 		public TimeSpan SendTimeout
 		{
-			get { return TimeSpan.FromMilliseconds(GetOptionInt32(ZSocketOption.SNDTIMEO)); }
-			set { SetOption(ZSocketOption.SNDTIMEO, (int)value.TotalMilliseconds); }
+			get => TimeSpan.FromMilliseconds(GetOptionInt32(ZSocketOption.SNDTIMEO));
+			set => SetOption(ZSocketOption.SNDTIMEO, (int)value.TotalMilliseconds);
 		}
 
 		/// <summary>
@@ -1493,8 +1408,8 @@ namespace ZeroMQ
 		/// </summary>
 		public TcpKeepaliveBehaviour TcpKeepAlive
 		{
-			get { return (TcpKeepaliveBehaviour)GetOptionInt32(ZSocketOption.TCP_KEEPALIVE); }
-			set { SetOption(ZSocketOption.TCP_KEEPALIVE, (int)value); }
+			get => (TcpKeepaliveBehaviour)GetOptionInt32(ZSocketOption.TCP_KEEPALIVE);
+			set => SetOption(ZSocketOption.TCP_KEEPALIVE, (int)value);
 		}
 
 		/// <summary>
@@ -1503,8 +1418,8 @@ namespace ZeroMQ
 		/// </summary>
 		public int TcpKeepAliveCount
 		{
-			get { return GetOptionInt32(ZSocketOption.TCP_KEEPALIVE_CNT); }
-			set { SetOption(ZSocketOption.TCP_KEEPALIVE_CNT, value); }
+			get => GetOptionInt32(ZSocketOption.TCP_KEEPALIVE_CNT);
+			set => SetOption(ZSocketOption.TCP_KEEPALIVE_CNT, value);
 		}
 
 		/// <summary>
@@ -1512,8 +1427,8 @@ namespace ZeroMQ
 		/// </summary>
 		public int TcpKeepAliveIdle
 		{
-			get { return GetOptionInt32(ZSocketOption.TCP_KEEPALIVE_IDLE); }
-			set { SetOption(ZSocketOption.TCP_KEEPALIVE_IDLE, value); }
+			get => GetOptionInt32(ZSocketOption.TCP_KEEPALIVE_IDLE);
+			set => SetOption(ZSocketOption.TCP_KEEPALIVE_IDLE, value);
 		}
 
 		/// <summary>
@@ -1521,26 +1436,26 @@ namespace ZeroMQ
 		/// </summary>
 		public int TcpKeepAliveInterval
 		{
-			get { return GetOptionInt32(ZSocketOption.TCP_KEEPALIVE_INTVL); }
-			set { SetOption(ZSocketOption.TCP_KEEPALIVE_INTVL, value); }
+			get => GetOptionInt32(ZSocketOption.TCP_KEEPALIVE_INTVL);
+			set => SetOption(ZSocketOption.TCP_KEEPALIVE_INTVL, value);
 		}
 
 		public int TypeOfService
 		{
-			get { return GetOptionInt32(ZSocketOption.TOS); }
-			set { SetOption(ZSocketOption.TOS, value); }
+			get => GetOptionInt32(ZSocketOption.TOS);
+			set => SetOption(ZSocketOption.TOS, value);
 		}
 
 		public bool XPubVerbose
 		{
-			get { return GetOptionInt32(ZSocketOption.XPUB_VERBOSE) == 1; }
-			set { SetOption(ZSocketOption.XPUB_VERBOSE, value ? 1 : 0); }
+			get => GetOptionInt32(ZSocketOption.XPUB_VERBOSE) == 1;
+			set => SetOption(ZSocketOption.XPUB_VERBOSE, value ? 1 : 0);
 		}
 
 		public string ZAPDomain
 		{
-			get { return GetOptionString(ZSocketOption.ZAP_DOMAIN); }
-			set { SetOption(ZSocketOption.ZAP_DOMAIN, value); }
+			get => GetOptionString(ZSocketOption.ZAP_DOMAIN);
+			set => SetOption(ZSocketOption.ZAP_DOMAIN, value);
 		}
 
 		/// <summary>
@@ -1568,14 +1483,12 @@ namespace ZeroMQ
 		/// and allow TCP transport to accept connections from any IP.
 		/// </summary>
 		public void ClearTcpAcceptFilter()
-		{
-			SetOption(ZSocketOption.TCP_ACCEPT_FILTER, (string)null);
-		}
+			=> SetOption(ZSocketOption.TCP_ACCEPT_FILTER, (string)null);
 
 		public bool IPv4Only
 		{
-			get { return GetOptionInt32(ZSocketOption.IPV4_ONLY) == 1; }
-			set { SetOption(ZSocketOption.IPV4_ONLY, value ? 1 : 0); }
+			get => GetOptionInt32(ZSocketOption.IPV4_ONLY) == 1;
+			set => SetOption(ZSocketOption.IPV4_ONLY, value ? 1 : 0);
 		}
 
 		private void EnsureNotDisposed()

@@ -17,10 +17,7 @@ namespace ZeroMQ
 		/// Gets and protected sets the default Encoding.
 		/// Note: Do not set the Encoding after ZContext.Create.
 		/// </summary>
-		public static Encoding Encoding
-		{
-			get { return _encoding; }
-		}
+		public static Encoding Encoding => _encoding;
 
 		private static readonly object SyncObject = new object();
 
@@ -64,24 +61,17 @@ namespace ZeroMQ
 		/// </summary>
 		/// <returns><see cref="ZContext"/></returns>
 		public static ZContext Create()
-		{
-			return new ZContext();
-		}
+			=> new ZContext();
 
 		~ZContext()
-		{
-			Dispose(false);
-		}
+			=> Dispose(false);
 
 		private IntPtr _contextPtr;
 
 		/// <summary>
 		/// Gets a handle to the native ZeroMQ context.
 		/// </summary>
-		public IntPtr ContextPtr
-		{
-			get { return _contextPtr; }
-		}
+		public IntPtr ContextPtr => _contextPtr;
 
 		public static bool Has(string capability)
 		{
@@ -96,14 +86,10 @@ namespace ZeroMQ
 		}
 
 		public static void Proxy(ZSocket frontend, ZSocket backend)
-		{
-			Proxy(frontend, backend, null);
-		}
+			=> Proxy(frontend, backend, null);
 
 		public static bool Proxy(ZSocket frontend, ZSocket backend, out ZError error)
-		{
-			return Proxy(frontend, backend, null, out error);
-		}
+			=> Proxy(frontend, backend, null, out error);
 
 		public static void Proxy(ZSocket frontend, ZSocket backend, ZSocket capture)
 		{
@@ -137,14 +123,10 @@ namespace ZeroMQ
 		}
 
 		public static void ProxySteerable(ZSocket frontend, ZSocket backend, ZSocket control)
-		{
-			ProxySteerable(frontend, backend, null, control);
-		}
+			=> ProxySteerable(frontend, backend, null, control);
 
 		public static bool ProxySteerable(ZSocket frontend, ZSocket backend, ZSocket control, out ZError error)
-		{
-			return ProxySteerable(frontend, backend, null, control, out error);
-		}
+			=> ProxySteerable(frontend, backend, null, control, out error);
 
 		public static void ProxySteerable(ZSocket frontend, ZSocket backend, ZSocket capture, ZSocket control)
 		{
@@ -219,8 +201,8 @@ namespace ZeroMQ
 		/// </summary>
 		public int ThreadPoolSize
 		{
-			get { return GetOption(ZContextOption.IO_THREADS); }
-			set { SetOption(ZContextOption.IO_THREADS, value); }
+			get => GetOption(ZContextOption.IO_THREADS);
+			set => SetOption(ZContextOption.IO_THREADS, value);
 		}
 
 		/// <summary>
@@ -228,8 +210,8 @@ namespace ZeroMQ
 		/// </summary>
 		public int MaxSockets
 		{
-			get { return GetOption(ZContextOption.MAX_SOCKETS); }
-			set { SetOption(ZContextOption.MAX_SOCKETS, value); }
+			get => GetOption(ZContextOption.MAX_SOCKETS);
+			set => SetOption(ZContextOption.MAX_SOCKETS, value);
 		}
 
 		/// <summary>
@@ -237,8 +219,8 @@ namespace ZeroMQ
 		/// </summary>
 		public bool IPv6Enabled
 		{
-			get { return GetOption(ZContextOption.IPV6) == 1; }
-			set { SetOption(ZContextOption.IPV6, value ? 1 : 0); }
+			get => GetOption(ZContextOption.IPV6) == 1;
+			set => SetOption(ZContextOption.IPV6, value ? 1 : 0);
 		}
 
 		/// <summary>

@@ -24,24 +24,16 @@ namespace ZeroMQ
 		public SendDelegate SendMessage;
 
 		public static bool DefaultSendMessage(ZSocket socket, ZMessage message, out ZError error)
-		{
-			return socket.Send(message, out error);
-		}
+			=> socket.Send(message, out error);
 
 		protected ZPollItem(ZPoll events)
-		{
-			Events = events;
-		}
+			=> Events = events;
 
 		public static ZPollItem Create(ReceiveDelegate receiveMessage)
-		{
-			return Create(receiveMessage, null);
-		}
+			=> Create(receiveMessage, null);
 
 		public static ZPollItem CreateSender(SendDelegate sendMessage)
-		{
-			return Create(null, sendMessage);
-		}
+			=> Create(null, sendMessage);
 
 		public static ZPollItem Create(ReceiveDelegate receiveMessage, SendDelegate sendMessage)
 		{
@@ -52,18 +44,12 @@ namespace ZeroMQ
 		}
 
 		public static ZPollItem CreateReceiver()
-		{
-			return Create(DefaultReceiveMessage, null);
-		}
+			=> Create(DefaultReceiveMessage, null);
 
 		public static ZPollItem CreateSender()
-		{
-			return Create(null, DefaultSendMessage);
-		}
+			=> Create(null, DefaultSendMessage);
 
 		public static ZPollItem CreateReceiverSender()
-		{
-			return Create(DefaultReceiveMessage, DefaultSendMessage);
-		}
+			=> Create(DefaultReceiveMessage, DefaultSendMessage);
 	}
 }

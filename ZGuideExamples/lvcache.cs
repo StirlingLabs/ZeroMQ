@@ -107,9 +107,7 @@ namespace Examples
 			public string Current;
 
 			public override int GetHashCode()
-			{
-				return Topic.GetHashCode();
-			}
+				=> Topic.GetHashCode();
 		}
 	}
 }

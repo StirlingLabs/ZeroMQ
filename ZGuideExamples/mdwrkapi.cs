@@ -115,9 +115,7 @@ namespace Examples
 			}
 
 			~MajordomoWorker()
-			{
-				Dispose(false);
-			}
+				=> Dispose(false);
 
 			public void Dispose()
 			{
@@ -146,15 +144,11 @@ namespace Examples
 
 			//  Set heartbeat delay
 			public void Set_Heartbeat(int heartbeatInMs)
-			{
-				Heartbeat = TimeSpan.FromMilliseconds(heartbeatInMs);
-			}
+				=> Heartbeat = TimeSpan.FromMilliseconds(heartbeatInMs);
 
 			//  Set reconnect delay
 			public void Set_Reconnect(int reconnectInMs)
-			{
-				Reconnect = TimeSpan.FromMilliseconds(reconnectInMs);
-			}
+				=> Reconnect = TimeSpan.FromMilliseconds(reconnectInMs);
 
 
 			//  .split recv method

@@ -49,10 +49,8 @@ namespace Examples
 				socket.Linger = GLOBAL_TIMEOUT;
 			}
 
-			~FLClient() 
-			{
-				Dispose(false);
-			}
+			~FLClient()
+				=> Dispose(false);
 
 			public void Dispose()
 			{

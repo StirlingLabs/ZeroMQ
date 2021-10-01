@@ -131,9 +131,7 @@ namespace ZeroMQ
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e)
-        {
-            Load(Location);
-        }
+            => Load(Location);
 
         private void Load(string path)
         {

@@ -50,16 +50,12 @@
 		/// Forwards requests from the frontend socket to the backend socket.
 		/// </summary>
 		protected override bool FrontendHandler(ZSocket args, out ZMessage message, out ZError error)
-		{
-			return FrontendSocket.Forward(BackendSocket, out message, out error);
-		}
+			=> FrontendSocket.Forward(BackendSocket, out message, out error);
 
 		/// <summary>
 		/// Not implemented for the <see cref="PushPullDevice"/>.
 		/// </summary>
 		protected override bool BackendHandler(ZSocket args, out ZMessage message, out ZError error)
-		{
-			throw new NotSupportedException();
-		}
+			=> throw new NotSupportedException();
 	}
 }

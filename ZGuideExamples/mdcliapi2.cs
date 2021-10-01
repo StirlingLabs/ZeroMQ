@@ -64,9 +64,7 @@ namespace Examples
             }
 
             ~MajordomoClient()
-            {
-                Dispose(false);
-            }
+                => Dispose(false);
 
             public void Dispose()
             {
@@ -91,9 +89,7 @@ namespace Examples
 
             //  Set request timeout
             public void Set_Timeout(int timeoutInMs)
-            {
-                Timeout = TimeSpan.FromMilliseconds(timeoutInMs);
-            }
+                => Timeout = TimeSpan.FromMilliseconds(timeoutInMs);
 
             //  .until
             //  .skip

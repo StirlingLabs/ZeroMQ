@@ -64,9 +64,7 @@ namespace Examples
             }
 
             ~MajordomoClient()
-            {
-                Dispose(false);
-            }
+                => Dispose(false);
 
             public void Dispose()
             {
@@ -95,15 +93,11 @@ namespace Examples
 
             //  Set request timeout
             public void Set_Timeout(int timeoutInMs)
-            {
-                Timeout = TimeSpan.FromMilliseconds(timeoutInMs);
-            }
+                => Timeout = TimeSpan.FromMilliseconds(timeoutInMs);
 
             //  Set request retries
             public void Set_Retries(int retries)
-            {
-                Retries = retries;
-            }
+                => Retries = retries;
 
             //  .split send request and wait for reply
             //  Here is the {{send}} method. It sends a request to the broker and gets

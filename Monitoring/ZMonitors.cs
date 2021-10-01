@@ -30,9 +30,7 @@ namespace ZeroMQ.Monitoring
 		/// the specified socket over the inproc transport at the given endpoint.
 		/// </summary>
 		public static bool Monitor(this ZSocket socket, string endpoint, out ZError error)
-		{
-			return Monitor(socket, endpoint, ZMonitorEvents.AllEvents, out error);
-		}
+			=> Monitor(socket, endpoint, ZMonitorEvents.AllEvents, out error);
 
 		/// <summary>
 		/// Spawns a <see cref="ZSocketType.PAIR"/> socket that publishes all events for

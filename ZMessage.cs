@@ -19,9 +19,7 @@ namespace ZeroMQ
 		/// Creates an empty message.
 		/// </summary>
 		public ZMessage()
-		{ 
-			_frames = new List<ZFrame>();
-		}
+			=> _frames = new List<ZFrame>();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ZMessage"/> class.
@@ -40,9 +38,7 @@ namespace ZeroMQ
 		}
 
 		public void Dispose()
-		{
-			Dispose(true);
-		}
+			=> Dispose(true);
 
 		protected virtual void Dispose(bool disposing)
 		{
@@ -69,9 +65,7 @@ namespace ZeroMQ
 		}
 
 		public void ReplaceAt(int index, ZFrame replacement)
-		{
-			ReplaceAt(index, replacement, true);
-		}
+			=> ReplaceAt(index, replacement, true);
 
 		public ZFrame ReplaceAt(int index, ZFrame replacement, bool dispose) 
 		{
@@ -88,28 +82,20 @@ namespace ZeroMQ
 		#region IList implementation
 
 		public int IndexOf(ZFrame item)
-		{
-			return _frames.IndexOf(item);
-		}
+			=> _frames.IndexOf(item);
 
-		public void Prepend(ZFrame item) 
-		{
-			Insert(0, item);
-		}
+		public void Prepend(ZFrame item)
+			=> Insert(0, item);
 
 		public void Insert(int index, ZFrame item)
-		{
-			_frames.Insert(index, item);
-		}
+			=> _frames.Insert(index, item);
 
 		/// <summary>
 		/// Removes ZFrames. Note: Disposes the ZFrame.
 		/// </summary>
 		/// <returns>The <see cref="ZeroMQ.ZFrame"/>.</returns>
 		public void RemoveAt(int index)
-		{
-			RemoveAt(index, true);
-		}
+			=> RemoveAt(index, true);
 
 		/// <summary>
 		/// Removes ZFrames.
@@ -217,9 +203,7 @@ namespace ZeroMQ
 		}
 
 		public String PopString()
-		{
-			return PopString(ZContext.Encoding);
-		}
+			=> PopString(ZContext.Encoding);
 
 		public String PopString(Encoding encoding)
 		{
@@ -257,14 +241,8 @@ namespace ZeroMQ
 
 		public ZFrame this[int index]
 		{
-			get
-			{
-				return _frames[index];
-			}
-			set
-			{
-				_frames[index] = value;
-			}
+			get => _frames[index];
+			set => _frames[index] = value;
 		}
 
 		#endregion
@@ -272,24 +250,16 @@ namespace ZeroMQ
 		#region ICollection implementation
 
 		public void Append(ZFrame item)
-		{
-			Add(item);
-		}
+			=> Add(item);
 
 		public void AppendRange(IEnumerable<ZFrame> items)
-		{
-			AddRange(items);
-		}
+			=> AddRange(items);
 
 		public void Add(ZFrame item)
-		{
-			_frames.Add(item);
-		}
+			=> _frames.Add(item);
 
 		public void AddRange(IEnumerable<ZFrame> items)
-		{
-			_frames.AddRange(items);
-		}
+			=> _frames.AddRange(items);
 
 		public void Clear()
 		{
@@ -301,9 +271,7 @@ namespace ZeroMQ
 		}
 
 		public bool Contains(ZFrame item)
-		{
-			return _frames.Contains(item);
-		}
+			=> _frames.Contains(item);
 
 		void ICollection<ZFrame>.CopyTo(ZFrame[] array, int arrayIndex)
 		{
@@ -338,31 +306,26 @@ namespace ZeroMQ
 			return item;
 		}
 
-		public int Count { get { return _frames.Count; } }
+		public int Count => _frames.Count;
 
-		bool ICollection<ZFrame>.IsReadOnly { get { return false; } }
+		bool ICollection<ZFrame>.IsReadOnly => false;
 
 		#endregion
 
 		#region IEnumerable implementation
 
 		public IEnumerator<ZFrame> GetEnumerator()
-		{
-			return _frames.GetEnumerator();
-		}
+			=> _frames.GetEnumerator();
 
 		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
+			=> GetEnumerator();
+
 		#endregion
 
 		#region ICloneable implementation
 
 		public object Clone()
-		{
-			return Duplicate();
-		}
+			=> Duplicate();
 
 		public ZMessage Duplicate() 
 		{

@@ -34,9 +34,7 @@ namespace Examples
 	public static class MdpExtensions
 	{
 		public static bool StrHexEq(this ZFrame zfrm, MdpCommon.MdpwCmd cmd)
-		{
-			return zfrm.ToString().ToMdCmd().Equals(cmd);
-		}
+			=> zfrm.ToString().ToMdCmd().Equals(cmd);
 
 		/// <summary>
 		/// Parse hex value to MdpwCmd, if parsing fails, return 0
@@ -57,15 +55,11 @@ namespace Examples
 		}
 
 		public static string ToHexString(this MdpCommon.MdpwCmd cmd)
-		{
-			return cmd.ToString("X");
-		}
+			=> cmd.ToString("X");
 
 		public static void DumpString(this string format, params object[] args)
-		{
 			// if you dont wanna see utc timeshift, remove zzz and use DateTime.UtcNow instead
-			Console.WriteLine("[{0}] - {1}", string.Format("{0:yyyy-MM-ddTHH:mm:ss:fffffff zzz}", DateTime.Now), string.Format(format, args));
-		}
+			=> Console.WriteLine("[{0}] - {1}", string.Format("{0:yyyy-MM-ddTHH:mm:ss:fffffff zzz}", DateTime.Now), string.Format(format, args));
 
 		/// <summary>
 		/// Based on zmsg_dump 

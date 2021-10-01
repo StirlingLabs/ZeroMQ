@@ -43,9 +43,7 @@
 
 		protected ZDevice(ZContext context)
 			: base()
-		{
-			Context = context;
-		}
+			=> Context = context;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ZDevice"/> class.

@@ -32,80 +32,51 @@ namespace ZeroMQ.lib
 		}
 
 		public static DispoIntPtr AllocString(string str, out int byteCount)
-		{
-			return AllocStringNative(str, out byteCount);
-		}
+			=> AllocStringNative(str, out byteCount);
 
 		public static implicit operator IntPtr(DispoIntPtr dispoIntPtr)
-		{
-			return dispoIntPtr == null ? IntPtr.Zero : dispoIntPtr._ptr;
-		}
+			=> dispoIntPtr == null ? IntPtr.Zero : dispoIntPtr._ptr;
 
 		unsafe public static explicit operator void*(DispoIntPtr dispoIntPtr)
-		{
-			return dispoIntPtr == null ? (void*)null : (void*)dispoIntPtr._ptr;
-		}
+			=> dispoIntPtr == null ? (void*)null : (void*)dispoIntPtr._ptr;
 
 		unsafe public static explicit operator byte*(DispoIntPtr dispoIntPtr)
-		{
-			return dispoIntPtr == null ? (byte*)null : (byte*)dispoIntPtr._ptr;
-		}
+			=> dispoIntPtr == null ? (byte*)null : (byte*)dispoIntPtr._ptr;
 
 		unsafe public static explicit operator sbyte*(DispoIntPtr dispoIntPtr)
-		{
-			return dispoIntPtr == null ? (sbyte*)null : (sbyte*)dispoIntPtr._ptr;
-		}
+			=> dispoIntPtr == null ? (sbyte*)null : (sbyte*)dispoIntPtr._ptr;
 
 		unsafe public static explicit operator short*(DispoIntPtr dispoIntPtr)
-		{
-			return dispoIntPtr == null ? (short*)null : (short*)dispoIntPtr._ptr;
-		}
+			=> dispoIntPtr == null ? (short*)null : (short*)dispoIntPtr._ptr;
 
 		unsafe public static explicit operator ushort*(DispoIntPtr dispoIntPtr)
-		{
-			return dispoIntPtr == null ? (ushort*)null : (ushort*)dispoIntPtr._ptr;
-		}
+			=> dispoIntPtr == null ? (ushort*)null : (ushort*)dispoIntPtr._ptr;
 
 		unsafe public static explicit operator char*(DispoIntPtr dispoIntPtr)
-		{
-			return dispoIntPtr == null ? (char*)null : (char*)dispoIntPtr._ptr;
-		}
+			=> dispoIntPtr == null ? (char*)null : (char*)dispoIntPtr._ptr;
 
 		unsafe public static explicit operator int*(DispoIntPtr dispoIntPtr)
-		{
-			return dispoIntPtr == null ? (int*)null : (int*)dispoIntPtr._ptr;
-		}
+			=> dispoIntPtr == null ? (int*)null : (int*)dispoIntPtr._ptr;
 
 		unsafe public static explicit operator uint*(DispoIntPtr dispoIntPtr)
-		{
-			return dispoIntPtr == null ? (uint*)null : (uint*)dispoIntPtr._ptr;
-		}
+			=> dispoIntPtr == null ? (uint*)null : (uint*)dispoIntPtr._ptr;
 
 		unsafe public static explicit operator long*(DispoIntPtr dispoIntPtr)
-		{
-			return dispoIntPtr == null ? (long*)null : (long*)dispoIntPtr._ptr;
-		}
+			=> dispoIntPtr == null ? (long*)null : (long*)dispoIntPtr._ptr;
 
 		unsafe public static explicit operator ulong*(DispoIntPtr dispoIntPtr)
-		{
-			return dispoIntPtr == null ? (ulong*)null : (ulong*)dispoIntPtr._ptr;
-		}
+			=> dispoIntPtr == null ? (ulong*)null : (ulong*)dispoIntPtr._ptr;
 
 		private bool isAllocated;
 
 		private IntPtr _ptr;
 
-		public IntPtr Ptr
-		{
-			get { return _ptr; }
-		}
+		public IntPtr Ptr => _ptr;
 
 		internal DispoIntPtr() { }
 
 		~DispoIntPtr()
-		{
-			Dispose(false);
-		}
+			=> Dispose(false);
 
 		public void Dispose()
 		{

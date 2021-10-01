@@ -15,14 +15,12 @@ namespace ZeroMQ
     public class ZSymbol
 	{
 		internal protected ZSymbol(int errno)
-		{
-			this._num = errno;
-		}
+			=> this._num = errno;
 
 		private int _num;
-		public int Number { get { return _num; } }
+		public int Number => _num;
 
-        public string Name
+		public string Name
         {
             get
             {
@@ -31,9 +29,9 @@ namespace ZeroMQ
             }
         }
 
-        public string Text { get { return Marshal.PtrToStringAnsi(zmq.strerror(_num)); }  }
+        public string Text => Marshal.PtrToStringAnsi(zmq.strerror(_num));
 
-		private static void PickupConstantSymbols<T>(ref IDictionary<ZSymbol, string> symbols)
+        private static void PickupConstantSymbols<T>(ref IDictionary<ZSymbol, string> symbols)
             where T : ZSymbol
 		{
 			var type = typeof(T);
@@ -77,31 +75,23 @@ namespace ZeroMQ
 
         [Obsolete]
 		public bool IsEmpty()
-		{
-            // TODO: what is the intended semantics of this method? The following expression is always false, since default(ZSymbol) == null.
-			return this == default(ZSymbol);
-		}
+			// TODO: what is the intended semantics of this method? The following expression is always false, since default(ZSymbol) == null.
+			=> this == default(ZSymbol);
 
 		static IDictionary<ZSymbol, string> _zsymbolToName;
 
 		public static IEnumerable<ZSymbol> Find(string symbol)
-		{
-			return _zsymbolToName
+			=> _zsymbolToName
 				.Where(s => s.Value != null && (s.Value == symbol)).Select(x => x.Key);
-		}
 
 		public static IEnumerable<ZSymbol> Find(string ns, int num)
-		{
-			return _zsymbolToName
+			=> _zsymbolToName
 				.Where(s => s.Value != null && (s.Value.StartsWith(ns) && s.Key._num == num)).Select(x => x.Key);
-		}
 
 		public override bool Equals(object obj)
-		{
-			return ZSymbol.Equals(this, obj);
-		}
+			=> ZSymbol.Equals(this, obj);
 
-	    public new static bool Equals(object a, object b)
+		public new static bool Equals(object a, object b)
 	    {
 	        if (object.ReferenceEquals(a, b))
 	        {
@@ -115,19 +105,12 @@ namespace ZeroMQ
 	    }
 
 		public override int GetHashCode()
-		{
-			return Number.GetHashCode();
-		}
+			=> Number.GetHashCode();
 
 		public override string ToString()
-		{
-			return Name + "(" + Number + "): " + Text;
-		}
+			=> Name + "(" + Number + "): " + Text;
 
 		public static implicit operator int(ZSymbol errnum)
-		{
-			return errnum.Number;
-		}
-
+			=> errnum.Number;
 	}
 }

@@ -542,23 +542,17 @@ namespace ZeroMQ
         }
 
         private static void Info(string msg)
-        {
-            Console.WriteLine("I: " + DateTime.Now.ToLongDateString() + " ZAuth: " + msg);
-        }
+            => Console.WriteLine("I: " + DateTime.Now.ToLongDateString() + " ZAuth: " + msg);
 
         private static void Error(string msg)
-        {
-            Console.WriteLine("E: " + DateTime.Now.ToLongDateString() + " ZAuth: " + msg);
-        }
+            => Console.WriteLine("E: " + DateTime.Now.ToLongDateString() + " ZAuth: " + msg);
 
 
         /// <summary>
         /// Finalizes an instance of the <see cref="ZSocket"/> class.
         /// </summary>
         ~ZAuth()
-        {
-            Dispose(false);
-        }
+            => Dispose(false);
 
         public void Dispose()
         {
@@ -582,9 +576,7 @@ namespace ZeroMQ
 		/// Close the current  zauth/zactor.
 		/// </summary>
 		public void Close()
-        {
-            Terminated = true;
-        }
+            => Terminated = true;
 
         /// <summary>
         /// Load hash table from a text file in name=value format; hash table must
