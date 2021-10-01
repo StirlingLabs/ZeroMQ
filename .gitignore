@@ -15,8 +15,8 @@ packages/*
 *.suo
 *.nupkg
 
-amd64/*
-i386/*
+LocalBin/*
+!LocalBin/.keep
 
 ZeroMQ.*.zip
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Runtime.Serialization;
 using System.Threading;
 
@@ -138,8 +139,6 @@ namespace Examples
 		[System.Diagnostics.DebuggerStepThrough]
 		public static object Invoke(MethodInfo method, object target, params object[] args)
 		{
-			// source : http://csharptest.net/350/throw-innerexception-without-the-loosing-stack-trace/
-
 			try
 			{
 				return method.Invoke(target, args);
@@ -147,32 +146,12 @@ namespace Examples
 			catch (TException te)
 			{
 				if (te.InnerException == null)
-					throw te;
+					throw;
 
-				Exception innerException = te.InnerException;
+				ExceptionDispatchInfo.Capture(te.InnerException).Throw();
 
-				var savestack = (ThreadStart)Delegate.CreateDelegate(typeof(ThreadStart), innerException, "InternalPreserveStackTrace", false, false);
-				if (savestack != null) savestack();
-
-				throw innerException; // -- now we can re-throw without trashing the stack /**/
-
-				// PreserveStackTrace(te);
-				// throw te;
+				throw;
 			}
-		}
-
-		// http://stackoverflow.com/a/2085377/1352471 (Anton Tykhyy on In C#, how can I rethrow InnerException without losing stack trace?)
-		static void PreserveStackTrace(Exception e)
-		{
-			var ctx = new StreamingContext(StreamingContextStates.CrossAppDomain);
-			var mgr = new ObjectManager(null, ctx);
-			var si = new SerializationInfo(e.GetType(), new FormatterConverter());
-
-			e.GetObjectData(si, ctx);
-			mgr.RegisterObject(e, 1, si); // prepare for SetObjectData
-			mgr.DoFixups(); // ObjectManager calls SetObjectData
-
-			// voila, e is unmodified save for _remoteStackTraceString
 		}
 
 	}

@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace ZeroMQ.Monitoring
 {
 	using System;
@@ -11,17 +13,13 @@ namespace ZeroMQ.Monitoring
 		internal ZMonitorFileDescriptorEventArgs(ZMonitor monitor, ZMonitorEventData data)
 			: base(monitor, data)
 		{
-			if (Platform.Kind == PlatformKind.Posix)
-			{
-				this.FileDescriptor_Posix = data.EventValue;
-			}
-			else if (Platform.Kind == PlatformKind.Win32)
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
 				this.FileDescriptor_Windows = new IntPtr(data.EventValue);
 			}
 			else
 			{
-				throw new PlatformNotSupportedException();
+				this.FileDescriptor_Posix = data.EventValue;
 			}
 		}
 

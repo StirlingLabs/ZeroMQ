@@ -21,13 +21,7 @@ namespace ZeroMQ
 
 #pragma warning restore 649
 
-        static ZPollItems()
-		{
-			// Initialize static Fields
-			Platform.SetupImplementation(typeof(ZPollItems));
-		}
-
-		public static bool PollIn(this ZSocket socket, ZPollItem item, out ZMessage incoming, out ZError error, TimeSpan? timeout = null)
+  	public static bool PollIn(this ZSocket socket, ZPollItem item, out ZMessage incoming, out ZError error, TimeSpan? timeout = null)
 		{
 			incoming = null;
 			return Poll(socket, item, ZPoll.In, ref incoming, out error, timeout);

@@ -1,9 +1,15 @@
 
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZeroMQ.netcore", "ZeroMQ.netcore.csproj", "{F5C4F877-ABFF-408C-BF77-8D61D1D38D13}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZeroMQ", "ZeroMQ.csproj", "{F5C4F877-ABFF-408C-BF77-8D61D1D38D13}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZGuideExamples.netcore", "ZGuideExamples\ZGuideExamples.netcore.csproj", "{4B72A50C-CA9D-4172-B762-29281B36AD11}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZGuideExamples", "ZGuideExamples\ZGuideExamples.csproj", "{4B72A50C-CA9D-4172-B762-29281B36AD11}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{2C6074EA-C406-4F95-B34F-4101D256D60E}"
+ProjectSection(SolutionItems) = preProject
+	LICENSE.txt = LICENSE.txt
+	README.md = README.md
+EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

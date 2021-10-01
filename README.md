@@ -6,41 +6,38 @@
 clrzmq4 is a .NET wrapper around the native [ZeroMQ/libzmq](https://github.com/zeromq/libzmq) library, and
 provides the ZeroMQ namespace.
 
-It is written in C# 5.0, and can be opened and built using Visual Studio 2012+ and MonoDevelop 5+.
+It was origionally written in C# 5.0, but is now written in C# 9.0.
 
-It is built as AnyCPU to run on .NET Framework 4.0+ and mono 5+, and can currently load native shared libraries for
-i386 and amd64 on Windows, GNU/Linux and Mac OS X.
+While it is built as AnyCPU, you must load native shared libraries for
+your platform and handle the linkage. It will try to bind to `libzmq`.
 
-The pre-built [nuget.org/packages/ZeroMQ/](https://www.nuget.org/packages/ZeroMQ/) includes native shared libraries for Windows (libzmq 4.1.n) and GNU/Linux (libzmq 4.1.n), for Windows i386 and linux/MacOSX x86_64 architectures.
-
-You can place any native shared library or dynamic link libraries into a folder ~/Downloads/clrzmq4/amd64 or ~/Downloads/clrzmq4/i386, any libzmq.dll/.so/.dylib 3.x 4.x will work, important is just that the file name is `libzmq.dll`.
-
-```
-    sudo apt-get install libzmq3-dev
-```
+You can load any version 4.x native shared library or dynamic link libraries of `libzmq`
+into the process, important is just that the file name is `libzmq.dll`,
+`libzmq.so` or `libzmq.dylib` or that your DllImportResolver implementation
+can redirect `libzmq` to your native library's correct file name.
 
 Get it
 - by [downloading the Release](https://github.com/zeromq/clrzmq4/releases)
-- using `git clone https://github.com/zeromq/clrzmq4`
+- using `git clone https://github.com/StirlingLabs/clrzmq4`
 - using [nuget](https://www.nuget.org/packages/ZeroMQ/) `PM> Install-Package ZeroMQ` or by [downloading the nupkg](https://www.nuget.org/api/v2/package/ZeroMQ/)
 
 Open it
-- using MonoDevelop or Visual Studio
-- using Texteditor gedit or GNU emacs
+- using your favorite IDE
 
 Run it
 - You can't run ZeroMQ/clrzmq4 directly, because this is a library.
 - using mono framework:
 ```
-msbuild clrzmq4.mono.sln /p:Configuration=Release
+msbuild ZeroMQ.sln /p:Configuration=Release
 mono bin/Release/ZGuideExamples.exe Espresso
 ```
 - using dotnet framwork
 ```
-nuget restore clrzmq4.netcore.sln
-dotnet msbuild clrzmq4.netcore.sln
-dotnet run --project ZGuideExamples/ZGuideExamples.netcore.csproj Espresso
+nuget restore ZeroMQ.sln
+dotnet msbuild ZeroMQ.sln
+dotnet run --project ZGuideExamples Espresso
 ```
+_Note that ZGuideExamples provides it's own v4.x native library in it's output._
 
 Read [ZeroMQ - The Guide](http://zguide.zeromq.org/cs:all)
 - ZeroMQ - The Guide [Examples in C#](http://github.com/metadings/zguide/tree/master/examples/C%23)

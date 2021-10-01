@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ZGuideExamples</RootNamespace>
+    <AssemblyName>ZGuideExamples</AssemblyName>
+    <LangVersion>9</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ZeroMQ.csproj">
+      <SetTargetFramework>TargetFramework=$(TargetFramework)</SetTargetFramework>
+      <IncludeInPackage>false</IncludeInPackage>
+    </ProjectReference>
+  </ItemGroup>
+
+  <Target Name="CopyLocalBinToOutDir" AfterTargets="">
+    <ItemGroup>
+      <LocalBinFiles Include="..\LocalBin\**" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LocalBinFiles)" DestinationFolder="$(OutDir)" UseHardlinksIfPossible="true" />
+  </Target>
+</Project>

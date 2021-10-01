@@ -213,7 +213,7 @@ namespace ZeroMQ
                 byte[])cert.PublicKey.Clone(),
                 cert.SecretKey != null ? (byte[])cert.SecretKey.Clone() : new byte[32])
             {
-                metadata = cert.metadata.ToDictionary(entry => string.Copy(entry.Key), entry => string.Copy(entry.Value))
+                metadata = new(cert.metadata)
             };
         }
 
