@@ -3,84 +3,70 @@ using ZeroMQ.lib;
 
 namespace ZeroMQ.Monitoring
 {
+    /// <summary>
+    /// Defines extension methods related to monitoring for <see cref="ZSocket"/> instances.
+    /// </summary>
+    public static class ZMonitors
+    {
+        /// <summary>
+        /// Spawns a <see cref="ZSocketType.PAIR"/> socket that publishes all events for
+        /// the specified socket over the inproc transport at the given endpoint.
+        /// </summary>
+        public static bool Monitor(this ZSocket socket, string endpoint)
+        {
+            if (!Monitor(socket, endpoint, ZMonitorEvents.AllEvents, out var error))
+                throw new ZException(error);
+            return true;
+        }
 
-	/// <summary>
-	/// Defines extension methods related to monitoring for <see cref="ZSocket"/> instances.
-	/// </summary>
-	public static class ZMonitors
-	{
-		/// <summary>
-		/// Spawns a <see cref="ZSocketType.PAIR"/> socket that publishes all events for
-		/// the specified socket over the inproc transport at the given endpoint.
-		/// </summary>
-		public static bool Monitor(this ZSocket socket, string endpoint)
-		{
-			if (!Monitor(socket, endpoint, ZMonitorEvents.AllEvents, out var error))
-			{
-				throw new ZException(error);
-			}
-			return true;
-		}
+        /// <summary>
+        /// Spawns a <see cref="ZSocketType.PAIR"/> socket that publishes all events for
+        /// the specified socket over the inproc transport at the given endpoint.
+        /// </summary>
+        public static bool Monitor(this ZSocket socket, string endpoint, out ZError error)
+            => Monitor(socket, endpoint, ZMonitorEvents.AllEvents, out error);
 
-		/// <summary>
-		/// Spawns a <see cref="ZSocketType.PAIR"/> socket that publishes all events for
-		/// the specified socket over the inproc transport at the given endpoint.
-		/// </summary>
-		public static bool Monitor(this ZSocket socket, string endpoint, out ZError error)
-			=> Monitor(socket, endpoint, ZMonitorEvents.AllEvents, out error);
+        /// <summary>
+        /// Spawns a <see cref="ZSocketType.PAIR"/> socket that publishes all events for
+        /// the specified socket over the inproc transport at the given endpoint.
+        /// </summary>
+        public static bool Monitor(this ZSocket socket, string endpoint, ZMonitorEvents eventsToMonitor)
+        {
+            if (!Monitor(socket, endpoint, eventsToMonitor, out var error))
+                throw new ZException(error);
+            return true;
+        }
 
-		/// <summary>
-		/// Spawns a <see cref="ZSocketType.PAIR"/> socket that publishes all events for
-		/// the specified socket over the inproc transport at the given endpoint.
-		/// </summary>
-		public static bool Monitor(this ZSocket socket, string endpoint, ZMonitorEvents eventsToMonitor)
-		{
-			if (!Monitor(socket, endpoint, eventsToMonitor, out var error))
-			{
-				throw new ZException(error);
-			}
-			return true;
-		}
+        /// <summary>
+        /// Spawns a <see cref="ZSocketType.PAIR"/> socket that publishes all events for
+        /// the specified socket over the inproc transport at the given endpoint.
+        /// </summary>
+        public static bool Monitor(this ZSocket socket, string endpoint, ZMonitorEvents eventsToMonitor, out ZError error)
+        {
+            if (socket == null)
+                throw new ArgumentNullException(nameof(socket));
 
-		/// <summary>
-		/// Spawns a <see cref="ZSocketType.PAIR"/> socket that publishes all events for
-		/// the specified socket over the inproc transport at the given endpoint.
-		/// </summary>
-		public static bool Monitor(this ZSocket socket, string endpoint, ZMonitorEvents eventsToMonitor, out ZError error)
-		{
-			if (socket == null)
-			{
-				throw new ArgumentNullException(nameof(socket));
-			}
+            if (endpoint == null)
+                throw new ArgumentNullException(nameof(endpoint));
 
-			if (endpoint == null)
-			{
-				throw new ArgumentNullException(nameof(endpoint));
-			}
+            if (endpoint == string.Empty)
+                throw new ArgumentException("Unable to publish socket events to an empty endpoint.", nameof(endpoint));
 
-			if (endpoint == string.Empty)
-			{
-				throw new ArgumentException("Unable to publish socket events to an empty endpoint.", nameof(endpoint));
-			}
+            error = ZError.None;
 
-			error = ZError.None;
+            using var endpointPtr = DispoIntPtr.AllocString(endpoint);
 
-			using (var endpointPtr = DispoIntPtr.AllocString(endpoint))
-			{
-				while (-1 == zmq.socket_monitor(socket.SocketPtr, endpointPtr, (int)eventsToMonitor))
-				{
-					error = ZError.GetLastErr();
+            while (-1 == zmq.socket_monitor(socket.SocketPtr, endpointPtr, (int)eventsToMonitor))
+            {
+                error = ZError.GetLastErr();
 
-					if (error == ZError.EINTR)
-					{
-						error = default;
-						continue;
-					}
+                if (error != ZError.EINTR)
+                    return false;
 
-					return false;
-				}
-			}
-			return true;
-		}
-	}
+                error = default;
+
+            }
+            return true;
+        }
+    }
 }

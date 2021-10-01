@@ -2,217 +2,199 @@
 
 namespace ZeroMQ.Devices
 {
-	// using lib.sys;
+    // using lib.sys;
 
-	/// <summary>
-	/// The Stream to Dealer is a Device for reading 
-	/// and sending REPlies to TCP
-	/// </summary>
-	public class StreamDealerDevice : ZDevice
-	{
-		/// <summary>
-		/// The frontend <see cref="ZSocketType"/> for a queue device.
-		/// </summary>
-		public static readonly ZSocketType FrontendType = ZSocketType.STREAM;
+    /// <summary>
+    /// The Stream to Dealer is a Device for reading 
+    /// and sending REPlies to TCP
+    /// </summary>
+    public class StreamDealerDevice : ZDevice
+    {
+        /// <summary>
+        /// The frontend <see cref="ZSocketType"/> for a queue device.
+        /// </summary>
+        public static readonly ZSocketType FrontendType = ZSocketType.STREAM;
 
-		/// <summary>
-		/// The backend <see cref="ZSocketType"/> for a queue device.
-		/// </summary>
-		public static readonly ZSocketType BackendType = ZSocketType.DEALER;
-		
-		/// <summary>
-		/// Initializes a new instance of the <see cref="StreamDealerDevice"/> class.
-		/// </summary>
-		public StreamDealerDevice() : this(ZContext.Current) { }
-		/// <summary>
-		/// Initializes a new instance of the <see cref="StreamDealerDevice"/> class.
-		/// </summary>
-		public StreamDealerDevice(ZContext context)
-			: base(context, FrontendType, BackendType)
-		{ }
-		
-		/// <summary>
-		/// Initializes a new instance of the <see cref="StreamDealerDevice"/> class.
-		/// </summary>
-		public StreamDealerDevice(string frontendBindAddr, string backendBindAddr)
-			: this(ZContext.Current, frontendBindAddr, backendBindAddr)
-		{ }
+        /// <summary>
+        /// The backend <see cref="ZSocketType"/> for a queue device.
+        /// </summary>
+        public static readonly ZSocketType BackendType = ZSocketType.DEALER;
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="StreamDealerDevice"/> class.
-		/// </summary>
-		public StreamDealerDevice(ZContext context, string frontendBindAddr, string backendBindAddr)
-			: base(context, FrontendType, BackendType)
-		{
-			FrontendSetup.Bind(frontendBindAddr);
-			BackendSetup.Bind(backendBindAddr);
-		}
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StreamDealerDevice"/> class.
+        /// </summary>
+        public StreamDealerDevice() : this(ZContext.Current) { }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StreamDealerDevice"/> class.
+        /// </summary>
+        public StreamDealerDevice(ZContext context)
+            : base(context, FrontendType, BackendType) { }
 
-		/// <summary>
-		/// Forwards requests from the frontend socket to the backend socket.
-		/// </summary>
-		protected override bool FrontendHandler(ZSocket sock, out ZMessage message, out ZError error)
-		{
-			error = default;
-			message = null;
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StreamDealerDevice"/> class.
+        /// </summary>
+        public StreamDealerDevice(string frontendBindAddr, string backendBindAddr)
+            : this(ZContext.Current, frontendBindAddr, backendBindAddr) { }
 
-			// receiving scope
-			// STREAM: get 2 frames, identity and body
-			ZMessage incoming = null;
-			// IPAddress address = null;
-			if (!ReceiveMsg(sock, ref incoming, out var address, out error))
-			{
-				return false;
-			}
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StreamDealerDevice"/> class.
+        /// </summary>
+        public StreamDealerDevice(ZContext context, string frontendBindAddr, string backendBindAddr)
+            : base(context, FrontendType, BackendType)
+        {
+            FrontendSetup.Bind(frontendBindAddr);
+            BackendSetup.Bind(backendBindAddr);
+        }
 
-			// sending scope
-			// DEALER: forward
-			using (incoming)
-			{
-				if (incoming[1].Length == 0)
-				{
-					return true; // Ignore the Empty one
-				}
+        /// <summary>
+        /// Forwards requests from the frontend socket to the backend socket.
+        /// </summary>
+        protected override bool FrontendHandler(ZSocket sock, out ZMessage message, out ZError error)
+        {
+            error = default;
+            message = null;
 
-				// Prepend empty delimiter between Identity frame and Data frame
-				incoming.Insert(1, new());
+            // receiving scope
+            // STREAM: get 2 frames, identity and body
+            ZMessage incoming = null;
+            // IPAddress address = null;
+            if (!ReceiveMsg(sock, ref incoming, out var address, out error))
+                return false;
 
-				// Prepend Peer-Address
-				incoming.Insert(2, new(address));
+            // sending scope
+            // DEALER: forward
+            using (incoming)
+            {
+                if (incoming[1].Length == 0)
+                    return true; // Ignore the Empty one
 
-				if (!BackendSocket.Send(incoming, /* ZSocketFlags.DontWait, */ out error))
-				{
-					return false;
-				}
-				incoming.Dismiss();
-			}
+                // Prepend empty delimiter between Identity frame and Data frame
+                incoming.Insert(1, new());
 
-			return true;
-		}
+                // Prepend Peer-Address
+                incoming.Insert(2, new(address));
 
-		static bool ReceiveMsg(ZSocket sock, ref ZMessage message, out string address, out ZError error)
-		{
-			error = ZError.None;
-			// address = IPAddress.None;
-			address = string.Empty;
+                if (!BackendSocket.Send(incoming, /* ZSocketFlags.DontWait, */ out error))
+                    return false;
 
-			// STREAM: read frames: identity, body
+                incoming.Dismiss();
 
-			// read the ip4 address from (ZFrame)frame.GetOption("Peer-Address")
+                return true;
+            }
+        }
 
-			var receiveCount = 2;
-			do
-			{
-				var frame = ZFrame.CreateEmpty();
+        static bool ReceiveMsg(ZSocket sock, ref ZMessage message, out string address, out ZError error)
+        {
+            error = ZError.None;
+            // address = IPAddress.None;
+            address = string.Empty;
 
-				while (-1 == zmq.msg_recv(frame.Ptr, sock.SocketPtr, (int)ZSocketFlags.More))
-				{
-					error = ZError.GetLastErr();
+            // STREAM: read frames: identity, body
 
-					if (error == ZError.EINTR) 
-					{
-						error = default;
-						continue;
-					}
+            // read the ip4 address from (ZFrame)frame.GetOption("Peer-Address")
 
-					frame.Dispose();
-					return false;
-				}
+            var receiveCount = 2;
+            do
+            {
+                var frame = ZFrame.CreateEmpty();
 
-				if (message == null)
-				{
-					message = new();
-				}
-				message.Add(frame);
+                while (-1 == zmq.msg_recv(frame.Ptr, sock.SocketPtr, (int)ZSocketFlags.More))
+                {
+                    error = ZError.GetLastErr();
 
-				if (receiveCount == 2)
-				{
-					if (default == (address = frame.GetOption("Peer-Address", out error)))
-					{
-						// just ignore
-						error = default;
-						address = string.Empty;
-					}
-				}
+                    if (error != ZError.EINTR)
+                    {
+                        frame.Dispose();
+                        return false;
+                    }
 
-			} while (--receiveCount > 0);
+                    error = default;
+                }
 
-			return true;
-		}
+                message ??= new();
+                message.Add(frame);
+
+                if (receiveCount != 2)
+                    continue;
+
+                if (default != (address = frame.GetOption("Peer-Address", out error)))
+                    continue;
+
+                // just ignore
+                error = default;
+                address = string.Empty;
+
+            } while (--receiveCount > 0);
+
+            return true;
+        }
 
 
-		/// <summary>
-		/// Forwards replies from the backend socket to the frontend socket.
-		/// </summary>
-		protected override bool BackendHandler(ZSocket sock, out ZMessage message, out ZError error)
-		{
-			error = default;
-			message = null;
+        /// <summary>
+        /// Forwards replies from the backend socket to the frontend socket.
+        /// </summary>
+        protected override bool BackendHandler(ZSocket sock, out ZMessage message, out ZError error)
+        {
+            error = default;
+            message = null;
 
-			// receiving scope
-			// DEALER: normal movemsg
-			ZMessage incoming = null;
-			if (!sock.ReceiveMessage(ref incoming, /* ZSocketFlags.DontWait */ ZSocketFlags.None, out error))
-			{
-				return false;
-			}
+            // receiving scope
+            // DEALER: normal movemsg
+            ZMessage incoming = null;
+            if (!sock.ReceiveMessage(ref incoming, /* ZSocketFlags.DontWait */ ZSocketFlags.None, out error))
+                return false;
 
-			using (incoming)
-			{
-				// STREAM: write frames: identity, body, identity, empty
-				// Read identity
-				var ic = (int)incoming[0].Length;
-				var identityBytes = new byte[ic];
-				incoming[0].Read(identityBytes, 0, ic); 
+            using (incoming)
+            {
+                // STREAM: write frames: identity, body, identity, empty
+                // Read identity
+                var ic = (int)incoming[0].Length;
+                var identityBytes = new byte[ic];
+                incoming[0].Read(identityBytes, 0, ic);
 
-				// Remove DEALER's delimiter
-				incoming.RemoveAt(1);
+                // Remove DEALER's delimiter
+                incoming.RemoveAt(1);
 
-				// Append Identity frame
-				var identity0 = new ZFrame(identityBytes);
-				incoming.Add(identity0);
+                // Append Identity frame
+                var identity0 = new ZFrame(identityBytes);
+                incoming.Add(identity0);
 
-				// Append STREAM's empty delimiter frame
-				incoming.Add(new());
+                // Append STREAM's empty delimiter frame
+                incoming.Add(new());
 
-				if (!SendMsg(FrontendSocket, incoming, out error))
-				{
-					return false;
-				}
-			}
+                if (!SendMsg(FrontendSocket, incoming, out error))
+                    return false;
+            }
 
-			return true;
-		}
+            return true;
+        }
 
-		static bool SendMsg(ZSocket sock, ZMessage msg, out ZError error)
-		{
-			error = ZError.None;
+        static bool SendMsg(ZSocket sock, ZMessage msg, out ZError error)
+        {
+            error = ZError.None;
 
-			foreach (var frame in msg)
-			{
-				while (-1 == zmq.msg_send(frame.Ptr, sock.SocketPtr, (int)ZSocketFlags.More))
-				{
-					error = ZError.GetLastErr();
+            foreach (var frame in msg)
+            {
+                while (-1 == zmq.msg_send(frame.Ptr, sock.SocketPtr, (int)ZSocketFlags.More))
+                {
+                    error = ZError.GetLastErr();
 
-					if (error == ZError.EINTR)
-					{
-						error = default;
-						continue;
-					}
-					/* if (error == ZError.EAGAIN)
-					{
-						error = default(ZError);
-						Thread.Sleep(1);
+                    if (error != ZError.EINTR)
+                        return false;
+                    error = default;
+                    /* if (error == ZError.EAGAIN)
+                    {
+                      error = default(ZError);
+                      Thread.Sleep(1);
+          
+                      continue;
+                    } */
 
-						continue;
-					} */
+                }
+            }
 
-					return false;
-				}
-			}
-
-			msg.Dismiss();
-			return true;
-		}
-	}
+            msg.Dismiss();
+            return true;
+        }
+    }
 }
