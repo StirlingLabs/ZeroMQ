@@ -41,7 +41,7 @@ namespace ZeroMQ
 		{
 			if (size < 0)
 			{
-				throw new ArgumentOutOfRangeException("size");
+				throw new ArgumentOutOfRangeException(nameof(size));
 			}
 			return new ZFrame(CreateNative(size), size);
 		}
@@ -282,7 +282,7 @@ namespace ZeroMQ
 				pos = offset;
 
 			if (pos < 0 || pos > Length)
-				throw new ArgumentOutOfRangeException("offset");
+				throw new ArgumentOutOfRangeException(nameof(offset));
 
 			position = (int)pos;
 			return pos;
@@ -637,7 +637,7 @@ namespace ZeroMQ
 		{
 			if (str == null)
 			{
-				throw new ArgumentNullException("str");
+				throw new ArgumentNullException(nameof(str));
 			}
 			if (str == string.Empty)
 			{

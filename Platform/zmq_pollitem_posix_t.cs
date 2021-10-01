@@ -15,7 +15,7 @@ namespace ZeroMQ.lib
 		{
 			if (socket == IntPtr.Zero)
 			{
-				throw new ArgumentException("Expected a valid socket handle.", "socket");
+				throw new ArgumentException("Expected a valid socket handle.", nameof(socket));
 			}
 
 			socketPtr = socket;

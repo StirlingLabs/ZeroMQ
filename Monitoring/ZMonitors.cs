@@ -52,17 +52,17 @@ namespace ZeroMQ.Monitoring
 		{
 			if (socket == null)
 			{
-				throw new ArgumentNullException("socket");
+				throw new ArgumentNullException(nameof(socket));
 			}
 
 			if (endpoint == null)
 			{
-				throw new ArgumentNullException("endpoint");
+				throw new ArgumentNullException(nameof(endpoint));
 			}
 
 			if (endpoint == string.Empty)
 			{
-				throw new ArgumentException("Unable to publish socket events to an empty endpoint.", "endpoint");
+				throw new ArgumentException("Unable to publish socket events to an empty endpoint.", nameof(endpoint));
 			}
 
 			error = ZError.None;

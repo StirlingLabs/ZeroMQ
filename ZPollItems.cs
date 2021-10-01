@@ -28,7 +28,7 @@ namespace ZeroMQ
 		{
 			if (outgoing == null)
 			{
-				throw new ArgumentNullException("outgoing");
+				throw new ArgumentNullException(nameof(outgoing));
 			}
 			return Poll(socket, item, ZPoll.Out, ref outgoing, out error, timeout);
 		}
@@ -152,7 +152,7 @@ namespace ZeroMQ
 		{
 			if (outgoing == null)
 			{
-				throw new ArgumentNullException("outgoing");
+				throw new ArgumentNullException(nameof(outgoing));
 			}
 			return Poll(sockets, items, ZPoll.Out, ref outgoing, out error, timeout);
 		}

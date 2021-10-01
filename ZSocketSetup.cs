@@ -21,7 +21,7 @@ namespace ZeroMQ
 		{
 			if (socket == null)
 			{
-				throw new ArgumentNullException("socket");
+				throw new ArgumentNullException(nameof(socket));
 			}
 
 			_socket = socket;
@@ -39,7 +39,7 @@ namespace ZeroMQ
 		{
 			if (endpoint == null)
 			{
-				throw new ArgumentNullException("endpoint");
+				throw new ArgumentNullException(nameof(endpoint));
 			}
 
 			_bindings.Add(endpoint);
@@ -56,7 +56,7 @@ namespace ZeroMQ
 		{
 			if (endpoint == null)
 			{
-				throw new ArgumentNullException("endpoint");
+				throw new ArgumentNullException(nameof(endpoint));
 			}
 
 			_connections.Add(endpoint);

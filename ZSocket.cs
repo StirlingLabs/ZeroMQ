@@ -166,7 +166,7 @@ namespace ZeroMQ
 
 			if (string.IsNullOrWhiteSpace(endpoint))
 			{
-				throw new ArgumentException("IsNullOrWhiteSpace", "endpoint");
+				throw new ArgumentException("IsNullOrWhiteSpace", nameof(endpoint));
 			}
 
 			using (var endpointPtr = DispoIntPtr.AllocString(endpoint))
@@ -205,7 +205,7 @@ namespace ZeroMQ
 
 			if (string.IsNullOrWhiteSpace(endpoint))
 			{
-				throw new ArgumentException("IsNullOrWhiteSpace", "endpoint");
+				throw new ArgumentException("IsNullOrWhiteSpace", nameof(endpoint));
 			}
 
 			using (var endpointPtr = DispoIntPtr.AllocString(endpoint))
@@ -244,7 +244,7 @@ namespace ZeroMQ
 
 			if (string.IsNullOrWhiteSpace(endpoint))
 			{
-				throw new ArgumentException("IsNullOrWhiteSpace", "endpoint");
+				throw new ArgumentException("IsNullOrWhiteSpace", nameof(endpoint));
 			}
 
 			using (var endpointPtr = DispoIntPtr.AllocString(endpoint))
@@ -282,7 +282,7 @@ namespace ZeroMQ
 
 			if (string.IsNullOrWhiteSpace(endpoint))
 			{
-				throw new ArgumentException("IsNullOrWhiteSpace", "endpoint");
+				throw new ArgumentException("IsNullOrWhiteSpace", nameof(endpoint));
 			}
 
 			using (var endpointPtr = DispoIntPtr.AllocString(endpoint))
@@ -1470,7 +1470,7 @@ namespace ZeroMQ
 		{
 			if (string.IsNullOrWhiteSpace(filter))
 			{
-				throw new ArgumentNullException("filter");
+				throw new ArgumentNullException(nameof(filter));
 			}
 
 			SetOption(ZSocketOption.TCP_ACCEPT_FILTER, filter);
