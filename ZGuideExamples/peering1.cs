@@ -30,7 +30,7 @@ namespace Examples
 				Console.WriteLine();
 				return;
 			}
-			string self = args[0];
+			var self = args[0];
 			Console.WriteLine("I: preparing broker as {0}", self);
 
 			using (var context = new ZContext())
@@ -42,9 +42,9 @@ namespace Examples
 
 				// Connect frontend to all peers
 				frontend.SubscribeAll();
-				for (int i = 1; i < args.Length; ++i)
+				for (var i = 1; i < args.Length; ++i)
 				{
-					string peer = args[i];
+					var peer = args[i];
 					Console.WriteLine("I: connecting to state backend at {0}", peer);
 					frontend.Connect("tcp://127.0.0.1:" + Peering1_GetPort(peer));
 				}
@@ -85,8 +85,8 @@ namespace Examples
 					}
 					using (incoming)
 					{
-						string peer_name = incoming[0].ReadString();
-						int available = incoming[1].ReadInt32();
+						var peer_name = incoming[0].ReadString();
+						var available = incoming[1].ReadInt32();
 						Console.WriteLine("{0} - {1} workers free", peer_name, available);
 					}
 				}

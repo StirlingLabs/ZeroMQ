@@ -39,10 +39,10 @@ namespace Examples
 			where T : ZMessage
 		{
 			var msg = ((ZMessage) obj);
-			List<byte[]> l = msg.Select(e => e.Read()).ToList();
+			var l = msg.Select(e => e.Read()).ToList();
 
-			XmlSerializer serializer = new XmlSerializer(typeof(List<byte[]>));
-			using (StreamWriter writer = new StreamWriter(path))
+			var serializer = new XmlSerializer(typeof(List<byte[]>));
+			using (var writer = new StreamWriter(path))
 			{
 				serializer.Serialize(writer, l);
 			}
@@ -52,9 +52,9 @@ namespace Examples
 			where T : ZMessage
 		{
 
-			ZMessage msg = new ZMessage();
-			XmlSerializer serializer = new XmlSerializer(typeof(List<byte[]>));
-			using (StreamReader reader = new StreamReader(path))
+			var msg = new ZMessage();
+			var serializer = new XmlSerializer(typeof(List<byte[]>));
+			using (var reader = new StreamReader(path))
 			{
 				var res = (List<byte[]>)serializer.Deserialize(reader);
 				foreach (var e in res)
@@ -98,22 +98,22 @@ namespace Examples
 		//  up the reply asynchronously using the {{titanic.reply}} service:
 		private static void Titanic_Request(ZContext ctx, ZSocket backendpipe, CancellationTokenSource cancellor, object[] args)
 		{
-			using (MajordomoWorker worker = new MajordomoWorker("tcp://127.0.0.1:5555", "titanic.request", (bool)args[0]))
+			using (var worker = new MajordomoWorker("tcp://127.0.0.1:5555", "titanic.request", (bool)args[0]))
 			{
 				ZMessage reply = null;
 				while (true)
 				{
 					// Send reply if it's not null
 					// And then get next request from broker
-					ZMessage request = worker.Recv(reply, cancellor);
+					var request = worker.Recv(reply, cancellor);
 					if (request == null)
 						break; // Interrupted, exit
 
 					// Ensure message directory exists
 					Directory.CreateDirectory(TitanicCommon.TITANIC_DIR);
 					// Generate UUID and save mesage to disk
-					Guid uuid = TitanicCommon.GenerateUuid();
-					string fn = TitanicCommon.RequestFilename(uuid);
+					var uuid = TitanicCommon.GenerateUuid();
+					var fn = TitanicCommon.RequestFilename(uuid);
 
 					request.SerializeToXml(fn);
 					request.Dispose();
@@ -185,7 +185,7 @@ namespace Examples
 				ZMessage reply = null;
 				while (true)
 				{
-					ZMessage request = worker.Recv(reply, cts);
+					var request = worker.Recv(reply, cts);
 					if (request == null)
 						break;
 
@@ -211,17 +211,17 @@ namespace Examples
 		static bool Titanic_ServiceSuccess(Guid uuid, CancellationTokenSource cts)
 		{
 			// Load request message, service will be first frame 
-			string fn = TitanicCommon.RequestFilename(uuid);
+			var fn = TitanicCommon.RequestFilename(uuid);
 			FileStream fs; 
 			if (!fn.TryFileOpenRead(out fs))
 				// If the client already close request, treat as successful
 				return true;
 			fs.Dispose();
 
-			ZMessage request = fn.DeserializeFromXml<ZMessage>();
+			var request = fn.DeserializeFromXml<ZMessage>();
 			var service = request.Pop();
-			string servicename = service.ToString();
-			bool res = false; 
+			var servicename = service.ToString();
+			var res = false; 
 
 			// Create MDP client session with short timeout
 			using (var client = new MajordomoClient("tcp://127.0.0.1:5555", false)) 
@@ -230,7 +230,7 @@ namespace Examples
 				client.Set_Retries(1);    // only 1 retry
 
 				// Use MMI protocol to check if service is available
-				ZMessage mmirequest = new ZMessage {service};
+				var mmirequest = new ZMessage {service};
 
 				bool service_ok;
 				using (var mmireply = client.Send("mmi.service", mmirequest, cts))
@@ -239,7 +239,7 @@ namespace Examples
 
 				res = false;
 				if(service_ok)
-					using (ZMessage reply = client.Send(servicename, request, cts)) 
+					using (var reply = client.Send(servicename, request, cts)) 
 						if (reply != null)
 						{
 							fn = TitanicCommon.ReplyFilename(uuid);
@@ -256,14 +256,14 @@ namespace Examples
 		//  Implements server side of http://rfc.zeromq.org/spec:9
 		public static void Titanic(string[] args)
 		{
-			CancellationTokenSource cancellor = new CancellationTokenSource();
+			var cancellor = new CancellationTokenSource();
 			Console.CancelKeyPress += (s, ea) =>
 			{
 				ea.Cancel = true;
 				cancellor.Cancel();
 			};
 
-			ZContext ctx = new ZContext();
+			var ctx = new ZContext();
 			using (var requestPipe = new ZActor(ctx, Titanic_Request, Verbose))
 			{
 				(new Thread(() => Titanic_Reply(ctx, cancellor, Verbose))).Start();
@@ -318,11 +318,11 @@ namespace Examples
 
 					// Brute force dispatcher
 					if(File.Exists(path))
-						using (FileStream fs = File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
+						using (var fs = File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
 						{
-							int numBytesRead = 0;
-							int numBytesToRead = (new UTF8Encoding().GetBytes(String.Format(TitanicCommon.QUEUE_LINEFORMAT, Guid.NewGuid()))).Length;
-							byte[] readBytes = new byte[numBytesToRead];
+							var numBytesRead = 0;
+							var numBytesToRead = (new UTF8Encoding().GetBytes(String.Format(TitanicCommon.QUEUE_LINEFORMAT, Guid.NewGuid()))).Length;
+							var readBytes = new byte[numBytesToRead];
 							while (numBytesToRead > 0)
 							{
 								var n = fs.Read(readBytes, 0, numBytesToRead);

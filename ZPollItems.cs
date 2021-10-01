@@ -53,8 +53,8 @@ namespace ZeroMQ
 
 		internal static bool PollSingleResult(ZSocket socket, ZPollItem item, ZPoll pollEvents, ref ZMessage message)
 		{
-			bool shouldReceive = item.ReceiveMessage != null && ((pollEvents & ZPoll.In) == ZPoll.In);
-			bool shouldSend = item.SendMessage != null && ((pollEvents & ZPoll.Out) == ZPoll.Out);
+			var shouldReceive = item.ReceiveMessage != null && ((pollEvents & ZPoll.In) == ZPoll.In);
+			var shouldSend = item.SendMessage != null && ((pollEvents & ZPoll.Out) == ZPoll.Out);
 
 			if (pollEvents == ZPoll.In)
 			{
@@ -178,11 +178,11 @@ namespace ZeroMQ
 
 		internal static bool PollManyResult(IEnumerable<ZSocket> sockets, IEnumerable<ZPollItem> items, ZPoll pollEvents, ref ZMessage[] messages)
 		{
-			int count = items.Count();
-			int readyCount = 0;
+			var count = items.Count();
+			var readyCount = 0;
 
-			bool send = messages != null && ((pollEvents & ZPoll.Out) == ZPoll.Out);
-			bool receive = ((pollEvents & ZPoll.In) == ZPoll.In);
+			var send = messages != null && ((pollEvents & ZPoll.Out) == ZPoll.Out);
+			var receive = ((pollEvents & ZPoll.In) == ZPoll.In);
 
 			ZMessage[] incoming = null;
 			if (receive)
@@ -190,11 +190,11 @@ namespace ZeroMQ
 				incoming = new ZMessage[count];
 			}
 
-			for (int i = 0; i < count; ++i)
+			for (var i = 0; i < count; ++i)
 			{
-				ZSocket socket = sockets.ElementAt(i);
-				ZPollItem item = items.ElementAt(i);
-				ZMessage message = send ? messages[i] : null;
+				var socket = sockets.ElementAt(i);
+				var item = items.ElementAt(i);
+				var message = send ? messages[i] : null;
 
 				if (ZPollItems.PollSingleResult(socket, item, pollEvents, ref message))
 				{

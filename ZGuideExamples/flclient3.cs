@@ -37,13 +37,13 @@ namespace Examples
 					args = new string[] { args[0], "tcp://127.0.0.1:5555" };
 			}
 
-			string name = args[0];
+			var name = args[0];
 
 			// Create new freelance client object
 			using (var client = new FreelanceClient())
 			{
 				// Connect to one or more endpoints
-				for (int i = 0; i < args.Length - 1; ++i)
+				for (var i = 0; i < args.Length - 1; ++i)
 				{
 					client.Connect(args[1]);
 				}
@@ -52,14 +52,14 @@ namespace Examples
 				var stopwatch = new Stopwatch();
 				stopwatch.Start();
 
-				int requests = 0;
+				var requests = 0;
 				while (requests++ < 100)
 				{
 					using (var request = new ZMessage())
 					{
 						request.Add(new ZFrame(name));
 
-						using (ZMessage reply = client.Request(request))
+						using (var reply = client.Request(request))
 						{
 
 						}

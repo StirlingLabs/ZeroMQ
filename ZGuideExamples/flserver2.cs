@@ -30,7 +30,7 @@ namespace Examples
 				args = new string[] { "tcp://127.0.0.1:7781" };
 			}
 
-			string endpoint = args[0];
+			var endpoint = args[0];
 
 			using (var context = new ZContext())
 			using (var server = new ZSocket(context, ZSocketType.REP))

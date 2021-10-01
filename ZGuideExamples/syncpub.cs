@@ -32,7 +32,7 @@ namespace Examples
 				syncservice.Bind("tcp://*:5562");
 
 				// Get synchronization from subscribers
-				int subscribers = SyncPub_SubscribersExpected;
+				var subscribers = SyncPub_SubscribersExpected;
 				do
 				{
 					Console.WriteLine("Waiting for {0} subscriber" + (subscribers > 1 ? "s" : string.Empty) + "...", subscribers);
@@ -47,7 +47,7 @@ namespace Examples
 
 				// Now broadcast exactly 20 updates followed by END
 				Console.WriteLine("Broadcasting messages:");
-				for (int i = 0; i < 20; ++i)
+				for (var i = 0; i < 20; ++i)
 				{
 					Console.WriteLine("Sending {0}...", i);
 					publisher.Send(new ZFrame(i));

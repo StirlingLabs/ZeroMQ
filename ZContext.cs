@@ -181,7 +181,7 @@ namespace ZeroMQ
 		{
 			EnsureNotDisposed();
 
-			int rc = zmq.ctx_set(_contextPtr, (Int32)option, optionValue);
+			var rc = zmq.ctx_set(_contextPtr, (Int32)option, optionValue);
 			if (rc == -1)
 			{
 				var error = ZError.GetLastErr();
@@ -199,7 +199,7 @@ namespace ZeroMQ
 		{
 			EnsureNotDisposed();
 
-			int rc = zmq.ctx_get(_contextPtr, (Int32)option);
+			var rc = zmq.ctx_get(_contextPtr, (Int32)option);
 			if (rc == -1)
 			{
 				var error = ZError.GetLastErr();

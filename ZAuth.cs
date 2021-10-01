@@ -89,13 +89,13 @@ namespace ZeroMQ
                 else
                 if (Mechanism == "CURVE")
                 {
-                    ZFrame frame = request.Pop();
+                    var frame = request.Pop();
 
                     if (frame.Length != 32)
                     {
                         return;
                     }
-                    ZCert cert = new ZCert(frame.Read(), new byte[32]);
+                    var cert = new ZCert(frame.Read(), new byte[32]);
                     ClientTxt = cert.PublicTxt;
                 }
                 else
@@ -118,7 +118,7 @@ namespace ZeroMQ
                 if (Verbose)
                     ZAuth.Info(string.Format("zauth: - ZAP reply status_code={0} status_text={1}", status_code, status_text));
 
-                ZMessage msg = new ZMessage();
+                var msg = new ZMessage();
                 msg.Add(new ZFrame("1.0"));
                 msg.Add(new ZFrame(Sequence));
                 msg.Add(new ZFrame(status_code));
@@ -220,8 +220,8 @@ namespace ZeroMQ
         /// this ZCertStore is used for ZCert handling.</param>
         public static void Action(ZContext context, ZSocket backend, System.Threading.CancellationTokenSource cancellor, object[] args)
         {
-            ZCertStore certStore = args != null && args.Length > 0 && args[0] is ZCertStore ? args[0] as ZCertStore : null;
-            using (ZAuth self = new ZAuth(context, backend, certStore))
+            var certStore = args != null && args.Length > 0 && args[0] is ZCertStore ? args[0] as ZCertStore : null;
+            using (var self = new ZAuth(context, backend, certStore))
             {
                 Run(cancellor, self);
             }
@@ -236,8 +236,8 @@ namespace ZeroMQ
         /// this ZCertStore is used for ZCert handling.</param>
         public static void Action0(ZSocket backend, System.Threading.CancellationTokenSource cancellor, object[] args)
         {
-            ZCertStore certStore = args != null && args.Length > 0 && args[0] is ZCertStore ? args[0] as ZCertStore : null;
-            using (ZAuth self = new ZAuth(backend, certStore))
+            var certStore = args != null && args.Length > 0 && args[0] is ZCertStore ? args[0] as ZCertStore : null;
+            using (var self = new ZAuth(backend, certStore))
             {
                 Run(cancellor, self);
             }
@@ -280,10 +280,10 @@ namespace ZeroMQ
 
         private void Authenticate(ZMessage zMessage)
         {
-            ZAP request = new ZAP(sockets[HANDLER], zMessage, verbose);
+            var request = new ZAP(sockets[HANDLER], zMessage, verbose);
             //  Is address explicitly whitelisted or blacklisted?
-            bool allowed = false;
-            bool denied = false;
+            var allowed = false;
+            var denied = false;
             if (whitelist.Count > 0)
             {
                 if (whitelist.Contains(request.Address))
@@ -317,8 +317,8 @@ namespace ZeroMQ
             }
 
             //  Curve certificate metadata
-            List<byte> metabuf = new List<byte>(512);
-            int metadataLength = 0;
+            var metabuf = new List<byte>(512);
+            var metadataLength = 0;
 
             //  Mechanism-specific checks
             if (!denied)
@@ -380,14 +380,14 @@ namespace ZeroMQ
             else
             if (certStore != null)
             {
-                ZCert cert = certStore.Lookup(request.ClientTxt);
+                var cert = certStore.Lookup(request.ClientTxt);
                 if (cert != null)
                 {
-                    Dictionary<string, string> meta = cert.MetaData;
+                    var meta = cert.MetaData;
                     foreach (var pair in meta)
                     {
-                        string key = pair.Key;
-                        string val = pair.Value;
+                        var key = pair.Key;
+                        var val = pair.Value;
                         AddProperty(metabuf, key, val);
                     }
 
@@ -405,7 +405,7 @@ namespace ZeroMQ
 
         private static int AddProperty(List<byte> metabuf, string name, string value)
         {
-            byte name_len = (byte)name.Length;
+            var name_len = (byte)name.Length;
             metabuf.Add(name_len);
             metabuf.AddRange(name.ToCharArray().Select(c => (byte)c));
 
@@ -455,8 +455,8 @@ namespace ZeroMQ
             if (request.Count == 0)
                 return -1;                  //  Interrupted
 
-            ZFrame commandFrame = request.Pop();
-            string command = commandFrame.ReadLine();
+            var commandFrame = request.Pop();
+            var command = commandFrame.ReadLine();
             if (verbose)
                 Info("zauth: API command=" + command);
 
@@ -464,8 +464,8 @@ namespace ZeroMQ
             {
                 while (request.Count > 0)
                 {
-                    ZFrame frame = request.Pop();
-                    string address = frame.ReadLine();
+                    var frame = request.Pop();
+                    var address = frame.ReadLine();
                     if (verbose)
                         Info("zauth: - whitelisting ipaddress=" + address);
 
@@ -480,8 +480,8 @@ namespace ZeroMQ
             {
                 while (request.Count > 0)
                 {
-                    ZFrame frame = request.Pop();
-                    string address = frame.ReadLine();
+                    var frame = request.Pop();
+                    var address = frame.ReadLine();
                     if (verbose)
                         Info("zauth: - blacklisting ipaddress=" + address);
 
@@ -497,8 +497,8 @@ namespace ZeroMQ
             {
                 //  Get password file and load into zhash table
                 //  If the file doesn't exist we'll get an empty table
-                ZFrame frame = request.Pop();
-                string filename = frame.ReadLine();
+                var frame = request.Pop();
+                var filename = frame.ReadLine();
                 if (Load(out passwords, filename) != 0 && verbose)
                     Info("zauth: could not load file=" + filename);
                 sockets[PIPE].SendFrame(new ZFrame(0));
@@ -508,8 +508,8 @@ namespace ZeroMQ
             {
                 //  If location is CURVE_ALLOW_ANY, allow all clients. Otherwise
                 //  treat location as a directory that holds the certificates.
-                ZFrame frame = request.Pop();
-                string location = frame.ReadLine();
+                var frame = request.Pop();
+                var location = frame.ReadLine();
                 if (location == CURVE_ALLOW_ANY)
                 {
                     allowAny = true;
@@ -606,15 +606,15 @@ namespace ZeroMQ
             //  file.
 
             //  Take copy of filename in case self->filename is same string.
-            Stack<string> lines = new Stack<string>(File.ReadAllLines(filename).ToList());
+            var lines = new Stack<string>(File.ReadAllLines(filename).ToList());
             while (lines.Count > 0)
             {
-                string buffer = lines.Pop();
+                var buffer = lines.Pop();
                 //  Skip lines starting with "#" or that do not look like
                 //  name=value data.
                 if (buffer.TrimStart().StartsWith("#"))
                     continue;
-                string[] pair = Split(buffer);
+                var pair = Split(buffer);
                 if (pair.Length == 2)
                 {
                     self.Add(pair[0], pair[1]);
@@ -625,8 +625,8 @@ namespace ZeroMQ
 
         private static string[] Split(string str)
         {
-            int splitindex = str.IndexOf('"');
-            string[] metadata = new string[0];
+            var splitindex = str.IndexOf('"');
+            var metadata = new string[0];
             if (splitindex > 2)
             {
                 metadata = new string[2] { str.Substring(0, splitindex - 2).Trim(), str.Substring(splitindex).Trim() };

@@ -334,7 +334,7 @@ namespace ZeroMQ
 			// int zmq_recv(void* socket, void* buf, size_t len, int flags);
 
 			var pin = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-			IntPtr pinPtr = pin.AddrOfPinnedObject() + offset;
+			var pinPtr = pin.AddrOfPinnedObject() + offset;
 
 			int length;
 			while (-1 == (length = zmq.recv(this.SocketPtr, pinPtr, count, (int)flags)))
@@ -378,7 +378,7 @@ namespace ZeroMQ
 			// int zmq_send (void *socket, void *buf, size_t len, int flags);
 
 			var pin = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-			IntPtr pinPtr = pin.AddrOfPinnedObject() + offset;
+			var pinPtr = pin.AddrOfPinnedObject() + offset;
 
 			int length;
 			while (-1 == (length = zmq.send(SocketPtr, pinPtr, count, (int)flags)))
@@ -425,7 +425,7 @@ namespace ZeroMQ
 		public ZMessage ReceiveMessage(ZSocketFlags flags)
 		{
 			ZError error;
-			ZMessage message = ReceiveMessage(flags, out error);
+			var message = ReceiveMessage(flags, out error);
 			if (error != ZError.None)
 			{
 				throw new ZException(error);
@@ -449,14 +449,14 @@ namespace ZeroMQ
 		{
 			EnsureNotDisposed();
 
-			int count = int.MaxValue;
+			var count = int.MaxValue;
 			return ReceiveFrames(ref count, ref message, flags, out error);
 		}
 
 		public ZFrame ReceiveFrame()
 		{
 			ZError error;
-			ZFrame frame = ReceiveFrame(out error);
+			var frame = ReceiveFrame(out error);
 			if (error != ZError.None)
 			{
 				throw new ZException(error);
@@ -471,10 +471,10 @@ namespace ZeroMQ
 
 		public ZFrame ReceiveFrame(ZSocketFlags flags, out ZError error)
 		{
-			IEnumerable<ZFrame> frames = ReceiveFrames(1, flags & ~ZSocketFlags.More, out error);
+			var frames = ReceiveFrames(1, flags & ~ZSocketFlags.More, out error);
 			if (frames != null)
 			{
-				foreach (ZFrame frame in frames)
+				foreach (var frame in frames)
 				{
 					return frame;
 				}
@@ -632,13 +632,13 @@ namespace ZeroMQ
 		public virtual bool SendMessage(ZMessage msg, ZSocketFlags flags, out ZError error)
 		{
             error = ZError.None;
-            bool more = (flags & ZSocketFlags.More) == ZSocketFlags.More;
+            var more = (flags & ZSocketFlags.More) == ZSocketFlags.More;
 		    flags = flags | ZSocketFlags.More;
-		    ZFrame[] _frames = msg.ToArray();
+		    var _frames = msg.ToArray();
 		    
 		    for (int i = 0, l = _frames.Length; i < l; ++i)
 		    {	   
-			ZFrame frame = msg.Remove(_frames[i], false);
+			var frame = msg.Remove(_frames[i], false);
 			
 			if (i == l - 1 && !more)
 			{
@@ -669,7 +669,7 @@ namespace ZeroMQ
 		public virtual void SendFrames(IEnumerable<ZFrame> frames, ZSocketFlags flags)
 		{
 			ZError error;
-			int sent = 0;
+			var sent = 0;
 			if (!SendFrames(frames, ref sent, flags, out error))
 			{
 				throw new ZException(error);
@@ -678,7 +678,7 @@ namespace ZeroMQ
 
 		public virtual bool SendFrames(IEnumerable<ZFrame> frames, ZSocketFlags flags, out ZError error)
 		{
-			int sent = 0;
+			var sent = 0;
 			if (!SendFrames(frames, ref sent, flags, out error))
 			{
 				return false;
@@ -692,15 +692,15 @@ namespace ZeroMQ
 
 			error = ZError.None;
 
-			bool more = (flags & ZSocketFlags.More) == ZSocketFlags.More;
+			var more = (flags & ZSocketFlags.More) == ZSocketFlags.More;
 			flags = flags | ZSocketFlags.More;
 
-			bool framesIsList = frames is IList<ZFrame>;
-			ZFrame[] _frames = frames.ToArray();
+			var framesIsList = frames is IList<ZFrame>;
+			var _frames = frames.ToArray();
 
 			for (int i = 0, l = _frames.Length; i < l; ++i)
 			{
-				ZFrame frame = _frames[i];
+				var frame = _frames[i];
 
 				if (i == l - 1 && !more)
 				{
@@ -798,7 +798,7 @@ namespace ZeroMQ
 			error = default(ZError);
 			message = null; // message is always null
 
-			bool more = false;
+			var more = false;
 
 			using (var msg = ZFrame.CreateEmpty())
 			{
@@ -888,7 +888,7 @@ namespace ZeroMQ
 		{
 			value = null;
 
-			int optionLength = size;
+			var optionLength = size;
 			using (var optionValue = DispoIntPtr.Alloc(optionLength))
 			{
 				if (GetOption(option, optionValue, ref optionLength))
@@ -915,7 +915,7 @@ namespace ZeroMQ
 		{
 			value = null;
 
-			int optionLength = MaxBinaryOptionSize;
+			var optionLength = MaxBinaryOptionSize;
 			using (var optionValue = DispoIntPtr.Alloc(optionLength))
 			{
 				if (GetOption(option, optionValue, ref optionLength))
@@ -943,7 +943,7 @@ namespace ZeroMQ
 		{
 			value = default(Int32);
 
-			int optionLength = Marshal.SizeOf(typeof(Int32));
+			var optionLength = Marshal.SizeOf(typeof(Int32));
 			using (var optionValue = DispoIntPtr.Alloc(optionLength))
 			{
 				if (GetOption(option, optionValue.Ptr, ref optionLength)) {
@@ -967,7 +967,7 @@ namespace ZeroMQ
 		public bool GetOption(ZSocketOption option, out UInt32 value)
 		{
 			Int32 resultValue;
-			bool result = GetOption(option, out resultValue);
+			var result = GetOption(option, out resultValue);
 			value = (UInt32)resultValue;
 			return result;
 		}
@@ -986,7 +986,7 @@ namespace ZeroMQ
 		{
 			value = default(Int64);
 
-			int optionLength = Marshal.SizeOf(typeof(Int64));
+			var optionLength = Marshal.SizeOf(typeof(Int64));
 			using (var optionValue = DispoIntPtr.Alloc(optionLength))
 			{
 				if (GetOption(option, optionValue.Ptr, ref optionLength))
@@ -1011,7 +1011,7 @@ namespace ZeroMQ
 		public bool GetOption(ZSocketOption option, out UInt64 value)
 		{
 			Int64 resultValue;
-			bool result = GetOption(option, out resultValue);
+			var result = GetOption(option, out resultValue);
 			value = (UInt64)resultValue;
 			return result;
 		}
@@ -1059,7 +1059,7 @@ namespace ZeroMQ
 				return SetOptionNull(option);
 			}
 
-			int optionLength = /* Marshal.SizeOf(typeof(byte)) * */ value.Length;
+			var optionLength = /* Marshal.SizeOf(typeof(byte)) * */ value.Length;
 			using (var optionValue = DispoIntPtr.Alloc(optionLength))
 			{
 				Marshal.Copy(value, 0, optionValue.Ptr, optionLength);
@@ -1084,7 +1084,7 @@ namespace ZeroMQ
 
 		public bool SetOption(ZSocketOption option, Int32 value)
 		{
-			int optionLength = Marshal.SizeOf(typeof(Int32));
+			var optionLength = Marshal.SizeOf(typeof(Int32));
 			using (var optionValue = DispoIntPtr.Alloc(optionLength))
 			{
 				Marshal.WriteInt32(optionValue, value);
@@ -1100,7 +1100,7 @@ namespace ZeroMQ
 
 		public bool SetOption(ZSocketOption option, Int64 value)
 		{
-			int optionLength = Marshal.SizeOf(typeof(Int64));
+			var optionLength = Marshal.SizeOf(typeof(Int64));
 			using (var optionValue = DispoIntPtr.Alloc(optionLength))
 			{
 				Marshal.WriteInt64(optionValue, value);

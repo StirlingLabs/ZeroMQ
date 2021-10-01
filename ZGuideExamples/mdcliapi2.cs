@@ -161,15 +161,15 @@ namespace Examples
                     if (msg.Count < 4)
                         throw new InvalidOperationException();
 
-                    using (ZFrame empty = msg.Pop())
+                    using (var empty = msg.Pop())
                         if (!empty.ToString().Equals(string.Empty))
                             throw new InvalidOperationException();
 
-                    using (ZFrame header = msg.Pop())
+                    using (var header = msg.Pop())
                         if (!header.ToString().Equals(MdpCommon.MDPC_CLIENT))
                             throw new InvalidOperationException();
 
-                    using (ZFrame replyService = msg.Pop())
+                    using (var replyService = msg.Pop())
                     {}
 
                     return msg;

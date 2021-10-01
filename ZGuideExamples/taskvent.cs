@@ -40,14 +40,14 @@ namespace Examples
 				var rnd = new Random();
 
 				// Send 100 tasks
-				int i = 0;
+				var i = 0;
 				long total_msec = 0;	// Total expected cost in msecs
 				for (; i < 100; ++i)
 				{
 					// Random workload from 1 to 100msecs
-					int workload = rnd.Next(100) + 1;
+					var workload = rnd.Next(100) + 1;
 					total_msec += workload;
-					byte[] action = BitConverter.GetBytes(workload);
+					var action = BitConverter.GetBytes(workload);
 
 					Console.WriteLine("{0}", workload);
 					sender.Send(action, 0, action.Length);

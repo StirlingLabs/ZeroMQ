@@ -99,7 +99,7 @@ namespace ZeroMQ
             publicTxt = Encoding.UTF8.GetString(Z85.Encode(publicKey)).ToCharArray();
             secretTxt = Encoding.UTF8.GetString(Z85.Encode(secretKey)).ToCharArray();
             
-            byte[] e = Z85.Encode(publicTxt.Select(c => (byte)c).ToArray());
+            var e = Z85.Encode(publicTxt.Select(c => (byte)c).ToArray());
         }
 
         /// <summary>
@@ -265,10 +265,10 @@ namespace ZeroMQ
         /// <returns>Return the loaded certificate. OBS! null is returned if the file isn't found.</returns>
         public static ZCert Load(string filename)
         {
-            ZCert cert = new ZCert();
+            var cert = new ZCert();
             //  Try first to load secret certificate, which has both keys
             //  Then fallback to loading public certificate
-            string filenameSecret = filename + "_secret";
+            var filenameSecret = filename + "_secret";
             Queue<string> lines;
             if (File.Exists(filenameSecret))
             {
@@ -285,14 +285,14 @@ namespace ZeroMQ
             LineRead reader = null;
             while (lines.Count > 0)
             {
-                string line = lines.Dequeue();
+                var line = lines.Dequeue();
                 if (line.TrimStart().StartsWith("#"))
                     continue;
                 if (line.TrimStart().StartsWith("metadata"))
                 {
                     reader = (str, c) =>
                     {
-                        string[] metadata = Split(str);
+                        var metadata = Split(str);
                         if (metadata.Length == 2)
                         {
                             c.SetMeta(metadata[0].Trim(), metadata[1].Trim(new char[] { '"', ' ', '\t' }));
@@ -323,8 +323,8 @@ namespace ZeroMQ
 
         private static string[] Split(string str)
         {
-            int splitindex = str.IndexOf('"');
-            string[] metadata = new string[0];
+            var splitindex = str.IndexOf('"');
+            var metadata = new string[0];
             if (splitindex > 2)
             {
                 metadata = new string[2] { str.Substring(0, splitindex - 2).Trim(), str.Substring(splitindex).Trim() };
@@ -335,7 +335,7 @@ namespace ZeroMQ
 
         private List<string> GetMetadataAll(string filename, IEnumerable<string> headers)
         {
-            List<string> lines = new List<string>();
+            var lines = new List<string>();
             lines.AddRange(headers);
             lines.Add("");
             lines.Add("metadata");
@@ -364,7 +364,7 @@ namespace ZeroMQ
         /// <param name="filename"></param>
         public void SavePublic(string filename)
         {
-            List<string> lines = GetMetadataAll(filename,
+            var lines = GetMetadataAll(filename,
                 new List<string>()
                 {
                     "#   ****  Generated on " + DateTime.Now.ToLongDateString(),
@@ -384,7 +384,7 @@ namespace ZeroMQ
         /// <param name="filename"></param>
         public void SaveSecret(string filename)
         {
-            List<string> lines = GetMetadataAll(filename,
+            var lines = GetMetadataAll(filename,
                 new List<string>()
                 {
                     "#   ****  Generated on " + DateTime.Now.ToLongDateString(),

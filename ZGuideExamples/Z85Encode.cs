@@ -19,8 +19,8 @@ namespace Examples
 				args = new string[] { "Hello World!" };
 			}
 
-			string txt = args[0];
-			string encoded = Z85.Encode(txt);
+			var txt = args[0];
+			var encoded = Z85.Encode(txt);
 			Console.WriteLine("{0}: {1}", txt, encoded);
 		}
 
@@ -35,8 +35,8 @@ namespace Examples
 				args = new string[] { "nm=QNzY&b1A+]nf" };
 			}
 
-			string txt = args[0];
-			string decoded = Z85.Decode(txt);
+			var txt = args[0];
+			var decoded = Z85.Decode(txt);
 			Console.WriteLine("{0}: {1}", txt, decoded);
 		}
 	}

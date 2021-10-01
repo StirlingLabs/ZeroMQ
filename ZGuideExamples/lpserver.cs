@@ -28,7 +28,7 @@ namespace Examples
 				responder.Bind("tcp://*:5555");
 
 				ZError error;
-				int cycles = 0;
+				var cycles = 0;
 				var rnd = new Random();
 
 				while (true)

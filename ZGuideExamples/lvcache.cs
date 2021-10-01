@@ -45,10 +45,10 @@ namespace Examples
 					{
 						using (msg)
 						{
-							string topic = msg[0].ReadString();
-							string current = msg[1].ReadString();
+							var topic = msg[0].ReadString();
+							var current = msg[1].ReadString();
 
-							LVCacheItem previous = cache.FirstOrDefault(item => topic == item.Topic);
+							var previous = cache.FirstOrDefault(item => topic == item.Topic);
 							if (previous != null)
 							{
 								cache.Remove(previous);
@@ -72,11 +72,11 @@ namespace Examples
 						using (msg)
 						{
 							// Event is one byte 0=unsub or 1=sub, followed by topic
-							byte subscribe = msg[0].ReadAsByte();
+							var subscribe = msg[0].ReadAsByte();
 							if (subscribe == 0x01)
 							{
-								string topic = msg[0].ReadString();
-								LVCacheItem previous = cache.FirstOrDefault(item => topic == item.Topic);
+								var topic = msg[0].ReadString();
+								var previous = cache.FirstOrDefault(item => topic == item.Topic);
 								if (previous != null)
 								{
 									Console.WriteLine("Sending cached topic {0}", topic);

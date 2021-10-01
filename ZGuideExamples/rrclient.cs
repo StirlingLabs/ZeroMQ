@@ -26,11 +26,11 @@ namespace Examples
 			{
 				requester.Connect("tcp://127.0.0.1:5559");
 
-				for (int n = 0; n < 10; ++n)
+				for (var n = 0; n < 10; ++n)
 				{
 					requester.Send(new ZFrame("Hello"));
 
-					using (ZFrame reply = requester.ReceiveFrame())
+					using (var reply = requester.ReceiveFrame())
 					{
 						Console.WriteLine("Hello {0}!", reply.ReadString());
 					}

@@ -12,25 +12,25 @@ namespace Examples
         //  Uses the mdcli API to hide all MDP aspects
         public static void MDClient2(string[] args)
         {
-            CancellationTokenSource cts = new CancellationTokenSource();
+            var cts = new CancellationTokenSource();
             Console.CancelKeyPress += (s, ea) =>
             {
                 ea.Cancel = true;
                 cts.Cancel();
             };
 
-            using (MajordomoClient session = new MajordomoClient("tcp://127.0.0.1:5555", Verbose))
+            using (var session = new MajordomoClient("tcp://127.0.0.1:5555", Verbose))
             {
                 int count;
                 for (count = 0; count < 100000 && !cts.IsCancellationRequested; count++)
                 {
-                    ZMessage request = new ZMessage();
+                    var request = new ZMessage();
                     request.Prepend(new ZFrame("Hello world"));
                     session.Send("echo", request, cts);
                 }
                 for (count = 0; count < 100000 && !cts.IsCancellationRequested; count++)
                 {
-                    using (ZMessage reply = session.Recv(cts))
+                    using (var reply = session.Recv(cts))
                         if (reply == null)
                             break; // Interrupt or failure
                 }

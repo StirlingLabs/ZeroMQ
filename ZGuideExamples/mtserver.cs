@@ -28,7 +28,7 @@ namespace Examples
 				workers.Bind("inproc://workers");
 
 				// Launch pool of worker threads
-				for (int i = 0; i < 5; ++i)
+				for (var i = 0; i < 5; ++i)
 				{
 					new Thread(() => MTServer_Worker(ctx)).Start();
 				}
@@ -47,7 +47,7 @@ namespace Examples
 
 				while (true)
 				{
-					using (ZFrame frame = server.ReceiveFrame())
+					using (var frame = server.ReceiveFrame())
 					{
 						Console.Write("Received: {0}", frame.ReadString());
 
@@ -55,7 +55,7 @@ namespace Examples
 						Thread.Sleep(1);
 
 						// Send reply back to client
-						string replyText = "World";
+						var replyText = "World";
 						Console.WriteLine(", Sending: {0}", replyText);
 						server.Send(new ZFrame(replyText));
 					}

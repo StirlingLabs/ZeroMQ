@@ -48,7 +48,7 @@ namespace ZeroMQ
 		{
 			if (_frames != null)
 			{
-				foreach (ZFrame frame in _frames)
+				foreach (var frame in _frames)
 				{
 					frame.Dispose();
 				}
@@ -60,7 +60,7 @@ namespace ZeroMQ
 		{
 			if (_frames != null)
 			{
-				foreach (ZFrame frame in _frames)
+				foreach (var frame in _frames)
 				{
 					frame.Dismiss();
 				}
@@ -75,7 +75,7 @@ namespace ZeroMQ
 
 		public ZFrame ReplaceAt(int index, ZFrame replacement, bool dispose) 
 		{
-			ZFrame old = _frames[index];
+			var old = _frames[index];
 			_frames[index] = replacement;
 			if (dispose)
 			{
@@ -118,7 +118,7 @@ namespace ZeroMQ
 		/// <param name="dispose">If set to <c>false</c>, do not dispose the ZFrame.</param>
 		public ZFrame RemoveAt(int index, bool dispose)
 		{
-			ZFrame frame = _frames[index];
+			var frame = _frames[index];
 			_frames.RemoveAt(index);
 
 			if (dispose)
@@ -245,7 +245,7 @@ namespace ZeroMQ
 
 		public ZFrame Unwrap() 
 		{
-			ZFrame frame = RemoveAt(0, false);
+			var frame = RemoveAt(0, false);
 
 			if (Count > 0 && this[0].Length == 0)
 			{
@@ -293,7 +293,7 @@ namespace ZeroMQ
 
 		public void Clear()
 		{
-			foreach (ZFrame frame in _frames)
+			foreach (var frame in _frames)
 			{
 				frame.Dispose();
 			}
@@ -308,7 +308,7 @@ namespace ZeroMQ
 		void ICollection<ZFrame>.CopyTo(ZFrame[] array, int arrayIndex)
 		{
 			int i = 0, count = this.Count;
-			foreach (ZFrame frame in this)
+			foreach (var frame in this)
 			{
 				array[arrayIndex + i] = ZFrame.CopyFrom(frame);
 
@@ -367,7 +367,7 @@ namespace ZeroMQ
 		public ZMessage Duplicate() 
 		{
 			var message = new ZMessage();
-			foreach (ZFrame frame in this)
+			foreach (var frame in this)
 			{
 				message.Add(frame.Duplicate());
 			}

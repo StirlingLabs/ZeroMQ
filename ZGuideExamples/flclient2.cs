@@ -104,7 +104,7 @@ namespace Examples
 					request.Prepend(new ZFrame());
 
 					// Blast the request to all connected servers
-					for (int server = 0; server < this.servers; ++server)
+					for (var server = 0; server < this.servers; ++server)
 					{
 						using (var outgoing = request.Duplicate())
 						{
@@ -115,7 +115,7 @@ namespace Examples
 					// Wait for a matching reply to arrive from anywhere
 					// Since we can poll several times, calculate each one
 					ZError error;
-					DateTime endtime = DateTime.UtcNow + GLOBAL_TIMEOUT;
+					var endtime = DateTime.UtcNow + GLOBAL_TIMEOUT;
 					var poll = ZPollItem.CreateReceiver();
 					while (endtime > DateTime.UtcNow)
 					{
@@ -129,9 +129,9 @@ namespace Examples
 
 							reply.RemoveAt(0);
 
-							using (ZFrame sequenceFrame = reply.RemoveAt(0, false))
+							using (var sequenceFrame = reply.RemoveAt(0, false))
 							{
-								int sequence = sequenceFrame.ReadInt32();
+								var sequence = sequenceFrame.ReadInt32();
 
 								if (sequence == this.sequence)
 								{
@@ -174,21 +174,21 @@ namespace Examples
 			using (var client = new FLClient())
 			{
 				// Connect to each endpoint
-				for (int i = 0; i < args.Length; ++i)
+				for (var i = 0; i < args.Length; ++i)
 				{
 					client.Connect(args[i]);
 				}
 
 				// Send a bunch of name resolution 'requests', measure time
-				int requests = 0;
-				DateTime starttime = DateTime.UtcNow;
+				var requests = 0;
+				var starttime = DateTime.UtcNow;
 				var error = ZError.None;
 				while (++requests < 10000)
 				{
 					var outgoing = new ZMessage();
 					outgoing.Add(new ZFrame("random name"));
 
-					ZMessage incoming = client.Request(outgoing);
+					var incoming = client.Request(outgoing);
 					if (incoming == null)
 					{
 						error = ZError.ETERM;

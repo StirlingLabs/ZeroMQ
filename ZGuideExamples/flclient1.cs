@@ -46,9 +46,9 @@ namespace Examples
 				if (args.Length == 1)
 				{
 					// For one endpoint, we retry N times
-					string endpoint = args[0];
+					var endpoint = args[0];
 
-					for (int retries = 0; retries < FLClient1_MAX_RETRIES; ++retries)
+					for (var retries = 0; retries < FLClient1_MAX_RETRIES; ++retries)
 					{
 						if (null != (reply = FLClient1_TryRequest(context, endpoint, request)))
 						{
@@ -61,9 +61,9 @@ namespace Examples
 				{
 					// For multiple endpoints, try each at most once
 
-					for (int endpoint_nbr = 0; endpoint_nbr < args.Length; ++endpoint_nbr)
+					for (var endpoint_nbr = 0; endpoint_nbr < args.Length; ++endpoint_nbr)
 					{
-						string endpoint = args[endpoint_nbr];
+						var endpoint = args[endpoint_nbr];
 
 						if (null != (reply = FLClient1_TryRequest(context, endpoint, request)))
 						{

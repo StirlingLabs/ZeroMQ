@@ -39,7 +39,7 @@ namespace Examples
 					// Get and process messages
 					if (null != (incoming = subscriber.ReceiveFrame(out error)))
 					{
-						string terms = incoming.ReadString();
+						var terms = incoming.ReadString();
 						Console.WriteLine(terms);
 						var clock = DateTime.Parse(terms);
 

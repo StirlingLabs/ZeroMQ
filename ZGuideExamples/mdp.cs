@@ -47,7 +47,7 @@ namespace Examples
 		{
 			try
 			{
-				MdpCommon.MdpwCmd cmd = (MdpCommon.MdpwCmd)byte.Parse(hexval, NumberStyles.AllowHexSpecifier);
+				var cmd = (MdpCommon.MdpwCmd)byte.Parse(hexval, NumberStyles.AllowHexSpecifier);
 				return cmd;
 			}
 			catch (FormatException)
@@ -90,15 +90,15 @@ namespace Examples
 			if(!string.IsNullOrWhiteSpace(format))
 				format.DumpString(args);
 
-			byte[] data = zfrm.Read();
-			long size = zfrm.Length;
+			var data = zfrm.Read();
+			var size = zfrm.Length;
 
 			// Dump the message as text or binary
-			bool isText = true;
-			for (int i = 0; i < size; i++)
+			var isText = true;
+			for (var i = 0; i < size; i++)
 				if (data[i] < 32 || data[i] > 127)
 					isText = false;
-			string datastr = isText ? Encoding.UTF8.GetString(data) : data.ToHexString();
+			var datastr = isText ? Encoding.UTF8.GetString(data) : data.ToHexString();
 			"\tD: [{0,3:D3}]:{1}".DumpString(size, datastr);
 		}
 	}

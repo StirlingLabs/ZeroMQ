@@ -70,7 +70,7 @@ namespace Examples
 				renderer.Append("}");
 
 				// now the message
-				ZFrame frame = message[i];
+				var frame = message[i];
 
 				frame.Position = 0;
 
@@ -96,7 +96,7 @@ namespace Examples
 				return string.Empty;
 			}
 			var s = new StringBuilder();
-			foreach (byte b in hex) {
+			foreach (var b in hex) {
 				s.Append(b.ToString("x2"));
 			}
 			return s.ToString();
@@ -110,9 +110,9 @@ namespace Examples
 			if (hex.Length == 0) {
 				return new byte[0];
 			}
-			int l = hex.Length / 2;
+			var l = hex.Length / 2;
 			var b = new byte[l];
-			for (int i = 0; i < l; ++i) {
+			for (var i = 0; i < l; ++i) {
 				b[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
 			}
 			return b;

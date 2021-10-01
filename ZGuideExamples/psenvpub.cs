@@ -25,7 +25,7 @@ namespace Examples
 				publisher.Linger = TimeSpan.Zero;
 				publisher.Bind("tcp://*:5563");
 
-				int published = 0;
+				var published = 0;
 				while (true)
 				{
 					// Write two messages, each with an envelope and content

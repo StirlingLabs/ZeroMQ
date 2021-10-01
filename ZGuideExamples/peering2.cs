@@ -44,7 +44,7 @@ namespace Examples
 					}
 
 					// Receive
-					ZFrame incoming = client.ReceiveFrame(out error);
+					var incoming = client.ReceiveFrame(out error);
 
 					if (incoming == null)
 					{
@@ -81,7 +81,7 @@ namespace Examples
 				while (true)
 				{
 					// Receive
-					ZFrame incoming = worker.ReceiveFrame(out error);
+					var incoming = worker.ReceiveFrame(out error);
 
 					if (incoming == null)
 					{
@@ -128,9 +128,9 @@ namespace Examples
 				}
 			}
 
-			string message = args[0];
+			var message = args[0];
 
-			string name = args[1];
+			var name = args[1];
 			Console.WriteLine("I: preparing broker as {0}", name);
 
 			using (var context = new ZContext())
@@ -145,9 +145,9 @@ namespace Examples
 
 				// Connect cloud backend to all peers
 				cloudBackend.IdentityString = name;
-				for (int i = 2; i < args.Length; ++i)
+				for (var i = 2; i < args.Length; ++i)
 				{
-					string peer = args[i];
+					var peer = args[i];
 					Console.WriteLine("I: connecting to cloud frontend at {0}", peer);
 					cloudBackend.Connect("tcp://127.0.0.1:" + Peering2_GetPort(peer) + 0);
 				}
@@ -161,15 +161,15 @@ namespace Examples
 				Console.ReadKey(true);
 
 				// Start local workers
-				for (int i = 0; i < Peering2_Workers; ++i)
+				for (var i = 0; i < Peering2_Workers; ++i)
 				{
-					int j = i; new Thread(() => Peering2_WorkerTask(context, j, name)).Start();
+					var j = i; new Thread(() => Peering2_WorkerTask(context, j, name)).Start();
 				}
 
 				// Start local clients
-				for (int i = 0; i < Peering2_Clients; ++i)
+				for (var i = 0; i < Peering2_Clients; ++i)
 				{
-					int j = i; new Thread(() => Peering2_ClientTask(context, j, name, message)).Start();
+					var j = i; new Thread(() => Peering2_ClientTask(context, j, name, message)).Start();
 				}
 
 				// Here, we handle the request-reply flow. We're using load-balancing
@@ -193,11 +193,11 @@ namespace Examples
 					if (localBackend.PollIn(poll, out incoming, out error, wait))
 					{
 						// Handle reply from local worker
-						string identity = incoming[0].ReadString();
+						var identity = incoming[0].ReadString();
 						workers.Add(identity);
 
 						// If it's READY, don't route the message any further
-						string hello = incoming[2].ReadString();
+						var hello = incoming[2].ReadString();
 						if (hello == "READY")
 						{
 							incoming.Dispose();
@@ -224,9 +224,9 @@ namespace Examples
 					if (incoming != null)
 					{
 						// Route reply to cloud if it's addressed to a broker
-						string identity = incoming[0].ReadString();
+						var identity = incoming[0].ReadString();
 
-						for (int i = 2; i < args.Length; ++i)
+						for (var i = 2; i < args.Length; ++i)
 						{
 							if (identity == args[i])
 							{
@@ -258,7 +258,7 @@ namespace Examples
 
 					while (workers.Count > 0)
 					{
-						int reroutable = 0;
+						var reroutable = 0;
 
 						// We'll do peer brokers first, to prevent starvation
 
@@ -290,7 +290,7 @@ namespace Examples
 							{
 								// Route to random broker peer
 
-								int peer = rnd.Next(args.Length - 2) + 2;
+								var peer = rnd.Next(args.Length - 2) + 2;
 
 								incoming.ReplaceAt(0, new ZFrame(args[peer]));
 
@@ -309,7 +309,7 @@ namespace Examples
 							{
 								// Route to local broker peer
 
-								string peer = workers[0];
+								var peer = workers[0];
 
 								workers.RemoveAt(0);
 								incoming.ReplaceAt(0, new ZFrame(peer));

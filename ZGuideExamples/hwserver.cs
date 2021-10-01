@@ -28,7 +28,7 @@ namespace Examples
 				args = new string[] { "World" };
 			}
 
-			string name = args[0];
+			var name = args[0];
 
 			// Create
 			using (var context = new ZContext())
@@ -40,7 +40,7 @@ namespace Examples
 				while (true)
 				{
 					// Receive
-					using (ZFrame request = responder.ReceiveFrame())
+					using (var request = responder.ReceiveFrame())
 					{
 						Console.WriteLine("Received {0}", request.ReadString());
 

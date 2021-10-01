@@ -38,11 +38,11 @@ namespace Examples
 				ZMessage incoming;
 				var poll = ZPollItem.CreateReceiver();
 
-				int requests = 0;
+				var requests = 0;
 				while (true)
 				{
 					// Tick once per second, pulling in arriving messages
-					for (int centitick = 0; centitick < 100; ++centitick)
+					for (var centitick = 0; centitick < 100; ++centitick)
 					{
 						if (!client.PollIn(poll, out incoming, out error, TimeSpan.FromMilliseconds(10)))
 						{
@@ -57,7 +57,7 @@ namespace Examples
 						}
 						using (incoming)
 						{
-							string messageText = incoming[0].ReadString();
+							var messageText = incoming[0].ReadString();
 							Console.WriteLine("[CLIENT{0}] {1}", i, messageText);
 						}
 					}
@@ -94,9 +94,9 @@ namespace Examples
 				backend.Bind("inproc://backend");
 
 				// Launch pool of worker threads, precise number is not critical
-				for (int i = 0; i < 5; ++i)
+				for (var i = 0; i < 5; ++i)
 				{
-					int j = i; new Thread(() => AsyncSrv_ServerWorker(context, j)).Start();
+					var j = i; new Thread(() => AsyncSrv_ServerWorker(context, j)).Start();
 				}
 
 				// Connect backend to frontend via a proxy
@@ -134,12 +134,12 @@ namespace Examples
 					using (request)
 					{
 						// The DEALER socket gives us the reply envelope and message
-						string identity = request[1].ReadString();
-						string content = request[2].ReadString();
+						var identity = request[1].ReadString();
+						var content = request[2].ReadString();
 
 						// Send 0..4 replies back
-						int replies = rnd.Next(5);
-						for (int reply = 0; reply < replies; ++reply)
+						var replies = rnd.Next(5);
+						for (var reply = 0; reply < replies; ++reply)
 						{
 							// Sleep for some fraction of a second
 							Thread.Sleep(rnd.Next(1000) + 1);
@@ -169,9 +169,9 @@ namespace Examples
 
 			using (var context = new ZContext())
 			{
-				for (int i = 0; i < 5; ++i)
+				for (var i = 0; i < 5; ++i)
 				{
-					int j = i; new Thread(() => AsyncSrv_Client(context, j)).Start();
+					var j = i; new Thread(() => AsyncSrv_Client(context, j)).Start();
 				}
 				new Thread(() => AsyncSrv_ServerTask(context)).Start();
 

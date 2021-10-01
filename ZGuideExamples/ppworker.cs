@@ -57,7 +57,7 @@ namespace Examples
 				Console.WriteLine();
 				args = new string[] { "World" };
 			}
-			string name = args[0];
+			var name = args[0];
 
 			ZError error;
 			using (var context = new ZContext())
@@ -73,14 +73,14 @@ namespace Examples
 					}
 
 					// If liveness hits zero, queue is considered disconnected
-					int liveness = Worker.PPP_HEARTBEAT_LIVENESS;
-					int interval = Worker.PPP_INTERVAL_INIT;
+					var liveness = Worker.PPP_HEARTBEAT_LIVENESS;
+					var interval = Worker.PPP_INTERVAL_INIT;
 
 					// Send out heartbeats at regular intervals
-					DateTime heartbeat_at = DateTime.UtcNow + Worker.PPP_HEARTBEAT_INTERVAL;
+					var heartbeat_at = DateTime.UtcNow + Worker.PPP_HEARTBEAT_INTERVAL;
 
 					ZMessage incoming;
-					int cycles = 0;
+					var cycles = 0;
 					var poll = ZPollItem.CreateReceiver();
 					var rnd = new Random();
 
@@ -126,7 +126,7 @@ namespace Examples
 								// indicator:
 								else if (incoming.Count == 1)
 								{
-									string identity = incoming[0].ReadString();
+									var identity = incoming[0].ReadString();
 
 									if (identity == Worker.PPP_HEARTBEAT)
 									{

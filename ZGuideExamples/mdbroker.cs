@@ -121,7 +121,7 @@ namespace Examples
                 if(msg.Count < 1) // At least, command
                     throw new InvalidOperationException();
 
-                ZFrame command = msg.Pop();
+                var command = msg.Pop();
                 //string id_string = sender.ReadString();
                 bool isWorkerReady; 
                 //string id_string;
@@ -130,7 +130,7 @@ namespace Examples
                     var idString = sfrm.Read().ToHexString();
                     isWorkerReady = Workers.ContainsKey(idString);
                 }
-                Worker worker = RequireWorker(sender);
+                var worker = RequireWorker(sender);
                 using (msg)
                 using (command)
                 {
@@ -146,7 +146,7 @@ namespace Examples
                         else
                         {
                             // Attach worker to service and mark as idle
-                            using (ZFrame serviceFrame = msg.Pop())
+                            using (var serviceFrame = msg.Pop())
                             {
                                 worker.Service = RequireService(serviceFrame);
                                 worker.Service.Workers++;
@@ -160,7 +160,7 @@ namespace Examples
                         {
                             //  Remove and save client return envelope and insert the
                             //  protocol header and service name, then rewrap envelope.
-                            ZFrame client = msg.Unwrap();
+                            var client = msg.Unwrap();
                             msg.Prepend(new ZFrame(worker.Service.Name));
                             msg.Prepend(new ZFrame(MdpCommon.MDPC_CLIENT));
                             msg.Wrap(client);
@@ -201,9 +201,9 @@ namespace Examples
                 if(msg.Count < 2)
                     throw new InvalidOperationException();
 
-                using (ZFrame serviceFrame = msg.Pop())
+                using (var serviceFrame = msg.Pop())
                 {
-                    Service service = RequireService(serviceFrame);
+                    var service = RequireService(serviceFrame);
 
                     // Set reply return identity to client sender
                     msg.Wrap(sender.Duplicate());
@@ -215,7 +215,7 @@ namespace Examples
                         string returnCode;
                         if (serviceFrame.ToString().Equals("mmi.service"))
                         {
-                            string name = msg.Last().ToString();
+                            var name = msg.Last().ToString();
                             returnCode = Services.ContainsKey(name) 
                                          && Services[name].Workers > 0
                                             ? "200"
@@ -251,7 +251,7 @@ namespace Examples
 
             public void Purge()
             {
-                Worker worker = Waiting.FirstOrDefault();
+                var worker = Waiting.FirstOrDefault();
                 while (worker != null)
                 {
                     if (DateTime.UtcNow < worker.Expiry)
@@ -274,7 +274,7 @@ namespace Examples
                 if(serviceFrame == null)
                     throw new InvalidOperationException();
 
-                string name = serviceFrame.ToString();
+                var name = serviceFrame.ToString();
 
                 Service service;
                 if (Services.ContainsKey(name))
@@ -310,7 +310,7 @@ namespace Examples
                     idString = tstfrm.Read().ToHexString();
                 }
                 
-                Worker worker = Workers.ContainsKey(idString)
+                var worker = Workers.ContainsKey(idString)
                     ? Workers[idString]
                     : null;
 
@@ -388,10 +388,10 @@ namespace Examples
                 while (Waiting.Count > 0
                        && Requests.Count > 0)
                 {
-                    Worker worker = Waiting[0];
+                    var worker = Waiting[0];
                     Waiting.RemoveAt(0);
                     Broker.Waiting.Remove(worker);
-                    ZMessage reqMsg = Requests[0];
+                    var reqMsg = Requests[0];
                     Requests.RemoveAt(0);
                     using (reqMsg)
                         worker.Send(MdpCommon.MdpwCmd.REQUEST.ToHexString(), null, reqMsg);
@@ -512,14 +512,14 @@ namespace Examples
         //  then process messages on the broker Socket:
         public static void MDBroker(string[] args)
         {
-            CancellationTokenSource cancellor = new CancellationTokenSource();
+            var cancellor = new CancellationTokenSource();
             Console.CancelKeyPress += (s, ea) =>
             {
                 ea.Cancel = true;
                 cancellor.Cancel();
             };
 
-            using (Broker broker = new Broker(Verbose))
+            using (var broker = new Broker(Verbose))
             {
                 broker.Bind("tcp://*:5555");
                 // Get and process messages forever or until interrupted
@@ -537,9 +537,9 @@ namespace Examples
                         if (Verbose)
                             msg.DumpZmsg("I: received message:");
 
-                        using (ZFrame sender = msg.Pop())
-                        using (ZFrame empty = msg.Pop())
-                        using (ZFrame header = msg.Pop())
+                        using (var sender = msg.Pop())
+                        using (var empty = msg.Pop())
+                        using (var header = msg.Pop())
                         {
                             if (header.ToString().Equals(MdpCommon.MDPC_CLIENT))
                                 broker.ClientMsg(sender, msg);

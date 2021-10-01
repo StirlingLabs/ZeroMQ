@@ -201,19 +201,19 @@ namespace Examples
 							if(msg.Count < 3)
 								throw new InvalidOperationException();
 
-							using (ZFrame empty = msg.Pop())
+							using (var empty = msg.Pop())
 							{
 								if (!empty.ToString().Equals(""))
 									throw new InvalidOperationException();
 							}
 
-							using (ZFrame header = msg.Pop())
+							using (var header = msg.Pop())
 							{
 								if (!header.ToString().Equals(MdpCommon.MDPW_WORKER))
 									throw new InvalidOperationException();
 							}
 							//header.ReadString().Equals(MDPW_WORKER);
-							using (ZFrame command = msg.Pop())
+							using (var command = msg.Pop())
 							{
 								if (command.StrHexEq(MdpCommon.MdpwCmd.REQUEST))
 								{

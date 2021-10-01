@@ -25,12 +25,12 @@ namespace Examples
 			using (var backend = new ZSocket(context, ZSocketType.XPUB))
 			{
 				// Frontend is where the weather server sits
-				string localhost = "tcp://127.0.0.1:5556";
+				var localhost = "tcp://127.0.0.1:5556";
 				Console.WriteLine("I: Connecting to {0}", localhost);
 				frontend.Connect(localhost);
 
 				// Backend is our public endpoint for subscribers
-				foreach (IPAddress address in WUProxy_GetPublicIPs())
+				foreach (var address in WUProxy_GetPublicIPs())
 				{
 					var tcpAddress = string.Format("tcp://{0}:8100", address);
 					Console.WriteLine("I: Binding on {0}", tcpAddress);
@@ -54,8 +54,8 @@ namespace Examples
 		static IEnumerable<IPAddress> WUProxy_GetPublicIPs() 
 		{
 			var list = new List<IPAddress>();
-			NetworkInterface[] ifaces = NetworkInterface.GetAllNetworkInterfaces();
-			foreach (NetworkInterface iface in ifaces)
+			var ifaces = NetworkInterface.GetAllNetworkInterfaces();
+			foreach (var iface in ifaces)
 			{
 				if (iface.NetworkInterfaceType == NetworkInterfaceType.Loopback)
 					continue;
@@ -64,7 +64,7 @@ namespace Examples
 
 				var props = iface.GetIPProperties();
 				var addresses = props.UnicastAddresses;
-				foreach (UnicastIPAddressInformation address in addresses)
+				foreach (var address in addresses)
 				{
 					if (address.Address.AddressFamily == AddressFamily.InterNetwork)
 						list.Add(address.Address);

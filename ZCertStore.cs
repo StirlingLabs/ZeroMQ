@@ -142,10 +142,10 @@ namespace ZeroMQ
                 certs.Clear();
                 if (Directory.Exists(path))
                 {
-                    string[] files = Directory.GetFiles(path, "*", SearchOption.TopDirectoryOnly);
+                    var files = Directory.GetFiles(path, "*", SearchOption.TopDirectoryOnly);
                     foreach (var filename in files)
                     {
-                        ZCert cert = ZCert.Load(Path.Combine(filename));
+                        var cert = ZCert.Load(Path.Combine(filename));
                         if (cert != null && (filename.EndsWith("_secret") || !certs.ContainsKey(cert.PublicTxt)))
                         {
                             certs[cert.PublicTxt] = cert;

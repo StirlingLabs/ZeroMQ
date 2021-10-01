@@ -116,7 +116,7 @@ namespace ZeroMQ.lib
 		void Dispose(bool disposing)
 		{
 			// TODO: instance ThreadStatic && do ( o == null ? return : ( lock(o, ms), check threadId, .. ) ) 
-			IntPtr handle = _ptr;
+			var handle = _ptr;
 			if (handle != IntPtr.Zero)
 			{
 				if (isAllocated)

@@ -46,7 +46,7 @@ namespace Examples
 				Thread.Sleep(100);
 
 				// Send out all 1,000 topic messages
-				for (int topic = 0; topic < 1000; ++topic)
+				for (var topic = 0; topic < 1000; ++topic)
 				{
 					publisher.SendMore(new ZFrame(string.Format("{0:D3}", topic)));
 					publisher.Send(new ZFrame("Save Roger"));

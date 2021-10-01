@@ -37,7 +37,7 @@ namespace Examples
 				stopwatch.Start();
 
 				// Process 100 confirmations
-				for (int i = 0; i < 100; ++i)
+				for (var i = 0; i < 100; ++i)
 				{
 					receiver.ReceiveFrame();
 

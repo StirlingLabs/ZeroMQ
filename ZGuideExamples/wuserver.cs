@@ -25,7 +25,7 @@ namespace Examples
 			using (var context = new ZContext())
 			using (var publisher = new ZSocket(context, ZSocketType.PUB))
 			{
-				string address = "tcp://*:5556";
+				var address = "tcp://*:5556";
 				Console.WriteLine("I: Publisher.Bind'ing on {0}", address);
 				publisher.Bind(address);
 
@@ -42,8 +42,8 @@ namespace Examples
 				while (true)
 				{
 					// Get values that will fool the boss
-					int zipcode = rnd.Next(99999);
-					int temperature = rnd.Next(-55, +45);
+					var zipcode = rnd.Next(99999);
+					var temperature = rnd.Next(-55, +45);
 
 					// Send message to all subscribers
 					var update = string.Format("{0:D5} {1}", zipcode, temperature);

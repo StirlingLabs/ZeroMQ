@@ -46,7 +46,7 @@ namespace Examples
 				}
 
 				// Receive reply
-				using (ZMessage reply = client.ReceiveMessage())
+				using (var reply = client.ReceiveMessage())
 				{
 					Console.WriteLine("CLIENT{0}: {1}", i, reply[0].ReadString());
 				}
@@ -90,9 +90,9 @@ namespace Examples
 
 					using (request)
 					{
-						string worker_id = request[0].ReadString();
+						var worker_id = request[0].ReadString();
 
-						string requestText = request[2].ReadString();
+						var requestText = request[2].ReadString();
 						Console.WriteLine("WORKER{0}: {1}", i, requestText);
 
 						// Send reply
@@ -127,15 +127,15 @@ namespace Examples
 				// Bind
 				backend.Bind("inproc://backend");
 
-				int clients = 0;
+				var clients = 0;
 				for (; clients < LBBroker_Clients; ++clients)
 				{
-					int j = clients;
+					var j = clients;
 					new Thread(() => LBBroker_Client(context, j)).Start();
 				}
-				for (int i = 0; i < LBBroker_Workers; ++i)
+				for (var i = 0; i < LBBroker_Workers; ++i)
 				{
-					int j = i;
+					var j = i;
 					new Thread(() => LBBroker_Worker(context, j)).Start();
 				}
 
@@ -163,21 +163,21 @@ namespace Examples
 						// Handle worker activity on backend
 
 						// incoming[0] is worker_id
-						string worker_id = incoming[0].ReadString();
+						var worker_id = incoming[0].ReadString();
 						// Queue worker identity for load-balancing
 						worker_queue.Add(worker_id);
 
 						// incoming[1] is empty
 
 						// incoming[2] is READY or else client_id
-						string client_id = incoming[2].ReadString();
+						var client_id = incoming[2].ReadString();
 
 						if (client_id != "READY")
 						{
 							// incoming[3] is empty
 
 							// incoming[4] is reply
-							string reply = incoming[4].ReadString();
+							var reply = incoming[4].ReadString();
 
 							using (var outgoing = new ZMessage())
 							{
@@ -208,12 +208,12 @@ namespace Examples
 							// Here is how we handle a client request
 
 							// incoming[0] is client_id
-							string client_id = incoming[0].ReadString();
+							var client_id = incoming[0].ReadString();
 
 							// incoming[1] is empty
 
 							// incoming[2] is request
-							string requestText = incoming[2].ReadString();
+							var requestText = incoming[2].ReadString();
 
 							using (var outgoing = new ZMessage())
 							{

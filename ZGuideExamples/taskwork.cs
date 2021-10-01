@@ -36,7 +36,7 @@ namespace Examples
 				{
 					var replyBytes = new byte[4];
 					receiver.ReceiveBytes(replyBytes, 0, replyBytes.Length);
-					int workload = BitConverter.ToInt32(replyBytes, 0);
+					var workload = BitConverter.ToInt32(replyBytes, 0);
 					Console.WriteLine("{0}.", workload);	// Show progress
 
 					Thread.Sleep(workload);	// Do the work

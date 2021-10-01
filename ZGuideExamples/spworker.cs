@@ -25,7 +25,7 @@ namespace Examples
 			{
 				args = new string[] { "World" + rnd.Next() };
 			}
-			string name = args[0];
+			var name = args[0];
 
 			using (var context = new ZContext())
 			using (var worker = new ZSocket(context, ZSocketType.REQ))
@@ -40,7 +40,7 @@ namespace Examples
 					worker.Send(outgoing);
 				}
 
-				int cycles = 0;
+				var cycles = 0;
 				ZError error;
 				ZMessage incoming;
 

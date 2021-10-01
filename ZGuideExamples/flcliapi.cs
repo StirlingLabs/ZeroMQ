@@ -108,7 +108,7 @@ namespace Examples
 				ZError error;
 				if (null != (reply = this.Actor.Frontend.ReceiveMessage(out error))) 
 				{
-					string status = reply.PopString();
+					var status = reply.PopString();
 					if (status == "FAILED")
 					{
 						reply.Dispose();
@@ -184,7 +184,7 @@ namespace Examples
 							else
 							{
 								// Find server to talk to, remove any expired ones
-								foreach (Server server in agent.Actives.ToList())
+								foreach (var server in agent.Actives.ToList())
 								{
 									if (DateTime.UtcNow >= server.Expires)
 									{
@@ -208,7 +208,7 @@ namespace Examples
 
 						// Disconnect and delete any expired servers
 						// Send heartbeats to idle servers if needed
-						foreach (Server server in agent.Servers)
+						foreach (var server in agent.Servers)
 						{
 							server.Ping(agent.Router);
 						}
@@ -316,11 +316,11 @@ namespace Examples
 				// This method processes one message from our frontend class
 				// (it's going to be CONNECT or REQUEST):
 
-				string command = msg.PopString();
+				var command = msg.PopString();
 
 				if (command == "CONNECT")
 				{
-					string endpoint = msg.PopString();
+					var endpoint = msg.PopString();
 					Console.WriteLine("I: connecting to {0}...", endpoint);
 
 					this.Router.Connect(endpoint);
@@ -354,8 +354,8 @@ namespace Examples
 				// server:
 
 				// Frame 0 is server that replied
-				string endpoint = reply.PopString();
-				Server server = this.Servers.Single(s => s.Endpoint == endpoint);
+				var endpoint = reply.PopString();
+				var server = this.Servers.Single(s => s.Endpoint == endpoint);
 				if (!server.Alive)
 				{
 					this.Actives.Add(server);
@@ -363,7 +363,7 @@ namespace Examples
 				}
 
 				// Frame 1 may be sequence number for reply
-				int sequence = reply.PopInt32();
+				var sequence = reply.PopInt32();
 				if (sequence == this.sequence)
 				{
 					reply.Prepend(new ZFrame("OK"));

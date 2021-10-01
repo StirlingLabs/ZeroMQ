@@ -20,8 +20,8 @@ namespace Examples
 			//
 
 			// Prepare server socket with predictable identity
-			string bind_endpoint = "tcp://*:5555";
-			string connect_endpoint = "tcp://127.0.0.1:5555";
+			var bind_endpoint = "tcp://*:5555";
+			var connect_endpoint = "tcp://127.0.0.1:5555";
 
 			using (var context = new ZContext())
 			using (var server = new ZSocket(context, ZSocketType.ROUTER))
@@ -60,8 +60,8 @@ namespace Examples
 
 							identity = request.Pop();
 
-							ZFrame control = request.Pop();
-							string controlMessage = control.ReadString();
+							var control = request.Pop();
+							var controlMessage = control.ReadString();
 
 							if (controlMessage == "PING")
 							{

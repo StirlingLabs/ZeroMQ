@@ -23,7 +23,7 @@ namespace Examples
 				args = new string[] { "World" };
 			}
 
-			string name = args[0];
+			var name = args[0];
 
 			var error = default(ZError);
 
@@ -44,7 +44,7 @@ namespace Examples
 				{
 					if (Console.KeyAvailable)
 					{
-						ConsoleKeyInfo info = Console.ReadKey(true);
+						var info = Console.ReadKey(true);
 						/* if (info.Modifiers == ConsoleModifiers.Control && info.Key == ConsoleKey.C)
 						{
 							context.Shutdown();

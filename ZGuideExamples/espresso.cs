@@ -87,7 +87,7 @@ namespace Examples
 
 				ZError error;
 				ZFrame frame;
-				int count = 0;
+				var count = 0;
 				while (count < 5)
 				{
 					if (null == (frame = subscriber.ReceiveFrame(out error)))
@@ -122,7 +122,7 @@ namespace Examples
 					{
 						using (frame)
 						{
-							byte first = frame.ReadAsByte();
+							var first = frame.ReadAsByte();
 
 							var rest = new byte[9];
 							frame.Read(rest, 0, rest.Length);

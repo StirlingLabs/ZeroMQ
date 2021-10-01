@@ -330,13 +330,13 @@ namespace ZeroMQ
 
 		public byte[] Read()
 		{
-			int remaining = Math.Max(0, (int)(Length - position));
+			var remaining = Math.Max(0, (int)(Length - position));
 			return Read(remaining);
 		}
 
 		public byte[] Read(int count)
 		{
-			int remaining = Math.Min(count, Math.Max(0, (int)(Length - position)));
+			var remaining = Math.Min(count, Math.Max(0, (int)(Length - position)));
 			if (remaining == 0) {
 				return new byte[0];
 			}
@@ -351,7 +351,7 @@ namespace ZeroMQ
 
 		public override int Read(byte[] buffer, int offset, int count)
 		{
-			int remaining = Math.Min(count, Math.Max(0, (int)(Length - position)));
+			var remaining = Math.Min(count, Math.Max(0, (int)(Length - position)));
 			if (remaining == 0) {
 				return 0;
 			}
@@ -380,7 +380,7 @@ namespace ZeroMQ
 			if (position + 1 > Length)
 				return default(byte);
 
-			byte byt = Marshal.ReadByte(DataPtr() + position);
+			var byt = Marshal.ReadByte(DataPtr() + position);
 			++position;
 			return byt;
 		}
@@ -388,7 +388,7 @@ namespace ZeroMQ
 		public Int16 ReadInt16()
 		{
 			var bytes = new byte[2];
-			int len = Read(bytes, 0, 2);
+			var len = Read(bytes, 0, 2);
 			if (len < 2)
 			{
 				return default(Int16);
@@ -400,7 +400,7 @@ namespace ZeroMQ
 		public UInt16 ReadUInt16()
 		{
 			var bytes = new byte[2];
-			int len = Read(bytes, 0, 2);
+			var len = Read(bytes, 0, 2);
 			if (len < 2)
 			{
 				return default(UInt16);
@@ -412,7 +412,7 @@ namespace ZeroMQ
 		public Char ReadChar()
 		{
 			var bytes = new byte[2];
-			int len = Read(bytes, 0, 2);
+			var len = Read(bytes, 0, 2);
 			if (len < 2)
 			{
 				return default(Char);
@@ -424,7 +424,7 @@ namespace ZeroMQ
 		public Int32 ReadInt32()
 		{
 			var bytes = new byte[4];
-			int len = Read(bytes, 0, 4);
+			var len = Read(bytes, 0, 4);
 			if (len < 4)
 			{
 				return default(Int32);
@@ -436,7 +436,7 @@ namespace ZeroMQ
 		public UInt32 ReadUInt32()
 		{
 			var bytes = new byte[4];
-			int len = Read(bytes, 0, 4);
+			var len = Read(bytes, 0, 4);
 			if (len < 4)
 			{
 				return default(UInt32);
@@ -448,7 +448,7 @@ namespace ZeroMQ
 		public Int64 ReadInt64()
 		{
 			var bytes = new byte[8];
-			int len = Read(bytes, 0, 8);
+			var len = Read(bytes, 0, 8);
 			if (len < 8)
 			{
 				return default(Int64);
@@ -460,7 +460,7 @@ namespace ZeroMQ
 		public UInt64 ReadUInt64()
 		{
 			var bytes = new byte[8];
-			int len = Read(bytes, 0, 8);
+			var len = Read(bytes, 0, 8);
 			if (len < 8)
 			{
 				return default(UInt64);
@@ -486,7 +486,7 @@ namespace ZeroMQ
 
 		public string ReadString(int byteCount, Encoding encoding)
 		{
-			int remaining = Math.Min(byteCount, Math.Max(0, (int)Length - position));
+			var remaining = Math.Min(byteCount, Math.Max(0, (int)Length - position));
 			if (remaining == 0)
 			{
 				return string.Empty;
@@ -500,8 +500,8 @@ namespace ZeroMQ
 			{
 				var bytes = (byte*)(this.DataPtr() + position);
 
-				Decoder dec = encoding.GetDecoder();
-				int charCount = dec.GetCharCount(bytes, remaining, false);
+				var dec = encoding.GetDecoder();
+				var charCount = dec.GetCharCount(bytes, remaining, false);
 				if (charCount == 0)
 				{
 					return string.Empty;
@@ -526,7 +526,7 @@ namespace ZeroMQ
 						}
 					}
 
-					Encoder enc = encoding.GetEncoder();
+					var enc = encoding.GetEncoder();
 					position += enc.GetByteCount(chars, charCount + z, true);
 
 					if (charCount == 0) return string.Empty;
@@ -547,7 +547,7 @@ namespace ZeroMQ
 
 		public string ReadLine(int byteCount, Encoding encoding)
 		{
-			int remaining = Math.Min(byteCount, Math.Max(0, (int)Length - position));
+			var remaining = Math.Min(byteCount, Math.Max(0, (int)Length - position));
 			if (remaining == 0)
 			{
 				return string.Empty;
@@ -561,8 +561,8 @@ namespace ZeroMQ
 			{
 				var bytes = (byte*)(this.DataPtr() + position);
 
-				Decoder dec = encoding.GetDecoder();
-				int charCount = dec.GetCharCount(bytes, remaining, false);
+				var dec = encoding.GetDecoder();
+				var charCount = dec.GetCharCount(bytes, remaining, false);
 				if (charCount == 0) return string.Empty;
 
 				var resultChars = new char[charCount];
@@ -597,7 +597,7 @@ namespace ZeroMQ
 						}
 					}
 
-					Encoder enc = encoding.GetEncoder();
+					var enc = encoding.GetEncoder();
 					position += enc.GetByteCount(chars, charCount + z, true);
 
 					if (charCount == 0) return string.Empty;
@@ -718,12 +718,12 @@ namespace ZeroMQ
 				return;
 			}
 
-			int charCount = str.Length;
-			Encoder enc = encoding.GetEncoder();
+			var charCount = str.Length;
+			var enc = encoding.GetEncoder();
 
 			fixed (char* strP = str)
 			{
-				int byteCount = enc.GetByteCount(strP, charCount, false);
+				var byteCount = enc.GetByteCount(strP, charCount, false);
 
 				if (create)
 				{
@@ -910,7 +910,7 @@ namespace ZeroMQ
 			{
 				long old = position;
 				Position = 0;
-				string retur = ReadString(encoding);
+				var retur = ReadString(encoding);
 				Position = old;
 				return retur;
 			}

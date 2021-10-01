@@ -29,7 +29,7 @@ namespace Examples
 				args = new string[] { "tcp://127.0.0.1:5555" };
 			}
 
-			string endpoint = args[0];
+			var endpoint = args[0];
 
 			// Create
 			using (var context = new ZContext())
@@ -38,16 +38,16 @@ namespace Examples
 				// Connect
 				requester.Connect(endpoint);
 
-				for (int n = 0; n < 10; ++n)
+				for (var n = 0; n < 10; ++n)
 				{
-					string requestText = "Hello";
+					var requestText = "Hello";
 					Console.Write("Sending {0}...", requestText);
 
 					// Send
 					requester.Send(new ZFrame(requestText));
 
 					// Receive
-					using (ZFrame reply = requester.ReceiveFrame()) 
+					using (var reply = requester.ReceiveFrame()) 
 					{
 						Console.WriteLine(" Received: {0} {1}!", requestText, reply.ReadString());
 					}

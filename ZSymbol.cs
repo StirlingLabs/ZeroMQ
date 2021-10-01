@@ -36,19 +36,19 @@ namespace ZeroMQ
 		private static void PickupConstantSymbols<T>(ref IDictionary<ZSymbol, string> symbols)
             where T : ZSymbol
 		{
-			Type type = typeof(T);
+			var type = typeof(T);
 
-			FieldInfo[] fields = type.GetFields(BindingFlags.Static | BindingFlags.Public);
+			var fields = type.GetFields(BindingFlags.Static | BindingFlags.Public);
 
-			Type codeType = type.GetNestedType("Code", BindingFlags.NonPublic);
+			var codeType = type.GetNestedType("Code", BindingFlags.NonPublic);
 
 			// Pickup constant symbols
-			foreach (FieldInfo symbolField in fields.Where(f => typeof(ZSymbol).IsAssignableFrom(f.FieldType)))
+			foreach (var symbolField in fields.Where(f => typeof(ZSymbol).IsAssignableFrom(f.FieldType)))
 			{
-				FieldInfo symbolCodeField = codeType.GetField(symbolField.Name);
+				var symbolCodeField = codeType.GetField(symbolField.Name);
 				if (symbolCodeField != null)
 				{
-					int symbolNumber = (int)symbolCodeField.GetValue(null);
+					var symbolNumber = (int)symbolCodeField.GetValue(null);
 
 				    var symbol = Activator.CreateInstance(
 				        type,

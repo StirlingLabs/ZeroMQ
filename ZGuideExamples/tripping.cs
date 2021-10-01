@@ -17,14 +17,14 @@ namespace Examples
         //  main when it's ready.
         public static void Tripping(string[] args)
         {
-            CancellationTokenSource cancellor = new CancellationTokenSource();
+            var cancellor = new CancellationTokenSource();
             Console.CancelKeyPress += (s, ea) =>
             {
                 ea.Cancel = true;
                 cancellor.Cancel();
             };
 
-            using (ZContext ctx = new ZContext())
+            using (var ctx = new ZContext())
             {
                 using (var client = new ZActor(ctx, Tripping_ClientTask))
                 {
@@ -42,7 +42,7 @@ namespace Examples
 
         static void Tripping_ClientTask(ZContext ctx, ZSocket pipe, CancellationTokenSource cancellor, object[] args)
         {
-            using (ZSocket client = new ZSocket(ctx, ZSocketType.DEALER))
+            using (var client = new ZSocket(ctx, ZSocketType.DEALER))
             {
                 client.Connect("tcp://127.0.0.1:5555");
                 "Setting up test...".DumpString();
@@ -51,7 +51,7 @@ namespace Examples
                 int requests;
                 "Synchronous round-trip test...".DumpString();
                 var start = DateTime.Now;
-                Stopwatch sw = Stopwatch.StartNew();
+                var sw = Stopwatch.StartNew();
                 for (requests = 0; requests < 10000; requests++)
                 {
                     using (var outgoing = new ZFrame("hello"))
@@ -96,7 +96,7 @@ namespace Examples
                 while (true)
                 {
                     ZError error;
-                    ZMessage msg = worker.ReceiveMessage(out error);
+                    var msg = worker.ReceiveMessage(out error);
                     if (error == null && worker.Send(msg, out error))
                         continue;
                     // errorhandling, context terminated or sth else

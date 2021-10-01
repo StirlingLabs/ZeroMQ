@@ -42,7 +42,7 @@ namespace Examples
 					// Process messages from either socket
 					if (receiver.PollIn(poll, out message, out error, TimeSpan.FromMilliseconds(64)))
 					{
-						int workload = message[0].ReadInt32();
+						var workload = message[0].ReadInt32();
 						Console.WriteLine("{0}.", workload);	// Show progress
 
 						Thread.Sleep(workload);	// Do the work

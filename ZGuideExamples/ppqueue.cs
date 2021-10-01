@@ -90,10 +90,10 @@ namespace Examples
 
 			public static ZFrame Next(this IList<Worker> workers) 
 			{
-				Worker worker = workers[0];
+				var worker = workers[0];
 				workers.RemoveAt(0);
 
-				ZFrame identity = worker.Identity;
+				var identity = worker.Identity;
 				worker.Identity = null;
 				worker.Dispose();
 
@@ -102,7 +102,7 @@ namespace Examples
 
 			public static void Purge(this IList<Worker> workers) 
 			{
-				foreach (Worker worker in workers.ToList())
+				foreach (var worker in workers.ToList())
 				{
 					if (DateTime.UtcNow < worker.Expiry)
 						continue;	// Worker is alive, we're done here
@@ -128,7 +128,7 @@ namespace Examples
 				var workers = new List<Worker>();
 
 				// Send out heartbeats at regular intervals
-				DateTime heartbeat_at = DateTime.UtcNow + Worker.PPP_HEARTBEAT_INTERVAL;
+				var heartbeat_at = DateTime.UtcNow + Worker.PPP_HEARTBEAT_INTERVAL;
 
 				// Create a Receiver ZPollItem (ZMQ_POLLIN)
 				var poll = ZPollItem.CreateReceiver();
@@ -143,14 +143,14 @@ namespace Examples
 						using (incoming)
 						{
 							// Any sign of life from worker means it's ready
-							ZFrame identity = incoming.Unwrap();
+							var identity = incoming.Unwrap();
 							var worker = new Worker(identity);
 							workers.Ready(worker);
 
 							// Validate control message, or return reply to client
 							if (incoming.Count == 1)
 							{
-								string message = incoming[0].ReadString();
+								var message = incoming[0].ReadString();
 								if (message == Worker.PPP_READY)
 								{
 									Console.WriteLine("I:        worker ready ({0})", worker.IdentityString);
@@ -188,7 +188,7 @@ namespace Examples
 							// Now get next client request, route to next worker
 							using (incoming)
 							{
-								ZFrame workerIdentity = workers.Next();
+								var workerIdentity = workers.Next();
 								incoming.Prepend(workerIdentity);
 
 								if (Verbose) Console_WriteZMessage("I: [frontend sending to backend] ({0})", incoming, workerIdentity.ReadString());
@@ -211,7 +211,7 @@ namespace Examples
 					{
 						heartbeat_at = DateTime.UtcNow + Worker.PPP_HEARTBEAT_INTERVAL;
 
-						foreach (Worker worker in workers)
+						foreach (var worker in workers)
 						{
 							using (var outgoing = new ZMessage())
 							{
@@ -227,7 +227,7 @@ namespace Examples
 				}
 
 				// When we're done, clean up properly
-				foreach (Worker worker in workers)
+				foreach (var worker in workers)
 				{
 					worker.Dispose();
 				}

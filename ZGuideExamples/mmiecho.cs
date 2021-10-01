@@ -17,19 +17,19 @@ namespace Examples
         //  MMI echo query example
         public static void MMIEcho(string[] args)
         {
-            CancellationTokenSource cancellor = new CancellationTokenSource();
+            var cancellor = new CancellationTokenSource();
             Console.CancelKeyPress += (s, ea) =>
             {
                 ea.Cancel = true;
                 cancellor.Cancel();
             };
 
-            using (MajordomoClient session = new MajordomoClient("tcp://127.0.0.1:5555", Verbose))
+            using (var session = new MajordomoClient("tcp://127.0.0.1:5555", Verbose))
             {
-                ZMessage request  = new ZMessage();
+                var request  = new ZMessage();
                 request.Add(new ZFrame("echo"));
 
-                ZMessage reply = session.Send("mmi.service", request, cancellor);
+                var reply = session.Send("mmi.service", request, cancellor);
                 if (reply != null)
                 {
                     var replycode = reply[0].ToString();

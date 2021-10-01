@@ -39,12 +39,12 @@ namespace Examples
 				syncclient.ReceiveFrame();
 
 				// Third, get our updates and report how many we got
-				int i = 0;
+				var i = 0;
 				while (true)
 				{
-					using (ZFrame frame = subscriber.ReceiveFrame())
+					using (var frame = subscriber.ReceiveFrame())
 					{
-						string text = frame.ReadString();
+						var text = frame.ReadString();
 						if (text == "END")
 						{
 							break;

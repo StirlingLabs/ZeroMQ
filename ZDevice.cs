@@ -229,7 +229,7 @@
 			if (FrontendSetup != null) FrontendSetup.BindConnect();
 			if (BackendSetup != null) BackendSetup.BindConnect();
 
-			bool isValid = false;
+			var isValid = false;
 			var error = default(ZError);
 			try
 			{

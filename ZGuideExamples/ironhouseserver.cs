@@ -28,10 +28,10 @@ namespace Examples
                 args = new string[] { "World" };
             }
 
-            string name = args[0];
+            var name = args[0];
             // Create or load certificates
-            ZCert clientCert = GetOrCreateCert("clienttest");
-            ZCert serverCert = GetOrCreateCert("servertest");
+            var clientCert = GetOrCreateCert("clienttest");
+            var serverCert = GetOrCreateCert("servertest");
 
             using (var responder = new ZSocket(ZSocketType.REP))
             using (var actor = new ZActor(ZAuth.Action0, null))
@@ -53,7 +53,7 @@ namespace Examples
                 while (true)
                 {
                     // Receive
-                    using (ZFrame request = responder.ReceiveFrame())
+                    using (var request = responder.ReceiveFrame())
                     {
                         Console.WriteLine("Received {0}", request.ReadString());
 
@@ -70,7 +70,7 @@ namespace Examples
         private static ZCert GetOrCreateCert(string name, string curvpath = ".curve")
         {
             ZCert cert;
-            string keyfile = Path.Combine(curvpath, name + ".pub");
+            var keyfile = Path.Combine(curvpath, name + ".pub");
             if (!File.Exists(keyfile))
             {
                 cert = new ZCert();

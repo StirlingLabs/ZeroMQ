@@ -123,7 +123,7 @@ namespace Examples
                 if (Verbose)
                     request.DumpZmsg("I: send request to '{0}' service:", service);
 
-                int retriesLeft = Retries;
+                var retriesLeft = Retries;
                 while (retriesLeft > 0 && !cancellor.IsCancellationRequested)
                 {
                     if (cancellor.IsCancellationRequested
@@ -131,7 +131,7 @@ namespace Examples
                         _context.Shutdown();
 
                     // Copy the Request and send on Client
-                    ZMessage msgreq = request.Duplicate();
+                    var msgreq = request.Duplicate();
 
                     ZError error;
                     if (!Client.Send(msgreq, out error))
@@ -160,11 +160,11 @@ namespace Examples
                         if(msg.Count < 3)
                             throw new InvalidOperationException();
 
-                        using (ZFrame header = msg.Pop())
+                        using (var header = msg.Pop())
                             if (!header.ToString().Equals(MdpCommon.MDPC_CLIENT))
                                 throw new InvalidOperationException();
 
-                        using (ZFrame replyService = msg.Pop())
+                        using (var replyService = msg.Pop())
                             if(!replyService.ToString().Equals(service))
                                 throw new InvalidOperationException();
 

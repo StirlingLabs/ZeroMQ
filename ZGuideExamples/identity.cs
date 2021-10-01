@@ -29,7 +29,7 @@ namespace Examples
 					anonymous.Connect("inproc://example");
 					anonymous.Send(new ZFrame("ROUTER uses REQ's generated 5 byte identity"));
 				}
-				using (ZMessage msg = sink.ReceiveMessage())
+				using (var msg = sink.ReceiveMessage())
 				{    
 					msg.DumpZmsg("--------------------------");
 				}
@@ -41,7 +41,7 @@ namespace Examples
 					identified.Connect("inproc://example");
 					identified.Send(new ZFrame("ROUTER uses REQ's socket identity"));
 				}
-				using (ZMessage msg = sink.ReceiveMessage())
+				using (var msg = sink.ReceiveMessage())
 				{
 					msg.DumpZmsg("--------------------------");
 				}

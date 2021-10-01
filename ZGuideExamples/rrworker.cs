@@ -36,9 +36,9 @@ namespace Examples
 				}
 			}
 
-			string name = args[0];
+			var name = args[0];
 
-			string endpoint = args[1];
+			var endpoint = args[1];
 
 			// Socket to talk to clients
 			using (var context = new ZContext())
@@ -49,7 +49,7 @@ namespace Examples
 				while (true)
 				{
 					// Wait for next request from client
-					using (ZFrame request = responder.ReceiveFrame())
+					using (var request = responder.ReceiveFrame())
 					{
 						Console.Write("{0} ", request.ReadString());
 

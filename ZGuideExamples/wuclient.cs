@@ -34,13 +34,13 @@ namespace Examples
 					args = new string[] { args[0], "tcp://127.0.0.1:5556" };
 			}
 
-			string endpoint = args[1];
+			var endpoint = args[1];
 
 			// Socket to talk to server
 			using (var context = new ZContext())
 			using (var subscriber = new ZSocket(context, ZSocketType.SUB))
 			{
-				string connect_to = args[1];
+				var connect_to = args[1];
 				Console.WriteLine("I: Connecting to {0}...", connect_to);
 				subscriber.Connect(connect_to);
 
@@ -53,18 +53,18 @@ namespace Examples
 				} */
 
 				// Subscribe to zipcode
-				string zipCode = args[0];
+				var zipCode = args[0];
 				Console.WriteLine("I: Subscribing to zip code {0}...", zipCode);
 				subscriber.Subscribe(zipCode);
 
 				// Process 10 updates
-				int i = 0;
+				var i = 0;
 				long total_temperature = 0;
 				for (; i < 20; ++i)
 				{
 					using (var replyFrame = subscriber.ReceiveFrame())
 					{
-						string reply = replyFrame.ReadString();
+						var reply = replyFrame.ReadString();
 
 						Console.WriteLine(reply);
 						total_temperature += Convert.ToInt64(reply.Split(' ')[1]);

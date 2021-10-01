@@ -27,7 +27,7 @@ namespace Examples
 				mailbox.Connect("tcp://127.0.0.1:9876");
 
 				ZError error;
-				for (int count = 0; count < 10; ++count)
+				for (var count = 0; count < 10; ++count)
 				{
 					Console.WriteLine("Sending {0}. message", count);
 

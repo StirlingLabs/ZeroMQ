@@ -49,7 +49,7 @@ namespace Examples
 				args = new string[] { "People" };
 			}
 
-			string name = args[0];
+			var name = args[0];
 
 			using (var context = new ZContext())
 			{
@@ -66,8 +66,8 @@ namespace Examples
 						throw new ZException(error);
 					}
 
-					int sequence = 0;
-					int retries_left = LPClient_RequestRetries;
+					var sequence = 0;
+					var retries_left = LPClient_RequestRetries;
 					var poll = ZPollItem.CreateReceiver();
 
 					while (retries_left > 0)
@@ -100,7 +100,7 @@ namespace Examples
 								using (incoming)
 								{
 									// We got a reply from the server
-									int incoming_sequence = incoming[0].ReadInt32();
+									var incoming_sequence = incoming[0].ReadInt32();
 									if (sequence == incoming_sequence)
 									{
 										Console.WriteLine("I: server replied OK ({0})", incoming_sequence);

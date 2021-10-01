@@ -22,21 +22,21 @@ namespace Examples
 
 		public static void TIClient(string[] args)
 		{
-			CancellationTokenSource cancellor = new CancellationTokenSource();
+			var cancellor = new CancellationTokenSource();
 			Console.CancelKeyPress += (s, ea) =>
 			{
 				ea.Cancel = true;
 				cancellor.Cancel();
 			};
 
-			using (MajordomoClient session = new MajordomoClient("tcp://127.0.0.1:5555", Verbose))
+			using (var session = new MajordomoClient("tcp://127.0.0.1:5555", Verbose))
 			{
 				//  1. Send 'echo' request to Titanic
-				ZMessage request = new ZMessage();
+				var request = new ZMessage();
 				request.Add(new ZFrame("echo"));
 				request.Add(new ZFrame("Hello World"));
 
-				Guid uuid = Guid.Empty; 
+				var uuid = Guid.Empty; 
 				using (var reply = TIClient_ServiceCall(session, "titanic.request", request, cancellor))
 				{
 					if (reply != null)
@@ -56,7 +56,7 @@ namespace Examples
 					var reply = TIClient_ServiceCall(session, "titanic.reply", request, cancellor);
 					if (reply != null)
 					{
-						string replystring = reply.Last().ToString();
+						var replystring = reply.Last().ToString();
 						"Reply: {0}\n".DumpString(replystring);
 						reply.Dispose();
 

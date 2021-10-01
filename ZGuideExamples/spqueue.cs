@@ -43,14 +43,14 @@ namespace Examples
 							// Handle worker activity on backend
 
 							// incoming[0] is worker_id
-							string worker_id = incoming[0].ReadString();
+							var worker_id = incoming[0].ReadString();
 							// Queue worker identity for load-balancing
 							worker_queue.Add(worker_id);
 
 							// incoming[1] is empty
 
 							// incoming[2] is READY or else client_id
-							string client_id = incoming[2].ReadString();
+							var client_id = incoming[2].ReadString();
 
 							if (client_id == "READY")
 							{
@@ -97,17 +97,17 @@ namespace Examples
 								// Here is how we handle a client request
 
 								// Dequeue the next worker identity
-								string worker_id = worker_queue[0];
+								var worker_id = worker_queue[0];
 								worker_queue.RemoveAt(0);
 
 								// incoming[0] is client_id
-								string client_id = incoming[0].ReadString();
+								var client_id = incoming[0].ReadString();
 
 								// incoming[1] is empty
 
 								// incoming[2] is request
 								// string request = incoming[2].ReadString();
-								int request = incoming[2].ReadInt32();
+								var request = incoming[2].ReadInt32();
 
 								Console.WriteLine("I: ({0}) working on ({1}) {2}", worker_id, client_id, request);
 

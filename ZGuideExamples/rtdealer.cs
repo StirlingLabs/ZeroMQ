@@ -30,20 +30,20 @@ namespace Examples
 			{
 				broker.Bind("tcp://*:5671");
 
-				for (int i = 0; i < RTDealer_Workers; ++i)
+				for (var i = 0; i < RTDealer_Workers; ++i)
 				{
-					int j = i; new Thread(() => RTDealer_Worker(j)).Start();
+					var j = i; new Thread(() => RTDealer_Worker(j)).Start();
 				}
 
 				var stopwatch = new Stopwatch();
 				stopwatch.Start();
 
 				// Run for five seconds and then tell workers to end
-				int workers_fired = 0;
+				var workers_fired = 0;
 				while (true)
 				{
 					// Next message gives us least recently used worker
-					using (ZMessage identity = broker.ReceiveMessage())
+					using (var identity = broker.ReceiveMessage())
 					{
 						broker.SendMore(identity[0]);
 						broker.SendMore(new ZFrame());
@@ -75,7 +75,7 @@ namespace Examples
 				worker.IdentityString = "PEER" + i;	// Set a printable identity
 				worker.Connect("tcp://127.0.0.1:5671");
 
-				int total = 0;
+				var total = 0;
 				while (true)
 				{
 					// Tell the broker we're ready for work
@@ -84,9 +84,9 @@ namespace Examples
 					worker.Send(new ZFrame("Hi Boss"));	
 
 					// Get workload from broker, until finished
-					using (ZMessage msg = worker.ReceiveMessage())
+					using (var msg = worker.ReceiveMessage())
 					{
-						bool finished = (msg[1].ReadString() == "Fired!");
+						var finished = (msg[1].ReadString() == "Fired!");
 
 						if (finished)
 						{
