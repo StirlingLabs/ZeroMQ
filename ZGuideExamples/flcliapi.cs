@@ -36,9 +36,9 @@ namespace Examples
 			public FreelanceClient()
 			{
 				// Constructor
-				context = new ZContext();
+				context = new();
 
-				Actor = new ZActor(context, Agent);
+				Actor = new(context, Agent);
 				Actor.Start();
 			}
 
@@ -82,8 +82,8 @@ namespace Examples
 
 				using (var message = new ZMessage())
 				{
-					message.Add(new ZFrame("CONNECT"));
-					message.Add(new ZFrame(endpoint));
+					message.Add(new("CONNECT"));
+					message.Add(new(endpoint));
 
 					Actor.Frontend.Send(message);
 				}
@@ -96,13 +96,12 @@ namespace Examples
 				// To implement the request method, the frontend object sends a message
 				// to the backend, specifying a command "REQUEST" and the request message:
 
-				request.Prepend(new ZFrame("REQUEST"));
+				request.Prepend(new("REQUEST"));
 
 				Actor.Frontend.Send(request);
 
 				ZMessage reply;
-				ZError error;
-				if (null != (reply = Actor.Frontend.ReceiveMessage(out error))) 
+				if (null != (reply = Actor.Frontend.ReceiveMessage(out var error))) 
 				{
 					var status = reply.PopString();
 					if (status == "FAILED")
@@ -125,12 +124,10 @@ namespace Examples
 
 					while (!cancellor.IsCancellationRequested)
 					{
-						ZMessage msg;
-						ZError error;
 
 						// Poll the control message
 
-						if (agent.Pipe.PollIn(p, out msg, out error, TimeSpan.FromMilliseconds(64)))
+						if (agent.Pipe.PollIn(p, out var msg, out var error, TimeSpan.FromMilliseconds(64)))
 						{
 							using (msg)
 							{
@@ -190,9 +187,9 @@ namespace Examples
 									else
 									{
 										// Copy the Request, Push the Endpoint and send on Router
-										using (var request = agent.Request.Duplicate())
+										using (var request = agent.Request.Clone())
 										{
-											request.Prepend(new ZFrame(server.Endpoint));
+											request.Prepend(new(server.Endpoint));
 
 											agent.Router.Send(request);
 											break;
@@ -247,7 +244,7 @@ namespace Examples
 			public DateTime Expires;
 
 			public Agent(ZContext context, ZSocket pipe)
-				: this (context, default(string), pipe)
+				: this (context, default, pipe)
 			{
 				var rnd = new Random();
 				Router.IdentityString = "CLIENT" + rnd.Next();
@@ -258,14 +255,14 @@ namespace Examples
 				// Constructor
 				Pipe = pipe;
 
-				Router = new ZSocket(context, ZSocketType.ROUTER);
+				Router = new(context, ZSocketType.ROUTER);
 				if (name != null)
 				{
 					Router.IdentityString = name;
 				}
 
-				Servers = new HashSet<Server>();
-				Actives = new List<Server>();
+				Servers = new();
+				Actives = new();
 			}
 
 			~Agent()
@@ -332,10 +329,10 @@ namespace Examples
 					}
 
 					// Prefix request with sequence number and empty envelope
-					msg.Prepend(new ZFrame(++sequence));
+					msg.Prepend(new(++sequence));
 
 					// Take ownership of request message
-					Request = msg.Duplicate();
+					Request = msg.Clone();
 
 					// Request expires after global timeout
 					Expires = DateTime.UtcNow + GLOBAL_TIMEOUT;
@@ -360,7 +357,7 @@ namespace Examples
 				var sequence = reply.PopInt32();
 				if (sequence == this.sequence)
 				{
-					reply.Prepend(new ZFrame("OK"));
+					reply.Prepend(new("OK"));
 
 					Pipe.Send(reply);
 
@@ -412,8 +409,8 @@ namespace Examples
 				{
 					using (var outgoing = new ZMessage())
 					{
-						outgoing.Add(new ZFrame(Endpoint));
-						outgoing.Add(new ZFrame("PING"));
+						outgoing.Add(new(Endpoint));
+						outgoing.Add(new("PING"));
 
 						socket.Send(outgoing);
 					}

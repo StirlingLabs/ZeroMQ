@@ -28,12 +28,11 @@ namespace Examples
 				subscriber.Connect("tcp://127.0.0.1:5556");
 
 				ZFrame incoming;
-				ZError error;
 				var rnd = new Random();
 				while (!cancellor.IsCancellationRequested)
 				{
 					// Get and process messages
-					if (null != (incoming = subscriber.ReceiveFrame(out error)))
+					if (null != (incoming = subscriber.ReceiveFrame(out var error)))
 					{
 						var terms = incoming.ReadString();
 						Console.WriteLine(terms);
@@ -72,11 +71,10 @@ namespace Examples
 				publisher.Bind("tcp://*:5556");
 
 				ZFrame signal;
-				ZError error;
 				while (!cancellor.IsCancellationRequested)
 				{
 					// Send current clock (msecs) to subscribers
-					if (!publisher.Send(new ZFrame(DateTime.UtcNow.ToString("s")), out error))
+					if (!publisher.Send(new ZFrame(DateTime.UtcNow.ToString("s")), out var error))
 					{
 						if (error == ZError.ETERM)
 							break;	// Interrupted

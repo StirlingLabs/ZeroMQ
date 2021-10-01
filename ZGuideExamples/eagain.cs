@@ -21,14 +21,13 @@ namespace Examples
 				mailbox.Linger = TimeSpan.Zero;
 				mailbox.Connect("tcp://127.0.0.1:9876");
 
-				ZError error;
 				for (var count = 0; count < 10; ++count)
 				{
 					Console.WriteLine("Sending {0}. message", count);
 
-					using (var outgoing = new ZFrame(string.Format("message {0}", count)))
+					using (var outgoing = new ZFrame($"message {count}"))
 					{
-						if (!mailbox.Send(outgoing, ZSocketFlags.DontWait, out error))
+						if (!mailbox.Send(outgoing, ZSocketFlags.DontWait, out var error))
 						{
 							if (error == ZError.EAGAIN)
 							{

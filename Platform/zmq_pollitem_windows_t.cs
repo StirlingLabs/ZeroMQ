@@ -13,13 +13,13 @@ namespace ZeroMQ.lib
 
 		public zmq_pollitem_windows_t(IntPtr socket, ZPoll pollEvents)
 		{
-			if (socket == IntPtr.Zero)
+			if (socket == default)
 			{
 				throw new ArgumentException("Expected a valid socket handle.", nameof(socket));
 			}
 
 			socketPtr = socket;
-			fileDescriptor = IntPtr.Zero;
+			fileDescriptor = default;
 			events = (short)pollEvents;
 			readyEvents = 0;
 		}

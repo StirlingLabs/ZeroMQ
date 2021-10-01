@@ -48,15 +48,15 @@ namespace Examples
             public Broker(bool verbose)
             {
                 // Constructor
-                _context = new ZContext();
+                _context = new();
 
-                Socket = new ZSocket(_context, ZSocketType.ROUTER);
+                Socket = new(_context, ZSocketType.ROUTER);
 
                 Verbose = verbose;
 
-                Services = new Dictionary<string, Service>(); //new HashSet<Service>();
-                Workers = new Dictionary<string, Worker>(); //new HashSet<Worker>();
-                Waiting = new List<Worker>();
+                Services = new(); //new HashSet<Service>();
+                Workers = new(); //new HashSet<Worker>();
+                Waiting = new();
 
                 HeartbeatAt = DateTime.UtcNow + MdpCommon.HEARTBEAT_INTERVAL;
             }
@@ -120,7 +120,7 @@ namespace Examples
                 //string id_string = sender.ReadString();
                 bool isWorkerReady; 
                 //string id_string;
-                using (var sfrm = sender.Duplicate())
+                using (var sfrm = sender.Clone())
                 {
                     var idString = sfrm.Read().ToHexString();
                     isWorkerReady = Workers.ContainsKey(idString);
@@ -156,8 +156,8 @@ namespace Examples
                             //  Remove and save client return envelope and insert the
                             //  protocol header and service name, then rewrap envelope.
                             var client = msg.Unwrap();
-                            msg.Prepend(new ZFrame(worker.Service.Name));
-                            msg.Prepend(new ZFrame(MdpCommon.MDPC_CLIENT));
+                            msg.Prepend(new(worker.Service.Name));
+                            msg.Prepend(new(MdpCommon.MDPC_CLIENT));
                             msg.Wrap(client);
                             Socket.Send(msg);
                             worker.Waiting();
@@ -201,7 +201,7 @@ namespace Examples
                     var service = RequireService(serviceFrame);
 
                     // Set reply return identity to client sender
-                    msg.Wrap(sender.Duplicate());
+                    msg.Wrap(sender.Clone());
 
                     //if we got a MMI Service request, process that internally
                     if (serviceFrame.Length >= 4
@@ -222,9 +222,9 @@ namespace Examples
                         var client = msg.Unwrap();
                         
                         msg.Clear();
-                        msg.Add(new ZFrame(returnCode));
+                        msg.Add(new(returnCode));
                         msg.Prepend(serviceFrame);
-                        msg.Prepend(new ZFrame(MdpCommon.MDPC_CLIENT));
+                        msg.Prepend(new(MdpCommon.MDPC_CLIENT));
 
                         msg.Wrap(client);
                         Socket.Send(msg);
@@ -278,7 +278,7 @@ namespace Examples
                 }
                 else
                 {
-                    service = new Service(this, name);
+                    service = new(this, name);
                     Services[name] = service;
 
                     //zhash_freefn(self->workers, id_string, s_worker_destroy);
@@ -300,7 +300,7 @@ namespace Examples
                     throw new InvalidOperationException();
 
                 string idString;
-                using (var tstfrm = identity.Duplicate())
+                using (var tstfrm = identity.Clone())
                 {
                     idString = tstfrm.Read().ToHexString();
                 }
@@ -311,7 +311,7 @@ namespace Examples
 
                 if (worker == null)
                 {
-                    worker = new Worker(idString, this, identity);
+                    worker = new(idString, this, identity);
                     Workers[idString] = worker;
                     if(Verbose)
                         "I: registering new worker: '{0}'".DumpString(idString);
@@ -343,8 +343,8 @@ namespace Examples
             {
                 Broker = broker;
                 Name = name; 
-                Requests = new List<ZMessage>();
-                Waiting = new List<Worker>();
+                Requests = new();
+                Waiting = new();
             }
 
             ~Service()
@@ -422,7 +422,7 @@ namespace Examples
             {
                 Broker = broker;
                 IdString = idString;
-                Identity = identity.Duplicate();
+                Identity = identity.Clone();
             }
             ~Worker()
                 => Dispose(false);
@@ -464,17 +464,17 @@ namespace Examples
             public void Send(string command, string option, ZMessage msg)
             {
                 msg = msg != null
-                        ? msg.Duplicate()
-                        : new ZMessage();
+                        ? msg.Clone()
+                        : new();
 
                 // Stack protocol envelope to start of message
                 if (!string.IsNullOrEmpty(option))
-                    msg.Prepend(new ZFrame(option));
-                msg.Prepend(new ZFrame(command));
-                msg.Prepend(new ZFrame(MdpCommon.MDPW_WORKER));
+                    msg.Prepend(new(option));
+                msg.Prepend(new(command));
+                msg.Prepend(new(MdpCommon.MDPW_WORKER));
 
                 // Stack routing envelope to start of message
-                msg.Wrap(Identity.Duplicate());
+                msg.Wrap(Identity.Clone());
 
                 if(Broker.Verbose)
                     msg.DumpZmsg("I: sending '{0:X}|{0}' to worker", command.ToMdCmd());
@@ -517,13 +517,11 @@ namespace Examples
                 while (true)
                 {
                     if (cancellor.IsCancellationRequested
-                        || (Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape))
+                        || Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)
                         broker.ShutdownContext();
 
                     var p = ZPollItem.CreateReceiver();
-                    ZMessage msg;
-                    ZError error;
-                    if (broker.Socket.PollIn(p, out msg, out error, MdpCommon.HEARTBEAT_INTERVAL))
+                    if (broker.Socket.PollIn(p, out var msg, out var error, MdpCommon.HEARTBEAT_INTERVAL))
                     {
                         if (Verbose)
                             msg.DumpZmsg("I: received message:");

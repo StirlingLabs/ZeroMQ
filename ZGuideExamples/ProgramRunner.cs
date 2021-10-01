@@ -45,7 +45,7 @@ namespace Examples
 					}
 					else if (keyField.FieldType == typeof(bool))
 					{
-						var equalsTrue = (value == null || value == string.Empty);
+						var equalsTrue = value == null || value == string.Empty;
 						if (!equalsTrue)
 							equalsTrue = string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
 						if (!equalsTrue)
@@ -57,7 +57,7 @@ namespace Examples
 			}
 
 			var methods = typeof(Program).GetMethods(BindingFlags.Public | BindingFlags.Static).OrderBy(method => method.Name).ToList();
-            var command = (args.Length == 0) ? "help" : args[0 + leaveOut].ToLower();
+            var command = args.Length == 0 ? "help" : args[0 + leaveOut].ToLower();
             if (command != "help")
 			{
 				var method = methods.FirstOrDefault(m => m.Name.Equals(command, StringComparison.OrdinalIgnoreCase));

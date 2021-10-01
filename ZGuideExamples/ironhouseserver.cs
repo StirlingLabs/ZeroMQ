@@ -38,9 +38,9 @@ namespace Examples
                 // send CURVE settings to ZAuth
                 actor.Frontend.Send(new ZFrame("VERBOSE"));
                 actor.Frontend.Send(new ZMessage(new List<ZFrame>
-                    { new ZFrame("ALLOW"), new ZFrame("127.0.0.1") } ));
+                    { new("ALLOW"), new("127.0.0.1") } ));
                 actor.Frontend.Send(new ZMessage(new List<ZFrame>
-                    { new ZFrame("CURVE"), new ZFrame(".curve") }));
+                    { new("CURVE"), new(".curve") }));
 
                 responder.CurvePublicKey = serverCert.PublicKey;
                 responder.CurveSecretKey = serverCert.SecretKey;
@@ -71,7 +71,7 @@ namespace Examples
             var keyfile = Path.Combine(curvpath, name + ".pub");
             if (!File.Exists(keyfile))
             {
-                cert = new ZCert();
+                cert = new();
                 Directory.CreateDirectory(curvpath);
                 cert.SetMeta("name", name);
                 cert.Save(keyfile);

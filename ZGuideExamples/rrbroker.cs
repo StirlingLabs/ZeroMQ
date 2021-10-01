@@ -25,11 +25,9 @@ namespace Examples
 				var poll = ZPollItem.CreateReceiver();
 
 				// Switch messages between sockets
-				ZError error;
-				ZMessage message;
 				while (true)
 				{
-					if (frontend.PollIn(poll, out message, out error, TimeSpan.FromMilliseconds(64)))
+					if (frontend.PollIn(poll, out var message, out var error, TimeSpan.FromMilliseconds(64)))
 					{
 						// Process all parts of the message
 						Console_WriteZMessage("frontend", 2, message);

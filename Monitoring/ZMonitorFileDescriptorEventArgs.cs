@@ -13,7 +13,7 @@ namespace ZeroMQ.Monitoring
 		{
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				FileDescriptor_Windows = new IntPtr(data.EventValue);
+				FileDescriptor_Windows = new(data.EventValue);
 			}
 			else
 			{

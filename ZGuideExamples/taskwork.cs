@@ -37,7 +37,7 @@ namespace Examples
 
 					Thread.Sleep(workload);	// Do the work
 
-					sink.Send(new byte[0], 0, 0);	// Send results to sink
+					sink.Send(Array.Empty<byte>(), 0, 0);	// Send results to sink
 				}
 			}
 		}

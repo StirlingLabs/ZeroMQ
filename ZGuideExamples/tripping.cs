@@ -26,8 +26,8 @@ namespace Examples
             {
                 using (var client = new ZActor(ctx, Tripping_ClientTask))
                 {
-                    (new Thread(() => Tripping_WorkerTask(ctx))).Start();
-                    (new Thread(() => Tripping_BrokerTask(ctx))).Start();
+                    new Thread(() => Tripping_WorkerTask(ctx)).Start();
+                    new Thread(() => Tripping_BrokerTask(ctx)).Start();
                     client.Start();
                     using (var signal = client.Frontend.ReceiveFrame())
                         if (Verbose)
@@ -93,8 +93,7 @@ namespace Examples
 
                 while (true)
                 {
-                    ZError error;
-                    var msg = worker.ReceiveMessage(out error);
+                    var msg = worker.ReceiveMessage(out var error);
                     if (error == null && worker.Send(msg, out error))
                         continue;
                     // errorhandling, context terminated or sth else
@@ -116,8 +115,7 @@ namespace Examples
                 frontend.Bind("tcp://*:5555");
                 backend.Bind("tcp://*:5556");
 
-                ZError error;
-                if (!ZContext.Proxy(frontend, backend, out error))
+                if (!ZContext.Proxy(frontend, backend, out var error))
                 {
                     if (Equals(error, ZError.ETERM))
                         return; // Interrupted

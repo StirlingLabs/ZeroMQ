@@ -9,108 +9,90 @@ using ZeroMQ.lib;
 
 namespace ZeroMQ
 {
-	/// <summary>
+    /// <summary>
     /// TODO merge this with its sole subclass, ZError
     /// </summary>
     public class ZSymbol
-	{
-		internal protected ZSymbol(int errno)
-			=> _num = errno;
+    {
+        protected internal ZSymbol(int errno)
+            => _num = errno;
 
-		private int _num;
-		public int Number => _num;
+        private int _num;
+        public int Number => _num;
 
-		public string Name
-        {
-            get
-            {
-                string result;
-                return _zsymbolToName.TryGetValue(this, out result) ? result : "<unknown>";
-            }
-        }
+        public string Name => _zsymbolToName.TryGetValue(this, out var result) ? result : "<unknown>";
 
         public string Text => Marshal.PtrToStringAnsi(zmq.strerror(_num));
 
         private static void PickupConstantSymbols<T>(ref IDictionary<ZSymbol, string> symbols)
             where T : ZSymbol
-		{
-			var type = typeof(T);
+        {
+            var type = typeof(T);
 
-			var fields = type.GetFields(BindingFlags.Static | BindingFlags.Public);
+            var fields = type.GetFields(BindingFlags.Static | BindingFlags.Public);
 
-			var codeType = type.GetNestedType("Code", BindingFlags.NonPublic);
+            var codeType = type.GetNestedType("Code", BindingFlags.NonPublic);
 
-			// Pickup constant symbols
-			foreach (var symbolField in fields.Where(f => typeof(ZSymbol).IsAssignableFrom(f.FieldType)))
-			{
-				var symbolCodeField = codeType.GetField(symbolField.Name);
-				if (symbolCodeField != null)
-				{
-					var symbolNumber = (int)symbolCodeField.GetValue(null);
+            // Pickup constant symbols
+            foreach (var symbolField in fields.Where(f => typeof(ZSymbol).IsAssignableFrom(f.FieldType)))
+            {
+                var symbolCodeField = codeType?.GetField(symbolField.Name);
 
-				    var symbol = Activator.CreateInstance(
-				        type,
-				        BindingFlags.NonPublic | BindingFlags.Instance, 
-				        null,
-				        new object[] {symbolNumber},
-				        null);
-					symbolField.SetValue(null, symbol);
-					symbols.Add((ZSymbol)symbol, symbolCodeField.Name);
-				}
-			}
-		}
+                if (symbolCodeField == null)
+                    continue;
 
-		public static readonly ZSymbol None = default(ZSymbol);
+                var symbolNumber = (int)symbolCodeField.GetValue(null);
 
-		static ZSymbol()
-		{
-			// System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(zmq).TypeHandle);
+                var symbol = Activator.CreateInstance(
+                    type,
+                    BindingFlags.NonPublic | BindingFlags.Instance,
+                    null,
+                    new object[] { symbolNumber },
+                    null);
+                symbolField.SetValue(null, symbol);
+                symbols.Add((ZSymbol)symbol, symbolCodeField.Name);
+            }
+        }
 
-			IDictionary<ZSymbol, string> symbols = new Dictionary<ZSymbol, string>();
+        public static readonly ZSymbol None = default;
 
-			PickupConstantSymbols<ZError>(ref symbols);
+        static ZSymbol()
+        {
+            // System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(zmq).TypeHandle);
 
-			_zsymbolToName = symbols;
-		}
+            IDictionary<ZSymbol, string> symbols = new Dictionary<ZSymbol, string>();
 
-        [Obsolete]
-		public bool IsEmpty()
-			// TODO: what is the intended semantics of this method? The following expression is always false, since default(ZSymbol) == null.
-			=> this == default(ZSymbol);
+            PickupConstantSymbols<ZError>(ref symbols);
 
-		static IDictionary<ZSymbol, string> _zsymbolToName;
+            _zsymbolToName = symbols;
+        }
 
-		public static IEnumerable<ZSymbol> Find(string symbol)
-			=> _zsymbolToName
-				.Where(s => s.Value != null && (s.Value == symbol)).Select(x => x.Key);
+        static IDictionary<ZSymbol, string> _zsymbolToName;
 
-		public static IEnumerable<ZSymbol> Find(string ns, int num)
-			=> _zsymbolToName
-				.Where(s => s.Value != null && (s.Value.StartsWith(ns) && s.Key._num == num)).Select(x => x.Key);
+        public static IEnumerable<ZSymbol> Find(string symbol)
+            => _zsymbolToName
+                .Where(s => s.Value != null && s.Value == symbol).Select(x => x.Key);
 
-		public override bool Equals(object obj)
-			=> Equals(this, obj);
+        public static IEnumerable<ZSymbol> Find(string ns, int num)
+            => _zsymbolToName
+                .Where(s => s.Value != null && s.Value.StartsWith(ns) && s.Key._num == num).Select(x => x.Key);
 
-		public new static bool Equals(object a, object b)
-	    {
-	        if (ReferenceEquals(a, b))
-	        {
-	            return true;
-	        }
+        public override bool Equals(object obj)
+            => Equals(this, obj);
 
-	        var symbolA = a as ZSymbol;
-	        var symbolB = b as ZSymbol;
+        public new static bool Equals(object a, object b)
+            => ReferenceEquals(a, b)
+                || a is ZSymbol symbolA
+                && b is ZSymbol symbolB
+                && symbolA._num == symbolB._num;
 
-	        return symbolA != null && symbolB != null && symbolA._num == symbolB._num;
-	    }
+        public override int GetHashCode()
+            => Number.GetHashCode();
 
-		public override int GetHashCode()
-			=> Number.GetHashCode();
+        public override string ToString()
+            => Name + "(" + Number + "): " + Text;
 
-		public override string ToString()
-			=> Name + "(" + Number + "): " + Text;
-
-		public static implicit operator int(ZSymbol errnum)
-			=> errnum.Number;
-	}
+        public static implicit operator int(ZSymbol errnum)
+            => errnum.Number;
+    }
 }

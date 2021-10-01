@@ -54,13 +54,12 @@ namespace Examples
 			}
 			var name = args[0];
 
-			ZError error;
 			using (var context = new ZContext())
 			{
 				ZSocket worker = null;
 				try // using (worker)
 				{
-					if (null == (worker = PPWorker_CreateZSocket(context, name, out error)))
+					if (null == (worker = PPWorker_CreateZSocket(context, name, out var error)))
 					{
 						if (error == ZError.ETERM)
 							return;	// Interrupted
@@ -74,14 +73,13 @@ namespace Examples
 					// Send out heartbeats at regular intervals
 					var heartbeat_at = DateTime.UtcNow + Worker.PPP_HEARTBEAT_INTERVAL;
 
-					ZMessage incoming;
 					var cycles = 0;
 					var poll = ZPollItem.CreateReceiver();
 					var rnd = new Random();
 
 					while (true)
 					{
-						if (worker.PollIn(poll, out incoming, out error, Worker.PPP_TICK))
+						if (worker.PollIn(poll, out var incoming, out error, Worker.PPP_TICK))
 						{
 							// Get message
 							// - 3-part envelope + content -> request

@@ -48,21 +48,19 @@ namespace Examples
 				// status messages back from peers. The zmq_poll timeout defines
 				// our own heartbeat:
 
-				ZError error;
-				ZMessage incoming;
 				var poll = ZPollItem.CreateReceiver();
 				var rnd = new Random();
 
 				while (true)
 				{
 					// Poll for activity, or 1 second timeout
-					if (!frontend.PollIn(poll, out incoming, out error, TimeSpan.FromSeconds(1)))
+					if (!frontend.PollIn(poll, out var incoming, out var error, TimeSpan.FromSeconds(1)))
 					{
 						if (error == ZError.EAGAIN)
 						{
 							using (var output = new ZMessage())
 							{
-								output.Add(new ZFrame(self));
+								output.Add(new(self));
 
 								var outputNumber = ZFrame.Create(4);
 								outputNumber.Write(rnd.Next(10));
@@ -88,9 +86,9 @@ namespace Examples
 			}
 		}
 
-		static Int16 Peering1_GetPort(string name)
+		static short Peering1_GetPort(string name)
 		{
-			var hash = (Int16)name[0];
+			var hash = (short)name[0];
 			if (hash < 1024)
 			{
 				hash += 1024;

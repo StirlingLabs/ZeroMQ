@@ -31,14 +31,13 @@ namespace Examples
 				subscriber.Connect(args[0]);
 
 				var rnd = new Random();
-				var subscription = string.Format("{0:D3}", rnd.Next(1000));
+				var subscription = $"{rnd.Next(1000):D3}";
 				subscriber.Subscribe(subscription);
 
 				ZMessage msg;
-				ZError error;
 				while (true)
 				{
-					if (null == (msg = subscriber.ReceiveMessage(out error)))
+					if (null == (msg = subscriber.ReceiveMessage(out var error)))
 					{
 						if (error == ZError.ETERM)
 							break;	// Interrupted

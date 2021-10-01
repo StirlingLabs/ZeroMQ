@@ -36,7 +36,7 @@ namespace Examples
 				{
 					receiver.ReceiveFrame();
 
-					if ((i / 10) * 10 == i)
+					if (i / 10 * 10 == i)
 						Console.Write(":");
 					else
 						Console.Write(".");

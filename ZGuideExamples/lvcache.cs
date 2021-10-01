@@ -33,12 +33,10 @@ namespace Examples
 				// we handle subscriptions by sending whatever we cached,
 				// if anything:
 				var p = ZPollItem.CreateReceiver();
-				ZMessage msg;
-				ZError error;
 				while (true)
 				{
 					// Any new topic data we cache and then forward
-					if (frontend.PollIn(p, out msg, out error, TimeSpan.FromMilliseconds(1)))
+					if (frontend.PollIn(p, out var msg, out var error, TimeSpan.FromMilliseconds(1)))
 					{
 						using (msg)
 						{
@@ -50,7 +48,8 @@ namespace Examples
 							{
 								cache.Remove(previous);
 							}
-							cache.Add(new LVCacheItem { Topic = topic, Current = current });
+							cache.Add(new()
+								{ Topic = topic, Current = current });
 
 							backend.Send(msg);
 						}
@@ -77,7 +76,7 @@ namespace Examples
 								if (previous != null)
 								{
 									Console.WriteLine("Sending cached topic {0}", topic);
-									backend.SendMore(new ZFrame(previous.Topic));
+									backend.SendMore(new(previous.Topic));
 									backend.Send(new ZFrame(previous.Current));
 								}
 								else

@@ -61,12 +61,12 @@ namespace Examples
 							if (controlMessage == "PING")
 							{
 								control.Dispose();
-								response.Add(new ZFrame("PONG"));
+								response.Add(new("PONG"));
 							}
 							else
 							{
 								response.Add(control);
-								response.Add(new ZFrame("OK"));
+								response.Add(new("OK"));
 							}
 						}
 

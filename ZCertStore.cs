@@ -30,9 +30,9 @@ namespace ZeroMQ
     class ZCertStore
     {
         // a dictionary with public keys (in text) and their certificates.
-        Dictionary<string, ZCert> certs = new Dictionary<string, ZCert>();
+        Dictionary<string, ZCert> certs = new();
 
-        FileSystemWatcher watcher = new FileSystemWatcher();
+        FileSystemWatcher watcher = new();
 
         /// <summary>
         /// The path to the certificate store (e.g. ".curve") or null if in memory only.
@@ -42,9 +42,7 @@ namespace ZeroMQ
         /// <summary>
         /// Certificate store in memory constructor,
         /// </summary>
-        public ZCertStore() : this(null)
-        {
-        }
+        public ZCertStore() : this(null) { }
 
         /// <summary>
         /// Create a new certificate store, loading and indexing all certificates.
@@ -100,7 +98,7 @@ namespace ZeroMQ
         public void Insert(ZCert cert)
         {
             lock (certs)
-            { 
+            {
                 certs[cert.PublicTxt] = cert;
             }
         }

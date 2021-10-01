@@ -60,7 +60,7 @@ namespace Examples
 					using (var outgoing = new ZMessage())
 					{
 						outgoing.Add(identity);
-						outgoing.Add(new ZFrame("OK"));
+						outgoing.Add(new("OK"));
 
 						if (!server.Send(outgoing, out error))
 						{

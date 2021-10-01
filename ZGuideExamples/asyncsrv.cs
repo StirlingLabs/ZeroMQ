@@ -32,7 +32,6 @@ namespace Examples
 				client.Connect("tcp://127.0.0.1:5570");
 
 				ZError error;
-				ZMessage incoming;
 				var poll = ZPollItem.CreateReceiver();
 
 				var requests = 0;
@@ -41,7 +40,7 @@ namespace Examples
 					// Tick once per second, pulling in arriving messages
 					for (var centitick = 0; centitick < 100; ++centitick)
 					{
-						if (!client.PollIn(poll, out incoming, out error, TimeSpan.FromMilliseconds(10)))
+						if (!client.PollIn(poll, out var incoming, out error, TimeSpan.FromMilliseconds(10)))
 						{
 							if (error == ZError.EAGAIN)
 							{
@@ -60,8 +59,8 @@ namespace Examples
 					}
 					using (var outgoing = new ZMessage())
 					{
-						outgoing.Add(new ZFrame(client.Identity));
-						outgoing.Add(new ZFrame("request " + (++requests)));
+						outgoing.Add(new(client.Identity));
+						outgoing.Add(new("request " + ++requests));
 
 						if (!client.Send(outgoing, out error))
 						{
@@ -97,8 +96,7 @@ namespace Examples
 				}
 
 				// Connect backend to frontend via a proxy
-				ZError error;
-				if (!ZContext.Proxy(frontend, backend, out error))
+				if (!ZContext.Proxy(frontend, backend, out var error))
 				{
 					if (error == ZError.ETERM)
 						return;	// Interrupted
@@ -116,13 +114,12 @@ namespace Examples
 			{
 				worker.Connect("inproc://backend");
 
-				ZError error;
 				ZMessage request;
 				var rnd = new Random();
 
 				while (true)
 				{
-					if (null == (request = worker.ReceiveMessage(out error)))
+					if (null == (request = worker.ReceiveMessage(out var error)))
 					{
 						if (error == ZError.ETERM)
 							return;	// Interrupted
@@ -143,8 +140,8 @@ namespace Examples
 
 							using (var response = new ZMessage())
 							{
-								response.Add(new ZFrame(identity));
-								response.Add(new ZFrame(content));
+								response.Add(new(identity));
+								response.Add(new(content));
 
 								if (!worker.Send(response, out error))
 								{

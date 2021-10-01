@@ -44,7 +44,7 @@ namespace Examples
 				// Send out all 1,000 topic messages
 				for (var topic = 0; topic < 1000; ++topic)
 				{
-					publisher.SendMore(new ZFrame(string.Format("{0:D3}", topic)));
+					publisher.SendMore(new($"{topic:D3}"));
 					publisher.Send(new ZFrame("Save Roger"));
 				}
 
@@ -53,7 +53,7 @@ namespace Examples
 				while (true)
 				{
 					Thread.Sleep(10);
-					publisher.SendMore(new ZFrame(string.Format("{0:D3}", rnd.Next(1000))));
+					publisher.SendMore(new($"{rnd.Next(1000):D3}"));
 					publisher.Send(new ZFrame("Off with his head!"));
 				}
 			}

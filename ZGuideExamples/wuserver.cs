@@ -40,7 +40,7 @@ namespace Examples
 					var temperature = rnd.Next(-55, +45);
 
 					// Send message to all subscribers
-					var update = string.Format("{0:D5} {1}", zipcode, temperature);
+					var update = $"{zipcode:D5} {temperature}";
 					using (var updateFrame = new ZFrame(update))
 					{
 						publisher.Send(updateFrame);

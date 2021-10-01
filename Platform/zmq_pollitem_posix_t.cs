@@ -13,7 +13,7 @@ namespace ZeroMQ.lib
 
 		public zmq_pollitem_posix_t(IntPtr socket, ZPoll pollEvents)
 		{
-			if (socket == IntPtr.Zero)
+			if (socket == default)
 			{
 				throw new ArgumentException("Expected a valid socket handle.", nameof(socket));
 			}

@@ -53,7 +53,7 @@ namespace Examples
 				{
 					using (var request = new ZMessage())
 					{
-						request.Add(new ZFrame(name));
+						request.Add(new(name));
 
 						using (var reply = client.Request(request))
 						{

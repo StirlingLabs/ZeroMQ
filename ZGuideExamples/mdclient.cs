@@ -25,7 +25,7 @@ namespace Examples
 				for (count = 0; count < 100000; count++)
 				{
 					var request = new ZMessage();
-					request.Prepend(new ZFrame("Hello world"));
+					request.Prepend(new("Hello world"));
 					using (var reply = session.Send("echo", request, cts))
 						if (reply == null)
 							break; // Interrupt or failure

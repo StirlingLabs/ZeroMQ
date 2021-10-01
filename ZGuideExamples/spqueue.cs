@@ -26,13 +26,11 @@ namespace Examples
 				// Queue of available workers
 				var worker_queue = new List<string>();
 
-				ZError error;
-				ZMessage incoming;
 				var poll = ZPollItem.CreateReceiver();
 
 				while (true)
 				{
-					if (backend.PollIn(poll, out incoming, out error, TimeSpan.FromMilliseconds(64)))
+					if (backend.PollIn(poll, out var incoming, out var error, TimeSpan.FromMilliseconds(64)))
 					{
 						using (incoming)
 						{
@@ -64,8 +62,8 @@ namespace Examples
 
 								using (var outgoing = new ZMessage())
 								{
-									outgoing.Add(new ZFrame(client_id));
-									outgoing.Add(new ZFrame());
+									outgoing.Add(new(client_id));
+									outgoing.Add(new());
 									outgoing.Add(incoming[4]);
 
 									// Send
@@ -109,10 +107,10 @@ namespace Examples
 
 								using (var outgoing = new ZMessage())
 								{
-									outgoing.Add(new ZFrame(worker_id));
-									outgoing.Add(new ZFrame());
-									outgoing.Add(new ZFrame(client_id));
-									outgoing.Add(new ZFrame());
+									outgoing.Add(new(worker_id));
+									outgoing.Add(new());
+									outgoing.Add(new(client_id));
+									outgoing.Add(new());
 									outgoing.Add(incoming[2]);
 
 									// Send

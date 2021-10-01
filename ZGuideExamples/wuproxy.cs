@@ -29,11 +29,11 @@ namespace Examples
 				// Backend is our public endpoint for subscribers
 				foreach (var address in WUProxy_GetPublicIPs())
 				{
-					var tcpAddress = string.Format("tcp://{0}:8100", address);
+					var tcpAddress = $"tcp://{address}:8100";
 					Console.WriteLine("I: Binding on {0}", tcpAddress);
 					backend.Bind(tcpAddress);
 
-					var epgmAddress = string.Format("epgm://{0};239.192.1.1:8100", address);
+					var epgmAddress = $"epgm://{address};239.192.1.1:8100";
 					Console.WriteLine("I: Binding on {0}", epgmAddress);
 					backend.Bind(epgmAddress);
 				}

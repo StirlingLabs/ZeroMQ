@@ -15,14 +15,12 @@ namespace ZeroMQ
     /// </summary>
     public class ZAuth : IDisposable
     {
-
         /// <summary>
         /// A small class for working with ZAP requests and replies.
         /// Used internally in ZAuth to simplify working with RFC 27 messages.
         /// </summary>
         private class ZAP
         {
-
             ZSocket handler;
             bool Verbose;
 
@@ -72,7 +70,6 @@ namespace ZeroMQ
                 Address = string.IsNullOrEmpty(Address) ? "" : Address;
                 Identity = string.IsNullOrEmpty(Identity) ? "" : Identity;
 
-
                 //  If the version is wrong, we're linked with a bogus libzmq, so die
                 if (Version != "1.0")
                 {
@@ -87,8 +84,7 @@ namespace ZeroMQ
                     Username = string.IsNullOrEmpty(Username) ? "" : Username;
                     Password = string.IsNullOrEmpty(Password) ? "" : Password;
                 }
-                else
-                if (Mechanism == "CURVE")
+                else if (Mechanism == "CURVE")
                 {
                     var frame = request.Pop();
 
@@ -99,12 +95,11 @@ namespace ZeroMQ
                     var cert = new ZCert(frame.Read(), new byte[32]);
                     ClientTxt = cert.PublicTxt;
                 }
-                else
-                if (Mechanism == "GSSAPI")
+                else if (Mechanism == "GSSAPI")
                     Principal = request.Pop().ReadLine();
 
                 if (Verbose)
-                    Info(string.Format("zauth: ZAP request mechanism={0} ipaddress={1}", Mechanism, Address));
+                    Info($"zauth: ZAP request mechanism={Mechanism} ipaddress={Address}");
             }
 
             /// <summary>
@@ -117,16 +112,16 @@ namespace ZeroMQ
             public int RequestReply(string status_code, string status_text, byte[] metadata)
             {
                 if (Verbose)
-                    Info(string.Format("zauth: - ZAP reply status_code={0} status_text={1}", status_code, status_text));
+                    Info($"zauth: - ZAP reply status_code={status_code} status_text={status_text}");
 
                 var msg = new ZMessage();
-                msg.Add(new ZFrame("1.0"));
-                msg.Add(new ZFrame(Sequence));
-                msg.Add(new ZFrame(status_code));
-                msg.Add(new ZFrame(status_text));
-                msg.Add(new ZFrame(UserId != null ? UserId : ""));
+                msg.Add(new("1.0"));
+                msg.Add(new(Sequence));
+                msg.Add(new(status_code));
+                msg.Add(new(status_text));
+                msg.Add(new(UserId != null ? UserId : ""));
                 // rc = zmsg_addmem(msg, metadata, metasize);
-                msg.Add(new ZFrame(metadata));
+                msg.Add(new(metadata));
                 handler.SendMessage(msg);
                 return 0;
             }
@@ -144,15 +139,15 @@ namespace ZeroMQ
         /// <summary>
         /// Whitelisted addresses
         /// </summary>
-        HashSet<string> whitelist = new HashSet<string>();
+        HashSet<string> whitelist = new();
         /// <summary>
         /// Blacklisted addresses
         /// </summary>
-        HashSet<string> blacklist = new HashSet<string>();
+        HashSet<string> blacklist = new();
         /// <summary>
         /// PLAIN passwords, if loaded
         /// </summary>
-        Dictionary<string, string> passwords = new Dictionary<string, string>();
+        Dictionary<string, string> passwords = new();
 
         /// <summary>
         /// CURVE allows arbitrary clients
@@ -202,9 +197,7 @@ namespace ZeroMQ
             this.certStore = certStore;
         }
 
-        private ZAuth(ZSocket pipe, ZCertStore certStore = null) : this(null, pipe, certStore)
-        {
-        }
+        private ZAuth(ZSocket pipe, ZCertStore certStore = null) : this(null, pipe, certStore) { }
 
         /// <summary>
         /// Did caller ask us to quit?
@@ -248,11 +241,9 @@ namespace ZeroMQ
         {
             while (!self.Terminated && !cancellor.IsCancellationRequested)
             {
-                ZMessage[] msg;
-                ZError error;
                 // we only poll for 50 ms so we can look at the cancellation flags from time to time...
                 TimeSpan? wait = TimeSpan.FromMilliseconds(50);
-                if (self.sockets.PollIn(self.pollers, out msg, out error, wait))
+                if (self.sockets.PollIn(self.pollers, out var msg, out var error, wait))
                 {
                     if (msg != null && msg.Length == 2)
                     {
@@ -331,16 +322,13 @@ namespace ZeroMQ
                         Info("zauth: - allowed (NULL)");
                     allowed = true;
                 }
-                else
-                if (request.Mechanism == "PLAIN")
+                else if (request.Mechanism == "PLAIN")
                     //  For PLAIN, even a whitelisted address must authenticate
                     allowed = AuthenticatePlain(request);
-                else
-                if (request.Mechanism == "CURVE")
+                else if (request.Mechanism == "CURVE")
                     //  For CURVE, even a whitelisted address must authenticate
                     allowed = AuthenticateCurve(request, metabuf, out metadataLength);
-                else
-                if (request.Mechanism == "GSSAPI")
+                else if (request.Mechanism == "GSSAPI")
                     //  For GSSAPI, even a whitelisted address must authenticate
                     allowed = AuthenticateGssapi(request);
             }
@@ -355,16 +343,15 @@ namespace ZeroMQ
 
             {
                 //s_zap_request_reply(request, "400", "No access", (unsigned char *) "", 0);
-                request.RequestReply("400", "No access", new byte[0]);
-                
+                request.RequestReply("400", "No access", Array.Empty<byte>());
+
             }
         }
 
         private bool AuthenticateGssapi(ZAP request)
         {
             if (verbose)
-                Info(string.Format("zauth: - allowed (GSSAPI) principal={0} identity={1}",
-                           request.Principal, request.Identity));
+                Info($"zauth: - allowed (GSSAPI) principal={request.Principal} identity={request.Identity}");
             request.UserId = request.Principal;
             return true;
         }
@@ -415,11 +402,11 @@ namespace ZeroMQ
             return 1 + name.Length + 4 + value.Length;
         }
 
-        private static void PutUint32(List<byte> buffer, UInt32 value)
+        private static void PutUint32(List<byte> buffer, uint value)
         {
-            buffer.Add((byte)(((value) >> 24) & 0xff));
-            buffer.Add((byte)(((value) >> 16) & 0xff));
-            buffer.Add((byte)(((value) >> 8) & 0xff));
+            buffer.Add((byte)((value >> 24) & 0xff));
+            buffer.Add((byte)((value >> 16) & 0xff));
+            buffer.Add((byte)((value >> 8) & 0xff));
             buffer.Add((byte)(value & 0xff));
         }
 
@@ -430,13 +417,11 @@ namespace ZeroMQ
                 if (passwords.ContainsKey(request.Username) && passwords[request.Username] == request.Password)
                 {
                     if (verbose)
-                        Info(string.Format("zauth: - allowed (PLAIN) username={0} password={1}",
-                           request.Username, request.Password));
+                        Info($"zauth: - allowed (PLAIN) username={request.Username} password={request.Password}");
                     return true;
                 }
                 if (verbose)
-                    Info(string.Format("zauth: - denied (PLAIN) username={0} password={1}",
-                        request.Username, request.Password));
+                    Info($"zauth: - denied (PLAIN) username={request.Username} password={request.Password}");
                 return false;
             }
             if (verbose)
@@ -447,7 +432,7 @@ namespace ZeroMQ
         private int HandlePipe(ZMessage request)
         {
             if (request.Count == 0)
-                return -1;                  //  Interrupted
+                return -1; //  Interrupted
 
             var commandFrame = request.Pop();
             var command = commandFrame.ReadLine();
@@ -467,10 +452,9 @@ namespace ZeroMQ
                         whitelist.Add(address);
                 }
                 // 
-                sockets[PIPE].SendFrame(new ZFrame(0));
+                sockets[PIPE].SendFrame(new(0));
             }
-            else
-            if (command == "DENY")
+            else if (command == "DENY")
             {
                 while (request.Count > 0)
                 {
@@ -484,10 +468,9 @@ namespace ZeroMQ
                     if (whitelist.Contains(address))
                         whitelist.Remove(address);
                 }
-                sockets[PIPE].SendFrame(new ZFrame(0));
+                sockets[PIPE].SendFrame(new(0));
             }
-            else
-            if (command == "PLAIN")
+            else if (command == "PLAIN")
             {
                 //  Get password file and load into zhash table
                 //  If the file doesn't exist we'll get an empty table
@@ -495,10 +478,9 @@ namespace ZeroMQ
                 var filename = frame.ReadLine();
                 if (Load(out passwords, filename) != 0 && verbose)
                     Info("zauth: could not load file=" + filename);
-                sockets[PIPE].SendFrame(new ZFrame(0));
+                sockets[PIPE].SendFrame(new(0));
             }
-            else
-            if (command == "CURVE")
+            else if (command == "CURVE")
             {
                 //  If location is CURVE_ALLOW_ANY, allow all clients. Otherwise
                 //  treat location as a directory that holds the certificates.
@@ -510,23 +492,20 @@ namespace ZeroMQ
                 }
                 else
                 {
-                    certStore = new ZCertStore(location);
+                    certStore = new(location);
                     allowAny = false;
                 }
-                sockets[PIPE].SendFrame(new ZFrame(0));
+                sockets[PIPE].SendFrame(new(0));
             }
-            else
-            if (command == "GSSAPI")
+            else if (command == "GSSAPI")
                 //  GSSAPI authentication is not yet implemented here
-                sockets[PIPE].SendFrame(new ZFrame(0));
-            else
-            if (command == "VERBOSE")
+                sockets[PIPE].SendFrame(new(0));
+            else if (command == "VERBOSE")
             {
                 verbose = true;
-                sockets[PIPE].SendFrame(new ZFrame(0));
+                sockets[PIPE].SendFrame(new(0));
             }
-            else
-            if (command == "$TERM")
+            else if (command == "$TERM")
                 Terminated = true;
             else
             {
@@ -567,9 +546,9 @@ namespace ZeroMQ
         }
 
         /// <summary>
-		/// Close the current  zauth/zactor.
-		/// </summary>
-		public void Close()
+        /// Close the current  zauth/zactor.
+        /// </summary>
+        public void Close()
             => Terminated = true;
 
         /// <summary>
@@ -580,9 +559,9 @@ namespace ZeroMQ
         /// <param name="self"></param>
         /// <param name="filename"></param>
         /// <returns></returns>
-        static private int Load(out Dictionary<string, string> self, string filename)
+        private static int Load(out Dictionary<string, string> self, string filename)
         {
-            self = new Dictionary<string, string>();
+            self = new();
 
             if (!File.Exists(filename))
                 return -1;
@@ -612,7 +591,7 @@ namespace ZeroMQ
         private static string[] Split(string str)
         {
             var splitindex = str.IndexOf('"');
-            var metadata = new string[0];
+            var metadata = Array.Empty<string>();
             if (splitindex > 2)
             {
                 metadata = new string[2] { str.Substring(0, splitindex - 2).Trim(), str.Substring(splitindex).Trim() };

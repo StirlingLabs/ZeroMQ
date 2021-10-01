@@ -66,7 +66,7 @@ namespace Examples
 						total_temperature += Convert.ToInt64(reply.Split(' ')[1]);
 					}
 				}
-				Console.WriteLine("Average temperature for zipcode '{0}' was {1}°", zipCode, (total_temperature / i));
+				Console.WriteLine("Average temperature for zipcode '{0}' was {1}°", zipCode, total_temperature / i);
 			}
 		}
 	}

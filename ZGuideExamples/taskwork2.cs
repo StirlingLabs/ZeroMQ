@@ -31,19 +31,17 @@ namespace Examples
 
 				var poll = ZPollItem.CreateReceiver();
 
-				ZError error;
-				ZMessage message;
 				while (true)
 				{
 					// Process messages from either socket
-					if (receiver.PollIn(poll, out message, out error, TimeSpan.FromMilliseconds(64)))
+					if (receiver.PollIn(poll, out var message, out var error, TimeSpan.FromMilliseconds(64)))
 					{
 						var workload = message[0].ReadInt32();
 						Console.WriteLine("{0}.", workload);	// Show progress
 
 						Thread.Sleep(workload);	// Do the work
 
-						sender.Send(new byte[0], 0, 0);	// Send results to sink
+						sender.Send(Array.Empty<byte>(), 0, 0);	// Send results to sink
 					}
 
 					// Any waiting controller command acts as 'KILL'

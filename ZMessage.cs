@@ -5,336 +5,304 @@ using System.Text;
 
 namespace ZeroMQ
 {
-	/// <summary>
-	/// A single or multi-part message, sent or received via a <see cref="ZSocket"/>.
-	/// </summary>
-	public class ZMessage : IList<ZFrame>, ICloneable, IDisposable
-	{
-		private List<ZFrame> _frames;
+    /// <summary>
+    /// A single or multi-part message, sent or received via a <see cref="ZSocket"/>.
+    /// </summary>
+    public class ZMessage : IList<ZFrame>, ICloneable, IDisposable
+    {
+        private List<ZFrame> _frames;
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="ZMessage"/> class.
-		/// Creates an empty message.
-		/// </summary>
-		public ZMessage()
-			=> _frames = new List<ZFrame>();
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ZMessage"/> class.
+        /// Creates an empty message.
+        /// </summary>
+        public ZMessage()
+            => _frames = new();
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="ZMessage"/> class.
-		/// Creates a message that contains the given <see cref="ZFrame"/> objects.
-		/// </summary>
-		/// <param name="frames">A collection of <see cref="ZFrame"/> objects to be stored by this <see cref="ZMessage"/>.</param>
-		/// <exception cref="ArgumentNullException"><paramref name="frames"/> is null.</exception>
-		public ZMessage(IEnumerable<ZFrame> frames)
-		{
-			if (frames == null)
-			{
-				throw new ArgumentNullException("frames");
-			}
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ZMessage"/> class.
+        /// Creates a message that contains the given <see cref="ZFrame"/> objects.
+        /// </summary>
+        /// <param name="frames">A collection of <see cref="ZFrame"/> objects to be stored by this <see cref="ZMessage"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="frames"/> is null.</exception>
+        public ZMessage(IEnumerable<ZFrame> frames)
+        {
+            if (frames == null)
+            {
+                throw new ArgumentNullException(nameof(frames));
+            }
 
-			_frames = new List<ZFrame>(frames);
-		}
+            _frames = new(frames);
+        }
 
-		public void Dispose()
-			=> Dispose(true);
+        public void Dispose()
+            => Dispose(true);
 
-		protected virtual void Dispose(bool disposing)
-		{
-			if (_frames != null)
-			{
-				foreach (var frame in _frames)
-				{
-					frame.Dispose();
-				}
-			}
-			_frames = null;
-		}
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_frames != null)
+            {
+                foreach (var frame in _frames)
+                {
+                    frame.Dispose();
+                }
+            }
+            _frames = null;
+        }
 
-		public void Dismiss()
-		{
-			if (_frames != null)
-			{
-				foreach (var frame in _frames)
-				{
-					frame.Dismiss();
-				}
-			}
-			_frames = null;
-		}
+        public void Dismiss()
+        {
+            if (_frames != null)
+            {
+                foreach (var frame in _frames)
+                {
+                    frame.Dismiss();
+                }
+            }
+            _frames = null;
+        }
 
-		public void ReplaceAt(int index, ZFrame replacement)
-			=> ReplaceAt(index, replacement, true);
+        public void ReplaceAt(int index, ZFrame replacement)
+            => ReplaceAt(index, replacement, true);
 
-		public ZFrame ReplaceAt(int index, ZFrame replacement, bool dispose) 
-		{
-			var old = _frames[index];
-			_frames[index] = replacement;
-			if (dispose)
-			{
-				old.Dispose();
-				return null;
-			}
-			return old;
-		}
+        public ZFrame ReplaceAt(int index, ZFrame replacement, bool dispose)
+        {
+            var old = _frames[index];
+            _frames[index] = replacement;
+            if (!dispose)
+                return old;
 
-		#region IList implementation
+            old.Dispose();
+            return null;
+        }
 
-		public int IndexOf(ZFrame item)
-			=> _frames.IndexOf(item);
+        #region IList implementation
 
-		public void Prepend(ZFrame item)
-			=> Insert(0, item);
+        public int IndexOf(ZFrame item)
+            => _frames.IndexOf(item);
 
-		public void Insert(int index, ZFrame item)
-			=> _frames.Insert(index, item);
+        public void Prepend(ZFrame item)
+            => Insert(0, item);
 
-		/// <summary>
-		/// Removes ZFrames. Note: Disposes the ZFrame.
-		/// </summary>
-		/// <returns>The <see cref="ZeroMQ.ZFrame"/>.</returns>
-		public void RemoveAt(int index)
-			=> RemoveAt(index, true);
+        public void Insert(int index, ZFrame item)
+            => _frames.Insert(index, item);
 
-		/// <summary>
-		/// Removes ZFrames.
-		/// </summary>
-		/// <returns>The <see cref="ZeroMQ.ZFrame"/>.</returns>
-		/// <param name="dispose">If set to <c>false</c>, do not dispose the ZFrame.</param>
-		public ZFrame RemoveAt(int index, bool dispose)
-		{
-			var frame = _frames[index];
-			_frames.RemoveAt(index);
+        /// <summary>
+        /// Removes ZFrames. Note: Disposes the ZFrame.
+        /// </summary>
+        /// <returns>The <see cref="ZeroMQ.ZFrame"/>.</returns>
+        public void RemoveAt(int index)
+            => RemoveAt(index, true);
 
-			if (dispose)
-			{
-				frame.Dispose();
-				return null;
-			}
-			return frame;
-		}
+        /// <summary>
+        /// Removes ZFrames.
+        /// </summary>
+        /// <returns>The <see cref="ZeroMQ.ZFrame"/>.</returns>
+        /// <param name="dispose">If set to <c>false</c>, do not dispose the ZFrame.</param>
+        public ZFrame RemoveAt(int index, bool dispose)
+        {
+            var frame = _frames[index];
+            _frames.RemoveAt(index);
 
-		public ZFrame Pop()
-		{
-			var result = RemoveAt(0, false);
-		    result.Position = 0; // TODO maybe remove this here again, see https://github.com/zeromq/clrzmq4/issues/110
+            if (!dispose)
+                return frame;
+
+            frame.Dispose();
+            return null;
+        }
+
+        public ZFrame Pop()
+        {
+            var result = RemoveAt(0, false);
+            result.Position = 0; // TODO maybe remove this here again, see https://github.com/zeromq/clrzmq4/issues/110
             return result;
-		}
+        }
 
-		public int PopBytes(byte[] buffer, int offset, int count)
-		{
-			using (var frame = Pop())
-			{
-				return frame.Read(buffer, offset, count);
-			}
-		}
+        public int PopBytes(byte[] buffer, int offset, int count)
+        {
+            using var frame = Pop();
+            return frame.Read(buffer, offset, count);
+        }
 
-		public int PopByte()
-		{
-			using (var frame = Pop())
-			{
-				return frame.ReadByte();
-			}
-		}
+        public int PopByte()
+        {
+            using var frame = Pop();
+            return frame.ReadByte();
+        }
 
-		public byte PopAsByte()
-		{
-			using (var frame = Pop())
-			{
-				return frame.ReadAsByte();
-			}
-		}
+        public byte PopAsByte()
+        {
+            using var frame = Pop();
+            return frame.ReadAsByte();
+        }
 
-		public Int16 PopInt16()
-		{
-			using (var frame = Pop())
-			{
-				return frame.ReadInt16();
-			}
-		}
+        public short PopInt16()
+        {
+            using var frame = Pop();
+            return frame.ReadInt16();
+        }
 
-		public UInt16 PopUInt16()
-		{
-			using (var frame = Pop())
-			{
-				return frame.ReadUInt16();
-			}
-		}
+        public ushort PopUInt16()
+        {
+            using var frame = Pop();
+            return frame.ReadUInt16();
+        }
 
-		public Char PopChar()
-		{
-			using (var frame = Pop())
-			{
-				return frame.ReadChar();
-			}
-		}
+        public char PopChar()
+        {
+            using var frame = Pop();
+            return frame.ReadChar();
+        }
 
-		public Int32 PopInt32()
-		{
-			using (var frame = Pop())
-			{
-				return frame.ReadInt32();
-			}
-		}
+        public int PopInt32()
+        {
+            using var frame = Pop();
+            return frame.ReadInt32();
+        }
 
-		public UInt32 PopUInt32()
-		{
-			using (var frame = Pop())
-			{
-				return frame.ReadUInt32();
-			}
-		}
+        public uint PopUInt32()
+        {
+            using var frame = Pop();
+            return frame.ReadUInt32();
+        }
 
-		public Int64 PopInt64()
-		{
-			using (var frame = Pop())
-			{
-				return frame.ReadInt64();
-			}
-		}
+        public long PopInt64()
+        {
+            using var frame = Pop();
+            return frame.ReadInt64();
+        }
 
-		public UInt64 PopUInt64()
-		{
-			using (var frame = Pop())
-			{
-				return frame.ReadUInt64();
-			}
-		}
+        public ulong PopUInt64()
+        {
+            using var frame = Pop();
+            return frame.ReadUInt64();
+        }
 
-		public String PopString()
-			=> PopString(ZContext.Encoding);
+        public string PopString()
+            => PopString(ZContext.Encoding);
 
-		public String PopString(Encoding encoding)
-		{
-			using (var frame = Pop())
-			{
-				return frame.ReadString((int)frame.Length, encoding);
-			}
-		}
+        public string PopString(Encoding encoding)
+        {
+            using var frame = Pop();
+            return frame.ReadString((int)frame.Length, encoding);
+        }
 
-		public String PopString(int bytesCount, Encoding encoding)
-		{
-			using (var frame = Pop())
-			{
-				return frame.ReadString(bytesCount, encoding);
-			}
-		}
+        public string PopString(int bytesCount, Encoding encoding)
+        {
+            using var frame = Pop();
+            return frame.ReadString(bytesCount, encoding);
+        }
 
-		public void Wrap(ZFrame frame) 
-		{
-			Insert(0, new ZFrame());
-			Insert(0, frame);
-		}
+        public void Wrap(ZFrame frame)
+        {
+            Insert(0, new());
+            Insert(0, frame);
+        }
 
-		public ZFrame Unwrap() 
-		{
-			var frame = RemoveAt(0, false);
+        public ZFrame Unwrap()
+        {
+            var frame = RemoveAt(0, false);
 
-			if (Count > 0 && this[0].Length == 0)
-			{
-				RemoveAt(0);
-			}
+            if (Count > 0 && this[0].Length == 0)
+            {
+                RemoveAt(0);
+            }
 
-			return frame;
-		}
+            return frame;
+        }
 
-		public ZFrame this[int index]
-		{
-			get => _frames[index];
-			set => _frames[index] = value;
-		}
+        public ZFrame this[int index]
+        {
+            get => _frames[index];
+            set => _frames[index] = value;
+        }
 
-		#endregion
+        #endregion
 
-		#region ICollection implementation
+        #region ICollection implementation
 
-		public void Append(ZFrame item)
-			=> Add(item);
+        public void Append(ZFrame item)
+            => Add(item);
 
-		public void AppendRange(IEnumerable<ZFrame> items)
-			=> AddRange(items);
+        public void AppendRange(IEnumerable<ZFrame> items)
+            => AddRange(items);
 
-		public void Add(ZFrame item)
-			=> _frames.Add(item);
+        public void Add(ZFrame item)
+            => _frames.Add(item);
 
-		public void AddRange(IEnumerable<ZFrame> items)
-			=> _frames.AddRange(items);
+        public void AddRange(IEnumerable<ZFrame> items)
+            => _frames.AddRange(items);
 
-		public void Clear()
-		{
-			foreach (var frame in _frames)
-			{
-				frame.Dispose();
-			}
-			_frames.Clear();
-		}
+        public void Clear()
+        {
+            foreach (var frame in _frames)
+            {
+                frame.Dispose();
+            }
+            _frames.Clear();
+        }
 
-		public bool Contains(ZFrame item)
-			=> _frames.Contains(item);
+        public bool Contains(ZFrame item)
+            => _frames.Contains(item);
 
-		void ICollection<ZFrame>.CopyTo(ZFrame[] array, int arrayIndex)
-		{
-			int i = 0, count = Count;
-			foreach (var frame in this)
-			{
-				array[arrayIndex + i] = ZFrame.CopyFrom(frame);
+        void ICollection<ZFrame>.CopyTo(ZFrame[] array, int arrayIndex)
+        {
+            int i = 0, count = Count;
+            foreach (var frame in this)
+            {
+                array[arrayIndex + i] = ZFrame.CopyFrom(frame);
 
-				i++; if (i >= count) break;
-			}
-		}
+                i++;
+                if (i >= count) break;
+            }
+        }
 
-		public bool Remove(ZFrame item)
-		{
-			if (null != Remove(item, true))
-			{
-				return false;
-			}
-			return true;
-		}
+        public bool Remove(ZFrame item)
+            => null == Remove(item, true);
 
-		public ZFrame Remove(ZFrame item, bool dispose)
-		{
-			if (_frames.Remove(item))
-			{
-				if (dispose)
-				{
-					item.Dispose();
-					return null;
-				}
-			}
-			return item;
-		}
+        public ZFrame Remove(ZFrame item, bool dispose)
+        {
+            if (!_frames.Remove(item))
+                return item;
 
-		public int Count => _frames.Count;
+            if (!dispose)
+                return item;
 
-		bool ICollection<ZFrame>.IsReadOnly => false;
+            item.Dispose();
+            return null;
+        }
 
-		#endregion
+        public int Count => _frames.Count;
 
-		#region IEnumerable implementation
+        bool ICollection<ZFrame>.IsReadOnly => false;
 
-		public IEnumerator<ZFrame> GetEnumerator()
-			=> _frames.GetEnumerator();
+        #endregion
 
-		IEnumerator IEnumerable.GetEnumerator()
-			=> GetEnumerator();
+        #region IEnumerable implementation
 
-		#endregion
+        public IEnumerator<ZFrame> GetEnumerator()
+            => _frames.GetEnumerator();
 
-		#region ICloneable implementation
+        IEnumerator IEnumerable.GetEnumerator()
+            => GetEnumerator();
 
-		public object Clone()
-			=> Duplicate();
+        #endregion
 
-		public ZMessage Duplicate() 
-		{
-			var message = new ZMessage();
-			foreach (var frame in this)
-			{
-				message.Add(frame.Duplicate());
-			}
-			return message;
-		}
+        #region ICloneable implementation
 
-		#endregion
-	}
+        object ICloneable.Clone()
+            => Clone();
+
+        public ZMessage Clone()
+        {
+            var message = new ZMessage();
+            foreach (var frame in this)
+            {
+                message.Add(frame.Clone());
+            }
+            return message;
+        }
+
+        #endregion
+    }
 }

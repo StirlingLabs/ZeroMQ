@@ -42,7 +42,7 @@ namespace Examples
 					using (var identity = broker.ReceiveMessage())
 					{
 						broker.SendMore(identity[0]);
-						broker.SendMore(new ZFrame());
+						broker.SendMore(new());
 
 						// Encourage workers until it's time to fire them
 						if (stopwatch.Elapsed < TimeSpan.FromSeconds(5))
@@ -75,14 +75,14 @@ namespace Examples
 				while (true)
 				{
 					// Tell the broker we're ready for work
-					worker.SendMore(new ZFrame(worker.Identity));	
-					worker.SendMore(new ZFrame());
+					worker.SendMore(new(worker.Identity));	
+					worker.SendMore(new());
 					worker.Send(new ZFrame("Hi Boss"));	
 
 					// Get workload from broker, until finished
 					using (var msg = worker.ReceiveMessage())
 					{
-						var finished = (msg[1].ReadString() == "Fired!");
+						var finished = msg[1].ReadString() == "Fired!";
 
 						if (finished)
 						{

@@ -33,10 +33,9 @@ namespace Examples
 				Console.WriteLine("I: echo service is ready at {0}", args[0]);
 
 				ZMessage message;
-				ZError error;
 				while (true)
 				{
-					if (null != (message = server.ReceiveMessage(out error)))
+					if (null != (message = server.ReceiveMessage(out var error)))
 					{
 						using (message)
 						{

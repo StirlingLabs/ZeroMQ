@@ -43,7 +43,7 @@ namespace Examples
 					{
 						Identity.Dispose();
 					}
-					Identity = new ZFrame(value);
+					Identity = new(value);
 				}
 			}
 
@@ -127,12 +127,10 @@ namespace Examples
 				// Create a Receiver ZPollItem (ZMQ_POLLIN)
 				var poll = ZPollItem.CreateReceiver();
 
-				ZError error;
-				ZMessage incoming;
 				while (true)
 				{
 					// Handle worker activity on backend
-					if (backend.PollIn(poll, out incoming, out error, Worker.PPP_TICK))
+					if (backend.PollIn(poll, out var incoming, out var error, Worker.PPP_TICK))
 					{
 						using (incoming)
 						{
@@ -210,7 +208,7 @@ namespace Examples
 							using (var outgoing = new ZMessage())
 							{
 								outgoing.Add(ZFrame.CopyFrom(worker.Identity));
-								outgoing.Add(new ZFrame(Worker.PPP_HEARTBEAT));
+								outgoing.Add(new(Worker.PPP_HEARTBEAT));
 
 								Console.WriteLine("I:   sending heartbeat ({0})", worker.IdentityString);
 								backend.Send(outgoing);

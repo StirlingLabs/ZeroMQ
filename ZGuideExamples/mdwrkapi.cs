@@ -38,7 +38,7 @@ namespace Examples
 			public DateTime HeartbeatAt { get; protected set; }
 
 			// How many attempts left
-			public UInt64 Liveness { get; protected set; }
+			public ulong Liveness { get; protected set; }
 
 			// Heartbeat delay, msecs
 			public TimeSpan Heartbeat { get; protected set; }
@@ -61,13 +61,13 @@ namespace Examples
 
 			public void SendToBroker(string command, string option, ZMessage msg)
 			{
-				using (msg = msg != null ? msg.Duplicate() : new ZMessage())
+				using (msg = msg != null ? msg.Clone() : new())
 				{
 					if (!string.IsNullOrEmpty(option))
-						msg.Prepend(new ZFrame(option));
-					msg.Prepend(new ZFrame(command));
-					msg.Prepend(new ZFrame(MdpCommon.MDPW_WORKER));
-					msg.Prepend(new ZFrame(string.Empty));
+						msg.Prepend(new(option));
+					msg.Prepend(new(command));
+					msg.Prepend(new(MdpCommon.MDPW_WORKER));
+					msg.Prepend(new(string.Empty));
 
 					if (Verbose)
 						msg.DumpZmsg("I: sending '{0:X}|{0}' to broker", command.ToMdCmd());
@@ -79,7 +79,7 @@ namespace Examples
 			public void ConnectToBroker()
 			{
 				//  Connect or reconnect to broker
-				Worker = new ZSocket(_context, ZSocketType.DEALER);
+				Worker = new(_context, ZSocketType.DEALER);
 				Worker.Connect(Broker);
 				if (Verbose)
 					"I: connecting to broker at {0}...".DumpString(Broker);
@@ -99,7 +99,7 @@ namespace Examples
 				if(service == null)
 					throw new InvalidOperationException();
 
-				_context = new ZContext();
+				_context = new();
 				Broker = broker;
 				Service = service;
 				Verbose = verbose;
@@ -170,13 +170,11 @@ namespace Examples
 				while (true)
 				{
 					if (cancellor.IsCancellationRequested
-						|| (Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape))
+						|| Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)
 						_context.Shutdown();
 
 					var p = ZPollItem.CreateReceiver();
-					ZMessage msg;
-					ZError error;
-					if (Worker.PollIn(p, out msg, out error, Heartbeat))
+					if (Worker.PollIn(p, out var msg, out var error, Heartbeat))
 					{
 						using (msg)
 						{
@@ -213,7 +211,7 @@ namespace Examples
 									//  .split process message
 									//  Here is where we actually have a message to process; we
 									//  return it to the caller application:
-									return msg.Duplicate();
+									return msg.Clone();
 								}
 								if (command.StrHexEq(MdpCommon.MdpwCmd.HEARTBEAT))
 								{

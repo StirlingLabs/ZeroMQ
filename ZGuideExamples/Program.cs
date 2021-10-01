@@ -61,7 +61,7 @@ namespace Examples
 					renderer.Append(", ");
 				}
 				renderer.Append("{");
-				renderer.Append( (i - messagesNotToRead) + data.Length );
+				renderer.Append( i - messagesNotToRead + data.Length );
 				renderer.Append("}");
 
 				// now the message
@@ -103,7 +103,7 @@ namespace Examples
 				return null;
 			}
 			if (hex.Length == 0) {
-				return new byte[0];
+				return Array.Empty<byte>();
 			}
 			var l = hex.Length / 2;
 			var b = new byte[l];

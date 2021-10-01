@@ -53,11 +53,10 @@ namespace ZeroMQ
         /// </summary>
         public string PublicTxt
         {
-            get => new string(publicTxt);
-            private set
-            {
+            get => new(publicTxt);
+            private set {
                 publicTxt = value.ToCharArray();
-                publicKey = Z85.DecodeBytes(value, Encoding.UTF8);                   
+                publicKey = Z85.DecodeBytes(value, Encoding.UTF8);
             }
         }
 
@@ -67,18 +66,17 @@ namespace ZeroMQ
         /// </summary>
         public string SecretTxt
         {
-            get => new string(secretTxt);
-            private set
-            {
+            get => new(secretTxt);
+            private set {
                 secretTxt = value.ToCharArray();
-                secretKey = Z85.DecodeBytes(value, Encoding.UTF8);                
+                secretKey = Z85.DecodeBytes(value, Encoding.UTF8);
             }
         }
 
         /// <summary>
         /// Meta data key value pairs.
         /// </summary>
-        private Dictionary<string, string> metadata = new Dictionary<string, string>();
+        private Dictionary<string, string> metadata = new();
 
         private char[] publicTxt = new char[40];
         private char[] secretTxt = new char[40];
@@ -90,15 +88,13 @@ namespace ZeroMQ
         /// </summary>
         public ZCert()
         {
-            byte[] publictxt;
-            byte[] secrettxt;
-            Z85.CurveKeypair(out publictxt, out secrettxt);
+            Z85.CurveKeypair(out var publictxt, out var secrettxt);
             publicKey = Z85.Decode(publictxt);
             secretKey = Z85.Decode(secrettxt);
 
             publicTxt = Encoding.UTF8.GetString(Z85.Encode(publicKey)).ToCharArray();
             secretTxt = Encoding.UTF8.GetString(Z85.Encode(secretKey)).ToCharArray();
-            
+
             var e = Z85.Encode(publicTxt.Select(c => (byte)c).ToArray());
         }
 
@@ -175,8 +171,7 @@ namespace ZeroMQ
         /// <returns></returns>
         public string this[string name]
         {
-            get
-            {
+            get {
                 if (metadata.ContainsKey(name))
                 {
                     return metadata[name];
@@ -207,8 +202,8 @@ namespace ZeroMQ
         {
             if (cert == null)
                 return null;
-            return new ZCert((
-                byte[])cert.PublicKey.Clone(),
+            return new((
+                    byte[])cert.PublicKey.Clone(),
                 cert.SecretKey != null ? (byte[])cert.SecretKey.Clone() : new byte[32])
             {
                 metadata = new(cert.metadata)
@@ -268,11 +263,11 @@ namespace ZeroMQ
             Queue<string> lines;
             if (File.Exists(filenameSecret))
             {
-                lines = new Queue<string>(File.ReadAllLines(filenameSecret).ToList());
+                lines = new(File.ReadAllLines(filenameSecret).ToList());
             }
             else if (File.Exists(filename))
             {
-                lines = new Queue<string>(File.ReadAllLines(filename).ToList());
+                lines = new(File.ReadAllLines(filename).ToList());
             }
             else
             {
@@ -286,8 +281,7 @@ namespace ZeroMQ
                     continue;
                 if (line.TrimStart().StartsWith("metadata"))
                 {
-                    reader = (str, c) =>
-                    {
+                    reader = (str, c) => {
                         var metadata = Split(str);
                         if (metadata.Length == 2)
                         {
@@ -297,8 +291,7 @@ namespace ZeroMQ
                 }
                 if (line.TrimStart().StartsWith("curve"))
                 {
-                    reader = (str, c) =>
-                    {
+                    reader = (str, c) => {
                         var key = Split(str);
                         if (key.Length == 2)
                         {
@@ -320,7 +313,7 @@ namespace ZeroMQ
         private static string[] Split(string str)
         {
             var splitindex = str.IndexOf('"');
-            var metadata = new string[0];
+            var metadata = Array.Empty<string>();
             if (splitindex > 2)
             {
                 metadata = new string[2] { str.Substring(0, splitindex - 2).Trim(), str.Substring(splitindex).Trim() };

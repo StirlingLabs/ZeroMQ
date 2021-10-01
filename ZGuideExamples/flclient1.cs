@@ -90,10 +90,8 @@ namespace Examples
 				}
 
 				var poll = ZPollItem.CreateReceiver();
-				ZError error;
-				ZMessage incoming;
 
-				if (client.PollIn(poll, out incoming, out error, FLClient1_REQUEST_TIMEOUT))
+				if (client.PollIn(poll, out var incoming, out var error, FLClient1_REQUEST_TIMEOUT))
 				{
 					return incoming[0];
 				}

@@ -42,7 +42,7 @@ namespace Examples
 					using (var identity = broker.ReceiveMessage())
 					{
 						broker.SendMore(identity[0]);
-						broker.SendMore(new ZFrame());
+						broker.SendMore(new());
 
 						// Encourage workers until it's time to fire them
 						if (stopwatch.Elapsed < TimeSpan.FromSeconds(5))
@@ -80,7 +80,7 @@ namespace Examples
 					// Get workload from broker, until finished
 					using (var frame = worker.ReceiveFrame())
 					{
-						var finished = (frame.ReadString() == "Fired!");
+						var finished = frame.ReadString() == "Fired!";
 						if (finished)
 						{
 							break;

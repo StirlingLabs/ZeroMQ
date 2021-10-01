@@ -38,8 +38,8 @@ namespace Examples
 			{
 				// Constructor
 
-				context = new ZContext();
-				socket = new ZSocket(context, ZSocketType.DEALER);
+				context = new();
+				socket = new(context, ZSocketType.DEALER);
 				socket.Linger = GLOBAL_TIMEOUT;
 			}
 
@@ -92,13 +92,13 @@ namespace Examples
 				{
 					// Prefix request with sequence number and empty envelope
 					this.sequence++;
-					request.Prepend(new ZFrame(this.sequence));
-					request.Prepend(new ZFrame());
+					request.Prepend(new(this.sequence));
+					request.Prepend(new());
 
 					// Blast the request to all connected servers
 					for (var server = 0; server < servers; ++server)
 					{
-						using (var outgoing = request.Duplicate())
+						using (var outgoing = request.Clone())
 						{
 							socket.Send(outgoing);
 						}
@@ -106,12 +106,11 @@ namespace Examples
 
 					// Wait for a matching reply to arrive from anywhere
 					// Since we can poll several times, calculate each one
-					ZError error;
 					var endtime = DateTime.UtcNow + GLOBAL_TIMEOUT;
 					var poll = ZPollItem.CreateReceiver();
 					while (endtime > DateTime.UtcNow)
 					{
-						if (socket.PollIn(poll, out reply, out error, endtime - DateTime.UtcNow))
+						if (socket.PollIn(poll, out reply, out var error, endtime - DateTime.UtcNow))
 						{
 							// Reply is [empty][sequence][OK]
 							if (reply.Count < 3)
@@ -178,7 +177,7 @@ namespace Examples
 				while (++requests < 10000)
 				{
 					var outgoing = new ZMessage();
-					outgoing.Add(new ZFrame("random name"));
+					outgoing.Add(new("random name"));
 
 					var incoming = client.Request(outgoing);
 					if (incoming == null)

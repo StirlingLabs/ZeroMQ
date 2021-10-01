@@ -29,8 +29,8 @@ namespace Examples
 			{
 				//  1. Send 'echo' request to Titanic
 				var request = new ZMessage();
-				request.Add(new ZFrame("echo"));
-				request.Add(new ZFrame("Hello World"));
+				request.Add(new("echo"));
+				request.Add(new("Hello World"));
 
 				var uuid = Guid.Empty; 
 				using (var reply = TIClient_ServiceCall(session, "titanic.request", request, cancellor))
@@ -47,8 +47,8 @@ namespace Examples
 				{
 					Thread.Sleep(100);
 					request.Dispose();
-					request = new ZMessage();
-					request.Add(new ZFrame(uuid.ToString()));
+					request = new();
+					request.Add(new(uuid.ToString()));
 					var reply = TIClient_ServiceCall(session, "titanic.reply", request, cancellor);
 					if (reply != null)
 					{
@@ -58,8 +58,8 @@ namespace Examples
 
 						// 3. Close Request
 						request.Dispose();
-						request = new ZMessage();
-						request.Add(new ZFrame(uuid.ToString()));
+						request = new();
+						request.Add(new(uuid.ToString()));
 						reply = TIClient_ServiceCall(session, "titanic.close", request, cancellor);
 						reply.Dispose();
 						break;
@@ -81,7 +81,7 @@ namespace Examples
 					var status = reply.PopString();
 					if (status.Equals("200"))
 					{
-						return reply.Duplicate();
+						return reply.Clone();
 					}
 					if (status.Equals("400"))
 					{

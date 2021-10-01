@@ -15,8 +15,7 @@ namespace Examples
 
 			// Console.WriteLine(zmq.Version);
 
-			int major, minor, patch;
-			zmq.version(out major, out minor, out patch);
+			zmq.version(out var major, out var minor, out var patch);
 			Console.WriteLine("{0}.{1}.{2}", major, minor, patch);
 		}
 	}

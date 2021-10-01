@@ -30,8 +30,6 @@ namespace Examples
 				// Connect
 				client.Connect("tcp://127.0.0.1:" + Peering2_GetPort(name) + 1);
 
-				ZError error;
-
 				while (true)
 				{
 					// Send
@@ -41,7 +39,7 @@ namespace Examples
 					}
 
 					// Receive
-					var incoming = client.ReceiveFrame(out error);
+					var incoming = client.ReceiveFrame(out var error);
 
 					if (incoming == null)
 					{
@@ -74,11 +72,10 @@ namespace Examples
 				worker.Send(new ZFrame("READY"));
 
 				// Process messages as they arrive
-				ZError error;
 				while (true)
 				{
 					// Receive
-					var incoming = worker.ReceiveFrame(out error);
+					var incoming = worker.ReceiveFrame(out var error);
 
 					if (incoming == null)
 					{
@@ -176,8 +173,6 @@ namespace Examples
 				// Least recently used queue of available workers
 				var workers = new List<string>();
 
-				ZError error;
-				ZMessage incoming;
 				TimeSpan? wait;
 				var poll = ZPollItem.CreateReceiver();
 
@@ -187,7 +182,7 @@ namespace Examples
 					wait = workers.Count > 0 ? TimeSpan.FromMilliseconds(1000) : null;
 
 					// Poll localBackend
-					if (localBackend.PollIn(poll, out incoming, out error, wait))
+					if (localBackend.PollIn(poll, out var incoming, out var error, wait))
 					{
 						// Handle reply from local worker
 						var identity = incoming[0].ReadString();
@@ -289,7 +284,7 @@ namespace Examples
 
 								var peer = rnd.Next(args.Length - 2) + 2;
 
-								incoming.ReplaceAt(0, new ZFrame(args[peer]));
+								incoming.ReplaceAt(0, new(args[peer]));
 
 								/* using (var outgoing = new ZMessage())
 								{
@@ -309,7 +304,7 @@ namespace Examples
 								var peer = workers[0];
 
 								workers.RemoveAt(0);
-								incoming.ReplaceAt(0, new ZFrame(peer));
+								incoming.ReplaceAt(0, new(peer));
 
 								/* using (var outgoing = new ZMessage())
 								{
@@ -328,9 +323,9 @@ namespace Examples
 			}
 		}
 
-		static Int16 Peering2_GetPort(string name) 
+		static short Peering2_GetPort(string name) 
 		{
-			var hash = (Int16)name[0];
+			var hash = (short)name[0];
 			if (hash < 1024)
 			{
 				hash += 1024;

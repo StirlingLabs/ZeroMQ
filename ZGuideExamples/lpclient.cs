@@ -52,9 +52,7 @@ namespace Examples
 				try
 				{ // using (requester)
 
-					ZError error;
-
-					if (null == (requester = LPClient_CreateZSocket(context, name, out error)))
+					if (null == (requester = LPClient_CreateZSocket(context, name, out var error)))
 					{
 						if (error == ZError.ETERM)
 							return;	// Interrupted
@@ -79,7 +77,6 @@ namespace Examples
 							}
 						}
 
-						ZMessage incoming;
 						while (true)
 						{
 							// Here we process a server reply and exit our loop
@@ -90,7 +87,7 @@ namespace Examples
 							// before finally abandoning:
 
 							// Poll socket for a reply, with timeout
-							if (requester.PollIn(poll, out incoming, out error, LPClient_RequestTimeout))
+							if (requester.PollIn(poll, out var incoming, out error, LPClient_RequestTimeout))
 							{
 								using (incoming)
 								{

@@ -22,16 +22,16 @@ namespace Examples
 
 		//  Returns request filename for given UUID
 		public static string RequestFilename(Guid uuid)
-			=> string.Format("{0}/{1}.req", TITANIC_DIR, uuid);
+			=> $"{TITANIC_DIR}/{uuid}.req";
 
 		//  Returns reply filename for given UUID
 		public static string ReplyFilename(Guid uuid)
-			=> string.Format("{0}/{1}.rep", TITANIC_DIR, uuid);
+			=> $"{TITANIC_DIR}/{uuid}.rep";
 
-		public static void SerializeToXml<T>(this T obj, String path)
+		public static void SerializeToXml<T>(this T obj, string path)
 			where T : ZMessage
 		{
-			var msg = ((ZMessage) obj);
+			var msg = (ZMessage) obj;
 			var l = msg.Select(e => e.Read()).ToList();
 
 			var serializer = new XmlSerializer(typeof(List<byte[]>));
@@ -41,7 +41,7 @@ namespace Examples
 			}
 		}
 
-		public static T DeserializeFromXml<T>(this String path)
+		public static T DeserializeFromXml<T>(this string path)
 			where T : ZMessage
 		{
 
@@ -52,13 +52,13 @@ namespace Examples
 				var res = (List<byte[]>)serializer.Deserialize(reader);
 				foreach (var e in res)
 				{
-					msg.Add(new ZFrame(e));
+					msg.Add(new(e));
 				}
 			}
 			return (T)msg; 
 		}
 
-		public static bool TryFileOpenRead(this String path, out FileStream fs)
+		public static bool TryFileOpenRead(this string path, out FileStream fs)
 		{
 			fs = null;
 			try
@@ -112,10 +112,9 @@ namespace Examples
 					request.Dispose();
 
 					// Send UUID through tho message queue
-					reply = new ZMessage();
-					reply.Add(new ZFrame(uuid.ToString()));
-					ZError error;
-					if (!backendpipe.Send(reply, out error))
+					reply = new();
+					reply.Add(new(uuid.ToString()));
+					if (!backendpipe.Send(reply, out var error))
 					{
 						if(error.Equals(ZError.ETERM))
 							break;
@@ -124,9 +123,9 @@ namespace Examples
 
 					// Now send UUID back to client
 					// Done by the mdwrk_recv() at the top of the loop
-					reply = new ZMessage();
-					reply.Add(new ZFrame("200"));
-					reply.Add(new ZFrame(uuid.ToString()));
+					reply = new();
+					reply.Add(new("200"));
+					reply.Add(new(uuid.ToString()));
 				}
 			}
 		}
@@ -152,15 +151,15 @@ namespace Examples
 					if (File.Exists(repfn))
 					{
 						reply = repfn.DeserializeFromXml<ZMessage>();
-						reply.Prepend(new ZFrame("200"));
+						reply.Prepend(new("200"));
 					}
 					else
 					{
-						reply = new ZMessage();
+						reply = new();
 						if(File.Exists(reqfn))
-							reply.Prepend(new ZFrame("300")); //Pending
+							reply.Prepend(new("300")); //Pending
 						else
-							reply.Prepend(new ZFrame("400")); //Unknown
+							reply.Prepend(new("400")); //Unknown
 					}
 					request.Dispose();
 				}
@@ -188,8 +187,8 @@ namespace Examples
 					File.Delete(reqfn);
 					File.Delete(repfn);
 					request.Dispose();
-					reply = new ZMessage();
-					reply.Add(new ZFrame("200"));
+					reply = new();
+					reply.Add(new("200"));
 				}
 			}
 		}
@@ -205,8 +204,7 @@ namespace Examples
 		{
 			// Load request message, service will be first frame 
 			var fn = TitanicCommon.RequestFilename(uuid);
-			FileStream fs; 
-			if (!fn.TryFileOpenRead(out fs))
+			if (!fn.TryFileOpenRead(out var fs))
 				// If the client already close request, treat as successful
 				return true;
 			fs.Dispose();
@@ -227,8 +225,8 @@ namespace Examples
 
 				bool service_ok;
 				using (var mmireply = client.Send("mmi.service", mmirequest, cts))
-					service_ok = (mmireply != null
-								  && mmireply.First().ToString().Equals("200"));
+					service_ok = mmireply != null
+						&& mmireply.First().ToString().Equals("200");
 
 				res = false;
 				if(service_ok)
@@ -259,8 +257,8 @@ namespace Examples
 			var ctx = new ZContext();
 			using (var requestPipe = new ZActor(ctx, Titanic_Request, Verbose))
 			{
-				(new Thread(() => Titanic_Reply(ctx, cancellor, Verbose))).Start();
-				(new Thread(() => Titanic_Close(ctx, cancellor, Verbose))).Start();
+				new Thread(() => Titanic_Reply(ctx, cancellor, Verbose)).Start();
+				new Thread(() => Titanic_Close(ctx, cancellor, Verbose)).Start();
 				////////////////////
 				/// HINT: Use requestPipe.Start instead of requestPipe.Start(cancellor) 
 				/// => with cancellor consturctor needed frontent pipe will not be initializes!!
@@ -274,14 +272,12 @@ namespace Examples
 				{
 					//continue;
 					if (cancellor.IsCancellationRequested
-					|| (Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape))
+					|| Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)
 						ctx.Shutdown();
 
 					var path = Path.Combine(TitanicCommon.TITANIC_DIR, TitanicCommon.QUEUE_FILE);
 					var p = ZPollItem.CreateReceiver();
-					ZMessage msg;
-					ZError error;
-					if (requestPipe.Frontend.PollIn(p, out msg, out error, TimeSpan.FromMilliseconds(1000)))
+					if (requestPipe.Frontend.PollIn(p, out var msg, out var error, TimeSpan.FromMilliseconds(1000)))
 					{
 						using (msg)
 						{
@@ -314,14 +310,14 @@ namespace Examples
 						using (var fs = File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
 						{
 							var numBytesRead = 0;
-							var numBytesToRead = (new UTF8Encoding().GetBytes(String.Format(TitanicCommon.QUEUE_LINEFORMAT, Guid.NewGuid()))).Length;
+							var numBytesToRead = new UTF8Encoding().GetBytes(string.Format(TitanicCommon.QUEUE_LINEFORMAT, Guid.NewGuid())).Length;
 							var readBytes = new byte[numBytesToRead];
 							while (numBytesToRead > 0)
 							{
 								var n = fs.Read(readBytes, 0, numBytesToRead);
 								if (n == 0)
 									break;
-								var line = (new UTF8Encoding()).GetString(readBytes, 0, n);
+								var line = new UTF8Encoding().GetString(readBytes, 0, n);
 								//  UUID is prefixed with '-' if still waiting
 								if (line.StartsWith("-"))
 								{
@@ -331,7 +327,7 @@ namespace Examples
 									if (Titanic_ServiceSuccess(uuid, cancellor))
 									{
 										//  Mark queue entry as processed
-										var newval = (new UTF8Encoding()).GetBytes("+");
+										var newval = new UTF8Encoding().GetBytes("+");
 										fs.Seek(-n, SeekOrigin.Current);
 										fs.Write(newval, 0, newval.Length);
 										fs.Seek(n - newval.Length, SeekOrigin.Current);

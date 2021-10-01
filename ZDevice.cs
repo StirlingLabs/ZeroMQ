@@ -3,296 +3,298 @@ using System.Threading;
 
 namespace ZeroMQ
 {
-	/// <summary>
-	/// Forwards messages received by a front-end socket to a back-end socket, from which
-	/// they are then sent.
-	/// </summary>
-	/// <remarks>
-	/// The base implementation of <see cref="ZDevice"/> is <b>not</b> threadsafe. Do not construct
-	/// a device with sockets that were created in separate threads or separate contexts.
-	/// </remarks>
-	public abstract class ZDevice : ZThread
-	{
-		/// <summary>
-		/// The polling interval in milliseconds.
-		/// </summary>
-		protected readonly TimeSpan PollingInterval = TimeSpan.FromMilliseconds(500);
+    /// <summary>
+    /// Forwards messages received by a front-end socket to a back-end socket, from which
+    /// they are then sent.
+    /// </summary>
+    /// <remarks>
+    /// The base implementation of <see cref="ZDevice"/> is <b>not</b> threadsafe. Do not construct
+    /// a device with sockets that were created in separate threads or separate contexts.
+    /// </remarks>
+    public abstract class ZDevice : ZThread
+    {
+        /// <summary>
+        /// The polling interval in milliseconds.
+        /// </summary>
+        protected readonly TimeSpan PollingInterval = TimeSpan.FromMilliseconds(500);
 
-		/// <summary>
-		/// The ZContext reference, to not become finalized
-		/// </summary>
-		protected readonly ZContext Context;
+        /// <summary>
+        /// The ZContext reference, to not become finalized
+        /// </summary>
+        protected readonly ZContext Context;
 
-		/// <summary>
-		/// The frontend socket that will normally pass messages to <see cref="BackendSocket"/>.
-		/// </summary>
-		public ZSocket FrontendSocket;
+        /// <summary>
+        /// The frontend socket that will normally pass messages to <see cref="BackendSocket"/>.
+        /// </summary>
+        public ZSocket FrontendSocket;
 
-		/// <summary>
-		/// The backend socket that will normally receive messages from (and possibly send replies to) <see cref="FrontendSocket"/>.
-		/// </summary>
-		public ZSocket BackendSocket;
+        /// <summary>
+        /// The backend socket that will normally receive messages from (and possibly send replies to) <see cref="FrontendSocket"/>.
+        /// </summary>
+        public ZSocket BackendSocket;
 
-		/// <summary>
-		/// You are using ZContext.Current!
-		/// </summary>
-		protected ZDevice()
-			: this (ZContext.Current)
-		{ }
+        /// <summary>
+        /// You are using ZContext.Current!
+        /// </summary>
+        protected ZDevice()
+            : this(ZContext.Current) { }
 
-		protected ZDevice(ZContext context)
-			=> Context = context;
+        protected ZDevice(ZContext context)
+            => Context = context;
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="ZDevice"/> class.
-		/// You are using ZContext.Current!
-		/// </summary>
-		/// <param name="frontendSocket">
-		/// A <see cref="ZSocket"/> that will pass incoming messages to <paramref name="backendSocket"/>.
-		/// </param>
-		/// <param name="backendSocket">
-		/// A <see cref="ZSocket"/> that will receive messages from (and optionally send replies to) <paramref name="frontendSocket"/>.
-		/// </param>
-		/// <param name="mode">The <see cref="DeviceMode"/> for the current device.</param>
-		protected ZDevice(ZSocketType frontendType, ZSocketType backendType)
-			: this (ZContext.Current, frontendType, backendType)
-		{ }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ZDevice"/> class.
+        /// You are using ZContext.Current!
+        /// </summary>
+        /// <param name="frontendSocket">
+        /// A <see cref="ZSocket"/> that will pass incoming messages to <paramref name="backendSocket"/>.
+        /// </param>
+        /// <param name="backendSocket">
+        /// A <see cref="ZSocket"/> that will receive messages from (and optionally send replies to) <paramref name="frontendSocket"/>.
+        /// </param>
+        /// <param name="mode">The <see cref="DeviceMode"/> for the current device.</param>
+        protected ZDevice(ZSocketType frontendType, ZSocketType backendType)
+            : this(ZContext.Current, frontendType, backendType) { }
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="ZDevice"/> class.
-		/// </summary>
-		/// <param name="frontendSocket">
-		/// A <see cref="ZSocket"/> that will pass incoming messages to <paramref name="backendSocket"/>.
-		/// </param>
-		/// <param name="backendSocket">
-		/// A <see cref="ZSocket"/> that will receive messages from (and optionally send replies to) <paramref name="frontendSocket"/>.
-		/// </param>
-		/// <param name="mode">The <see cref="DeviceMode"/> for the current device.</param>
-		protected ZDevice(ZContext context, ZSocketType frontendType, ZSocketType backendType)
-		{
-			Context = context;
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ZDevice"/> class.
+        /// </summary>
+        /// <param name="frontendSocket">
+        /// A <see cref="ZSocket"/> that will pass incoming messages to <paramref name="backendSocket"/>.
+        /// </param>
+        /// <param name="backendSocket">
+        /// A <see cref="ZSocket"/> that will receive messages from (and optionally send replies to) <paramref name="frontendSocket"/>.
+        /// </param>
+        /// <param name="mode">The <see cref="DeviceMode"/> for the current device.</param>
+        protected ZDevice(ZContext context, ZSocketType frontendType, ZSocketType backendType)
+        {
+            Context = context;
 
-			ZError error;
-			if (!Initialize(frontendType, backendType, out error))
-			{
-				throw new ZException(error);
-			}
-		}
+            if (!Initialize(frontendType, backendType, out var error))
+            {
+                throw new ZException(error);
+            }
+        }
 
-		protected virtual bool Initialize(ZSocketType frontendType, ZSocketType backendType, out ZError error)
-		{
-			error = default(ZError);
+        protected virtual bool Initialize(ZSocketType frontendType, ZSocketType backendType, out ZError error)
+        {
+            error = default;
 
-			/* if (frontendType == ZSocketType.None && backendType == ZSocketType.None)
-			{
-				throw new InvalidOperationException();
-			} /**/
+            /* if (frontendType == ZSocketType.None && backendType == ZSocketType.None)
+            {
+              throw new InvalidOperationException();
+            } /**/
 
-			if (frontendType != ZSocketType.None)
-			{
-				if (null == (FrontendSocket = ZSocket.Create(Context, frontendType, out error)))
-				{
-					return false;
-				}
-				FrontendSetup = new ZSocketSetup(FrontendSocket);
-			}
+            if (frontendType != ZSocketType.None)
+            {
+                if (null == (FrontendSocket = ZSocket.Create(Context, frontendType, out error)))
+                {
+                    return false;
+                }
+                FrontendSetup = new(FrontendSocket);
+            }
 
-			if (backendType != ZSocketType.None)
-			{
-				if (null == (BackendSocket = ZSocket.Create(Context, backendType, out error)))
-				{
-					return false;
-				}
-				BackendSetup = new ZSocketSetup(BackendSocket);
-			}
+            if (backendType != ZSocketType.None)
+            {
+                if (null == (BackendSocket = ZSocket.Create(Context, backendType, out error)))
+                {
+                    return false;
+                }
+                BackendSetup = new(BackendSocket);
+            }
 
-			return true;
-		}
+            return true;
+        }
 
-		/// <summary>
-		/// Gets a <see cref="ZSocketSetup"/> for configuring the frontend socket.
-		/// </summary>
-		public ZSocketSetup BackendSetup { get; protected set; }
+        /// <summary>
+        /// Gets a <see cref="ZSocketSetup"/> for configuring the frontend socket.
+        /// </summary>
+        public ZSocketSetup BackendSetup { get; protected set; }
 
-		/// <summary>
-		/// Gets a <see cref="ZSocketSetup"/> for configuring the backend socket.
-		/// </summary>
-		public ZSocketSetup FrontendSetup { get; protected set; }
+        /// <summary>
+        /// Gets a <see cref="ZSocketSetup"/> for configuring the backend socket.
+        /// </summary>
+        public ZSocketSetup FrontendSetup { get; protected set; }
 
-		/*/ <summary>
-		/// Gets a <see cref="ManualResetEvent"/> that can be used to block while the device is running.
-		/// </summary>
-		public ManualResetEvent DoneEvent { get; private set; } /**/
+        /*/ <summary>
+        /// Gets a <see cref="ManualResetEvent"/> that can be used to block while the device is running.
+        /// </summary>
+        public ManualResetEvent DoneEvent { get; private set; } /**/
 
-		/*/ <summary>
-		/// Gets an <see cref="AutoResetEvent"/> that is pulsed after every Poll call.
-		/// </summary>
-		public AutoResetEvent PollerPulse
-		{
-				get { return _poller.Pulse; }
-		}*/
+        /*/ <summary>
+        /// Gets an <see cref="AutoResetEvent"/> that is pulsed after every Poll call.
+        /// </summary>
+        public AutoResetEvent PollerPulse
+        {
+            get { return _poller.Pulse; }
+        }*/
 
-		/// <summary>
-		/// Initializes the frontend and backend sockets. Called automatically when starting the device.
-		/// If called multiple times, will only execute once.
-		/// </summary>
-		public virtual void Initialize()
-		{
-			EnsureNotDisposed();
+        /// <summary>
+        /// Initializes the frontend and backend sockets. Called automatically when starting the device.
+        /// If called multiple times, will only execute once.
+        /// </summary>
+        public virtual void Initialize()
+        {
+            EnsureNotDisposed();
 
-			if (FrontendSetup != null) FrontendSetup.Configure();
-			if (BackendSetup != null) BackendSetup.Configure();
-		}
+            if (FrontendSetup != null) FrontendSetup.Configure();
+            if (BackendSetup != null) BackendSetup.Configure();
+        }
 
-		/// <summary>
-		/// Start the device in the current thread. Should be used by implementations of the <see cref="DeviceRunner.Start"/> method.
-		/// </summary>
-		/// <remarks>
-		/// Initializes the sockets prior to starting the device with <see cref="Initialize"/>.
-		/// </remarks>
-		protected override void Run()
-		{
-			EnsureNotDisposed();
+        /// <summary>
+        /// Start the device in the current thread. Should be used by implementations of the <see cref="DeviceRunner.Start"/> method.
+        /// </summary>
+        /// <remarks>
+        /// Initializes the sockets prior to starting the device with <see cref="Initialize"/>.
+        /// </remarks>
+        protected override void Run()
+        {
+            EnsureNotDisposed();
 
-			Initialize();
+            Initialize();
 
-			ZSocket[] sockets;
-			ZPollItem[] polls;
-			if (FrontendSocket != null && BackendSocket != null)
-			{
-				sockets = new[] {
-					FrontendSocket,
-					BackendSocket
-				};
-				polls = new[] {
-					ZPollItem.Create(FrontendHandler),
-					ZPollItem.Create(BackendHandler)
-				};
-			}
-			else if (FrontendSocket != null)
-			{
-				sockets = new[] {
-					FrontendSocket
-				}; 
-				polls = new[] {
-					ZPollItem.Create(FrontendHandler)
-				};
-			}
-			else
-			{
-				sockets = new[] {
-					BackendSocket
-				};
-				polls = new[] {
-					ZPollItem.Create(BackendHandler)
-				};
-			}
+            ZSocket[] sockets;
+            ZPollItem[] polls;
+            if (FrontendSocket != null && BackendSocket != null)
+            {
+                sockets = new[]
+                {
+                    FrontendSocket,
+                    BackendSocket
+                };
+                polls = new[]
+                {
+                    ZPollItem.Create(FrontendHandler),
+                    ZPollItem.Create(BackendHandler)
+                };
+            }
+            else if (FrontendSocket != null)
+            {
+                sockets = new[]
+                {
+                    FrontendSocket
+                };
+                polls = new[]
+                {
+                    ZPollItem.Create(FrontendHandler)
+                };
+            }
+            else
+            {
+                sockets = new[]
+                {
+                    BackendSocket
+                };
+                polls = new[]
+                {
+                    ZPollItem.Create(BackendHandler)
+                };
+            }
 
-			/* ZPollItem[] polls;
-			{
-				var pollItems = new List<ZPollItem>();
-				switch (FrontendSocket.SocketType)
-				{
-					case ZSocketType.Code.ROUTER:
-					case ZSocketType.Code.XSUB:
-					case ZSocketType.Code.PUSH:
-						// case ZSocketType.Code.STREAM:
-						pollItems.Add(new ZPollItem(FrontendSocket, ZPoll.In)
-						{
-								ReceiveMessage = FrontendHandler
-						});
+            /* ZPollItem[] polls;
+            {
+              var pollItems = new List<ZPollItem>();
+              switch (FrontendSocket.SocketType)
+              {
+                case ZSocketType.Code.ROUTER:
+                case ZSocketType.Code.XSUB:
+                case ZSocketType.Code.PUSH:
+                  // case ZSocketType.Code.STREAM:
+                  pollItems.Add(new ZPollItem(FrontendSocket, ZPoll.In)
+                  {
+                      ReceiveMessage = FrontendHandler
+                  });
+      
+                  break;
+              }
+              switch (BackendSocket.SocketType)
+              {
+                case ZSocketType.Code.DEALER:
+                  // case ZSocketType.Code.STREAM:
+                  pollItems.Add(new ZPollItem(BackendSocket, ZPoll.In)
+                  {
+                      ReceiveMessage = BackendHandler
+                  });
+      
+                  break;
+              }
+              polls = pollItems.ToArray();
+            } */
 
-						break;
-				}
-				switch (BackendSocket.SocketType)
-				{
-					case ZSocketType.Code.DEALER:
-						// case ZSocketType.Code.STREAM:
-						pollItems.Add(new ZPollItem(BackendSocket, ZPoll.In)
-						{
-								ReceiveMessage = BackendHandler
-						});
+            // Because of using ZmqSocket.Forward, this field will always be null
+            ZMessage[] lastMessageFrames = null;
 
-						break;
-				}
-				polls = pollItems.ToArray();
-			} */
+            if (FrontendSetup != null) FrontendSetup.BindConnect();
+            if (BackendSetup != null) BackendSetup.BindConnect();
 
-			// Because of using ZmqSocket.Forward, this field will always be null
-			ZMessage[] lastMessageFrames = null;
+            var isValid = false;
+            var error = default(ZError);
+            try
+            {
+                while (!Cancellor.IsCancellationRequested)
+                {
 
-			if (FrontendSetup != null) FrontendSetup.BindConnect();
-			if (BackendSetup != null) BackendSetup.BindConnect();
+                    if (!(isValid = sockets.Poll(polls, ZPoll.In, ref lastMessageFrames, out error, PollingInterval)))
+                    {
 
-			var isValid = false;
-			var error = default(ZError);
-			try
-			{
-				while (!Cancellor.IsCancellationRequested)
-				{
+                        if (error == ZError.EAGAIN)
+                        {
+                            Thread.Sleep(1);
+                            continue;
+                        }
+                        if (error == ZError.ETERM)
+                        {
+                            break;
+                        }
 
-					if (!(isValid = sockets.Poll(polls, ZPoll.In, ref lastMessageFrames, out error, PollingInterval)))
-					{
+                        // EFAULT
+                        throw new ZException(error);
+                    }
+                }
+            }
+            catch (ZException)
+            {
+                // Swallow any exceptions thrown while stopping
+                if (!Cancellor.IsCancellationRequested)
+                {
+                    throw;
+                }
+            }
 
-						if (error == ZError.EAGAIN)
-						{
-							Thread.Sleep(1);
-							continue;
-						}
-						if (error == ZError.ETERM)
-						{
-							break;
-						}
+            if (FrontendSetup != null) FrontendSetup.UnbindDisconnect();
+            if (BackendSetup != null) BackendSetup.UnbindDisconnect();
 
-						// EFAULT
-						throw new ZException(error);
-					}
-				}
-			}
-			catch (ZException)
-			{
-				// Swallow any exceptions thrown while stopping
-				if (!Cancellor.IsCancellationRequested)
-				{
-					throw;
-				}
-			}
+            if (error == ZError.ETERM)
+            {
+                Close();
+            }
+        }
 
-			if (FrontendSetup != null) FrontendSetup.UnbindDisconnect();
-			if (BackendSetup != null) BackendSetup.UnbindDisconnect();
+        /// <summary>
+        /// Invoked when a message has been received by the frontend socket.
+        /// </summary>
+        /// <param name="args">A <see cref="SocketEventArgs"/> object containing the poll event args.</param>
+        protected abstract bool FrontendHandler(ZSocket socket, out ZMessage message, out ZError error);
 
-			if (error == ZError.ETERM)
-			{
-				Close();
-			}
-		}
+        /// <summary>
+        /// Invoked when a message has been received by the backend socket.
+        /// </summary>
+        /// <param name="args">A <see cref="SocketEventArgs"/> object containing the poll event args.</param>
+        protected abstract bool BackendHandler(ZSocket args, out ZMessage message, out ZError error);
 
-		/// <summary>
-		/// Invoked when a message has been received by the frontend socket.
-		/// </summary>
-		/// <param name="args">A <see cref="SocketEventArgs"/> object containing the poll event args.</param>
-		protected abstract bool FrontendHandler(ZSocket socket, out ZMessage message, out ZError error);
+        /// <summary>
+        /// Stops the device and releases the underlying sockets. Optionally disposes of managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (FrontendSocket != null) FrontendSocket.Dispose();
+                if (BackendSocket != null) BackendSocket.Dispose();
+            }
 
-		/// <summary>
-		/// Invoked when a message has been received by the backend socket.
-		/// </summary>
-		/// <param name="args">A <see cref="SocketEventArgs"/> object containing the poll event args.</param>
-		protected abstract bool BackendHandler(ZSocket args, out ZMessage message, out ZError error);
-
-		/// <summary>
-		/// Stops the device and releases the underlying sockets. Optionally disposes of managed resources.
-		/// </summary>
-		/// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-		protected override void Dispose(bool disposing)
-		{
-			if (disposing)
-			{
-				if (FrontendSocket != null) FrontendSocket.Dispose();
-				if (BackendSocket != null) BackendSocket.Dispose();
-			}
-
-			base.Dispose(disposing);
-		}
-
-	}
+            base.Dispose(disposing);
+        }
+    }
 }

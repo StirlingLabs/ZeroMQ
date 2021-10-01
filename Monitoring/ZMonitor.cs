@@ -31,20 +31,20 @@ namespace ZeroMQ.Monitoring
             // TODO: remove socket argument and create socket within Run?
 			_socket = socket;
 			_endpoint = endpoint;
-			_eventHandler = new Dictionary<ZMonitorEvents, Action<ZMonitorEventData>>
+			_eventHandler = new()
 			{
-				{ ZMonitorEvents.AllEvents, data => InvokeEvent(AllEvents, () => new ZMonitorEventArgs(this, data)) },
-				{ ZMonitorEvents.Connected, data => InvokeEvent(Connected, () => new ZMonitorFileDescriptorEventArgs(this, data)) },
-				{ ZMonitorEvents.ConnectDelayed, data => InvokeEvent(ConnectDelayed, () => new ZMonitorEventArgs(this, data)) },
-				{ ZMonitorEvents.ConnectRetried, data => InvokeEvent(ConnectRetried, () => new ZMonitorIntervalEventArgs(this, data)) },
-				{ ZMonitorEvents.Listening, data => InvokeEvent(Listening, () => new ZMonitorFileDescriptorEventArgs(this, data)) },
-				{ ZMonitorEvents.BindFailed, data => InvokeEvent(BindFailed, () => new ZMonitorEventArgs(this, data)) },
-				{ ZMonitorEvents.Accepted, data => InvokeEvent(Accepted, () => new ZMonitorFileDescriptorEventArgs(this, data)) },
-				{ ZMonitorEvents.AcceptFailed, data => InvokeEvent(AcceptFailed, () => new ZMonitorEventArgs(this, data)) },
-				{ ZMonitorEvents.Closed, data => InvokeEvent(Closed, () => new ZMonitorFileDescriptorEventArgs(this, data)) },
-				{ ZMonitorEvents.CloseFailed, data => InvokeEvent(CloseFailed, () => new ZMonitorEventArgs(this, data)) },
-				{ ZMonitorEvents.Disconnected, data => InvokeEvent(Disconnected, () => new ZMonitorFileDescriptorEventArgs(this, data)) },
-				{ ZMonitorEvents.Stopped, data => InvokeEvent(Stopped, () => new ZMonitorEventArgs(this, data)) },
+				{ ZMonitorEvents.AllEvents, data => InvokeEvent(AllEvents, () => new(this, data)) },
+				{ ZMonitorEvents.Connected, data => InvokeEvent(Connected, () => new(this, data)) },
+				{ ZMonitorEvents.ConnectDelayed, data => InvokeEvent(ConnectDelayed, () => new(this, data)) },
+				{ ZMonitorEvents.ConnectRetried, data => InvokeEvent(ConnectRetried, () => new(this, data)) },
+				{ ZMonitorEvents.Listening, data => InvokeEvent(Listening, () => new(this, data)) },
+				{ ZMonitorEvents.BindFailed, data => InvokeEvent(BindFailed, () => new(this, data)) },
+				{ ZMonitorEvents.Accepted, data => InvokeEvent(Accepted, () => new(this, data)) },
+				{ ZMonitorEvents.AcceptFailed, data => InvokeEvent(AcceptFailed, () => new(this, data)) },
+				{ ZMonitorEvents.Closed, data => InvokeEvent(Closed, () => new(this, data)) },
+				{ ZMonitorEvents.CloseFailed, data => InvokeEvent(CloseFailed, () => new(this, data)) },
+				{ ZMonitorEvents.Disconnected, data => InvokeEvent(Disconnected, () => new(this, data)) },
+				{ ZMonitorEvents.Stopped, data => InvokeEvent(Stopped, () => new(this, data)) },
 			};
 		}
 
@@ -53,9 +53,8 @@ namespace ZeroMQ.Monitoring
 
 		public static ZMonitor Create(ZContext context, string endpoint)
 		{
-			ZError error;
 			ZMonitor monitor;
-			if (null == (monitor = Create(context, endpoint, out error)))
+			if (null == (monitor = Create(context, endpoint, out var error)))
 			{
 				throw new ZException(error);
 			}
@@ -80,10 +79,10 @@ namespace ZeroMQ.Monitoring
 			ZSocket socket;
 			if (null == (socket = ZSocket.Create(context, ZSocketType.PAIR, out error)))
 			{
-				return default(ZMonitor);
+				return default;
 			}
 
-			return new ZMonitor(context, socket, endpoint);
+			return new(context, socket, endpoint);
 		}
 
 		public event EventHandler<ZMonitorEventArgs> AllEvents;
@@ -164,8 +163,7 @@ namespace ZeroMQ.Monitoring
 	    {
 	        using (_socket)
 	        {
-	            ZError error;
-	            if (!_socket.Connect(_endpoint, out error))
+		        if (!_socket.Connect(_endpoint, out var error))
 	            {
 	                LogError(error, "connect");
 	                return;
@@ -175,8 +173,7 @@ namespace ZeroMQ.Monitoring
 
 	            while (!Cancellor.IsCancellationRequested)
 	            {
-	                ZMessage incoming;
-	                if (!_socket.PollIn(poller, out incoming, out error, PollingInterval))
+		            if (!_socket.PollIn(poller, out var incoming, out error, PollingInterval))
 	                {
 	                    if (error == ZError.EAGAIN)
 	                    {

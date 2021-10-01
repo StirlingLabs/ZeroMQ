@@ -38,12 +38,11 @@ namespace Examples
 				}
 
 				var cycles = 0;
-				ZError error;
 				ZMessage incoming;
 
 				while (true)
 				{
-					if (null == (incoming = worker.ReceiveMessage(out error)))
+					if (null == (incoming = worker.ReceiveMessage(out var error)))
 					{
 						if (error == ZError.ETERM)
 							return;

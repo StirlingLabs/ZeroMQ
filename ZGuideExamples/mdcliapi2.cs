@@ -39,7 +39,7 @@ namespace Examples
                 //  DEALER socket instead of a REQ socket; this lets us send any number
                 //  of requests without waiting for a reply.
 
-                Client = new ZSocket(_context, ZSocketType.DEALER);
+                Client = new(_context, ZSocketType.DEALER);
                 Client.Connect(Broker);
                 if (Verbose)
                     "I: connecting to broker at '{0}'...".DumpString(Broker);
@@ -54,7 +54,7 @@ namespace Examples
             {
                 if(broker == null)
                     throw new InvalidOperationException();
-                _context = new ZContext();
+                _context = new();
                 Broker = broker;
                 Verbose = verbose;
                 Timeout = TimeSpan.FromMilliseconds(2500);
@@ -103,22 +103,21 @@ namespace Examples
                     throw new NotImplementedException();
 
                 if (cancellor.IsCancellationRequested
-                        || (Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape))
+                        || Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)
                     _context.Shutdown();
 
                 //  Prefix request with protocol frames
                 //  Frame 0: empty (REQ emulation)
                 //  Frame 1: "MDPCxy" (six bytes, MDP/Client x.y)
                 //  Frame 2: Service name (printable string)
-                request.Prepend(new ZFrame(service));
-                request.Prepend(new ZFrame(MdpCommon.MDPC_CLIENT));
-                request.Prepend(new ZFrame(string.Empty));
+                request.Prepend(new(service));
+                request.Prepend(new(MdpCommon.MDPC_CLIENT));
+                request.Prepend(new(string.Empty));
 
                 if (Verbose)
                     request.DumpZmsg("I: send request to '{0}' service:", service);
 
-                ZError error; 
-                if(!Client.Send(request, out error))
+                if(!Client.Send(request, out var error))
                 {
                     if (Equals(error, ZError.ETERM))
                         cancellor.Cancel(); // Interrupted
@@ -138,15 +137,13 @@ namespace Examples
             {
                 //  Poll socket for a reply, with timeout
                 var p = ZPollItem.CreateReceiver();
-                ZMessage msg;
-                ZError error;
                 //  .split body of send 
                 //  On any blocking call, {{libzmq}} will return -1 if there was
                 //  an error; we could in theory check for different error codes,
                 //  but in practice it's OK to assume it was {{EINTR}} (Ctrl-C):
 
                 // Poll the client Message
-                if (Client.PollIn(p, out msg, out error, Timeout))
+                if (Client.PollIn(p, out var msg, out var error, Timeout))
                 {
                     //  If we got a reply, process it
                     if (Verbose)

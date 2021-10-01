@@ -57,7 +57,7 @@ namespace Examples
 
 		public static void DumpString(this string format, params object[] args)
 			// if you dont wanna see utc timeshift, remove zzz and use DateTime.UtcNow instead
-			=> Console.WriteLine("[{0}] - {1}", string.Format("{0:yyyy-MM-ddTHH:mm:ss:fffffff zzz}", DateTime.Now), string.Format(format, args));
+			=> Console.WriteLine("[{0}] - {1}", $"{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}", string.Format(format, args));
 
 		/// <summary>
 		/// Based on zmsg_dump 
@@ -70,7 +70,7 @@ namespace Examples
 		{
 			if (!string.IsNullOrWhiteSpace(format))
 				format.DumpString(args);
-			using (var dmsg = zmsg.Duplicate())
+			using (var dmsg = zmsg.Clone())
 				foreach (var zfrm in dmsg)
 				{
 					zfrm.DumpZfrm();

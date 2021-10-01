@@ -23,14 +23,13 @@ namespace Examples
 			{
 				responder.Bind("tcp://*:5555");
 
-				ZError error;
 				var cycles = 0;
 				var rnd = new Random();
 
 				while (true)
 				{
 					ZMessage incoming;
-					if (null == (incoming = responder.ReceiveMessage(out error)))
+					if (null == (incoming = responder.ReceiveMessage(out var error)))
 					{
 						if (error == ZError.ETERM)
 							return;	// Interrupted

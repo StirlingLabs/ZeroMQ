@@ -53,15 +53,14 @@ namespace ZeroMQ.Devices
 		/// </summary>
 		protected override bool FrontendHandler(ZSocket sock, out ZMessage message, out ZError error)
 		{
-			error = default(ZError);
+			error = default;
 			message = null;
 
 			// receiving scope
 			// STREAM: get 2 frames, identity and body
 			ZMessage incoming = null;
 			// IPAddress address = null;
-			string address;
-			if (!ReceiveMsg(sock, ref incoming, out address, out error))
+			if (!ReceiveMsg(sock, ref incoming, out var address, out error))
 			{
 				return false;
 			}
@@ -76,10 +75,10 @@ namespace ZeroMQ.Devices
 				}
 
 				// Prepend empty delimiter between Identity frame and Data frame
-				incoming.Insert(1, new ZFrame());
+				incoming.Insert(1, new());
 
 				// Prepend Peer-Address
-				incoming.Insert(2, new ZFrame(address));
+				incoming.Insert(2, new(address));
 
 				if (!BackendSocket.Send(incoming, /* ZSocketFlags.DontWait, */ out error))
 				{
@@ -106,13 +105,13 @@ namespace ZeroMQ.Devices
 			{
 				var frame = ZFrame.CreateEmpty();
 
-				while (-1 == zmq.msg_recv(frame.Ptr, sock.SocketPtr, (int)(/* ZSocketFlags.DontWait | */ ZSocketFlags.More)))
+				while (-1 == zmq.msg_recv(frame.Ptr, sock.SocketPtr, (int)ZSocketFlags.More))
 				{
 					error = ZError.GetLastErr();
 
 					if (error == ZError.EINTR) 
 					{
-						error = default(ZError);
+						error = default;
 						continue;
 					}
 
@@ -122,16 +121,16 @@ namespace ZeroMQ.Devices
 
 				if (message == null)
 				{
-					message = new ZMessage();
+					message = new();
 				}
 				message.Add(frame);
 
 				if (receiveCount == 2)
 				{
-					if (default(string) == (address = frame.GetOption("Peer-Address", out error)))
+					if (default == (address = frame.GetOption("Peer-Address", out error)))
 					{
 						// just ignore
-						error = default(ZError);
+						error = default;
 						address = string.Empty;
 					}
 				}
@@ -147,7 +146,7 @@ namespace ZeroMQ.Devices
 		/// </summary>
 		protected override bool BackendHandler(ZSocket sock, out ZMessage message, out ZError error)
 		{
-			error = default(ZError);
+			error = default;
 			message = null;
 
 			// receiving scope
@@ -174,7 +173,7 @@ namespace ZeroMQ.Devices
 				incoming.Add(identity0);
 
 				// Append STREAM's empty delimiter frame
-				incoming.Add(new ZFrame());
+				incoming.Add(new());
 
 				if (!SendMsg(FrontendSocket, incoming, out error))
 				{
@@ -191,13 +190,13 @@ namespace ZeroMQ.Devices
 
 			foreach (var frame in msg)
 			{
-				while (-1 == zmq.msg_send(frame.Ptr, sock.SocketPtr, (int)(/* ZSocketFlags.DontWait | */ ZSocketFlags.More)))
+				while (-1 == zmq.msg_send(frame.Ptr, sock.SocketPtr, (int)ZSocketFlags.More))
 				{
 					error = ZError.GetLastErr();
 
 					if (error == ZError.EINTR)
 					{
-						error = default(ZError);
+						error = default;
 						continue;
 					}
 					/* if (error == ZError.EAGAIN)

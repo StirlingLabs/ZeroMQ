@@ -35,7 +35,7 @@ namespace Examples
 
 				using (var request = new ZMessage())
 				{
-					request.Add(new ZFrame("Hello"));
+					request.Add(new("Hello"));
 
 					// Send request
 					client.Send(request);
@@ -68,13 +68,12 @@ namespace Examples
 					worker.Send(ready);
 				}
 
-				ZError error;
 				ZMessage request;
 
 				while (true)
 				{
 					// Get request
-					if (null == (request = worker.ReceiveMessage(out error)))
+					if (null == (request = worker.ReceiveMessage(out var error)))
 					{
 						// We are using "out error",
 						// to NOT throw a ZException ETERM
@@ -94,9 +93,9 @@ namespace Examples
 						// Send reply
 						using (var commit = new ZMessage())
 						{
-							commit.Add(new ZFrame(worker_id));
-							commit.Add(new ZFrame());
-							commit.Add(new ZFrame("OK"));
+							commit.Add(new(worker_id));
+							commit.Add(new());
+							commit.Add(new("OK"));
 
 							worker.Send(commit);
 						}
@@ -148,13 +147,11 @@ namespace Examples
 				// Queue of available workers
 				var worker_queue = new List<string>();
 
-				ZMessage incoming;
-				ZError error;
 				var poll = ZPollItem.CreateReceiver();
 
 				while (true)
 				{
-					if (backend.PollIn(poll, out incoming, out error, TimeSpan.FromMilliseconds(64)))
+					if (backend.PollIn(poll, out var incoming, out var error, TimeSpan.FromMilliseconds(64)))
 					{
 						// Handle worker activity on backend
 
@@ -177,9 +174,9 @@ namespace Examples
 
 							using (var outgoing = new ZMessage())
 							{
-								outgoing.Add(new ZFrame(client_id));
-								outgoing.Add(new ZFrame());
-								outgoing.Add(new ZFrame(reply));
+								outgoing.Add(new(client_id));
+								outgoing.Add(new());
+								outgoing.Add(new(reply));
 
 								// Send
 								frontend.Send(outgoing);
@@ -213,11 +210,11 @@ namespace Examples
 
 							using (var outgoing = new ZMessage())
 							{
-								outgoing.Add(new ZFrame(worker_queue[0]));
-								outgoing.Add(new ZFrame());
-								outgoing.Add(new ZFrame(client_id));
-								outgoing.Add(new ZFrame());
-								outgoing.Add(new ZFrame(requestText));
+								outgoing.Add(new(worker_queue[0]));
+								outgoing.Add(new());
+								outgoing.Add(new(client_id));
+								outgoing.Add(new());
+								outgoing.Add(new(requestText));
 
 								// Send
 								backend.Send(outgoing);

@@ -29,11 +29,9 @@ namespace Examples
 				var polls = new[] { ZPollItem.CreateReceiver(), ZPollItem.CreateReceiver() };
 
 				// Process messages from both sockets
-				ZError error;
-				ZMessage[] msg;
 				while (true)
 				{
-					if (sockets.PollIn(polls, out msg, out error, TimeSpan.FromMilliseconds(64)))
+					if (sockets.PollIn(polls, out var msg, out var error, TimeSpan.FromMilliseconds(64)))
 					{
 						if (msg[0] != null)
 						{

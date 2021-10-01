@@ -29,8 +29,7 @@ namespace Examples
 				publisher.Bind("tcp://*:6001");
 				listener.Bind("inproc://listener");
 
-				ZError error;
-				if (!ZContext.Proxy(subscriber, publisher, listener, out error))
+				if (!ZContext.Proxy(subscriber, publisher, listener, out var error))
 				{
 					if (error == ZError.ETERM)
 						return;	// Interrupted
@@ -47,8 +46,6 @@ namespace Examples
 			{
 				publisher.Bind("tcp://*:6000");
 
-				ZError error;
-
 				while (true)
 				{
 					var frame = ZFrame.Create(8);
@@ -59,7 +56,7 @@ namespace Examples
 					}
 					frame.Write(bytes, 0, 8);
 					
-					if (!publisher.SendFrame(frame, out error))
+					if (!publisher.SendFrame(frame, out var error))
 					{
 						if (error == ZError.ETERM)
 							return;	// Interrupted
@@ -82,12 +79,11 @@ namespace Examples
 				subscriber.Subscribe("A");
 				subscriber.Subscribe("B");
 
-				ZError error;
 				ZFrame frame;
 				var count = 0;
 				while (count < 5)
 				{
-					if (null == (frame = subscriber.ReceiveFrame(out error)))
+					if (null == (frame = subscriber.ReceiveFrame(out var error)))
 					{
 						if (error == ZError.ETERM)
 							return;	// Interrupted
@@ -111,11 +107,10 @@ namespace Examples
 			{
 				listener.Connect("inproc://listener");
 
-				ZError error;
 				ZFrame frame;
 				while (true)
 				{
-					if (null != (frame = listener.ReceiveFrame(out error)))
+					if (null != (frame = listener.ReceiveFrame(out var error)))
 					{
 						using (frame)
 						{

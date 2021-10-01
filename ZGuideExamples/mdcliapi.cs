@@ -42,7 +42,7 @@ namespace Examples
             {
                 //  Connect or reconnect to broker
 
-                Client = new ZSocket(_context, ZSocketType.REQ);
+                Client = new(_context, ZSocketType.REQ);
                 Client.Connect(Broker);
                 if (Verbose)
                     "I: connecting to broker at '{0}'...".DumpString(Broker);
@@ -53,7 +53,7 @@ namespace Examples
             {
                 if(broker == null)
                     throw new InvalidOperationException();
-                _context = new ZContext();
+                _context = new();
                 Broker = broker;
                 Verbose = verbose;
                 Timeout = TimeSpan.FromMilliseconds(2500);
@@ -111,8 +111,8 @@ namespace Examples
                 //  Prefix request with protocol frames
                 //  Frame 1: "MDPCxy" (six bytes, MDP/Client x.y)
                 //  Frame 2: Service name (printable string)
-                request.Prepend(new ZFrame(service));
-                request.Prepend(new ZFrame(MdpCommon.MDPC_CLIENT));
+                request.Prepend(new(service));
+                request.Prepend(new(MdpCommon.MDPC_CLIENT));
                 if (Verbose)
                     request.DumpZmsg("I: send request to '{0}' service:", service);
 
@@ -120,14 +120,13 @@ namespace Examples
                 while (retriesLeft > 0 && !cancellor.IsCancellationRequested)
                 {
                     if (cancellor.IsCancellationRequested
-                        || (Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape))
+                        || Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)
                         _context.Shutdown();
 
                     // Copy the Request and send on Client
-                    var msgreq = request.Duplicate();
+                    var msgreq = request.Clone();
 
-                    ZError error;
-                    if (!Client.Send(msgreq, out error))
+                    if (!Client.Send(msgreq, out var error))
                     {
                         if (Equals(error, ZError.ETERM))
                         {
@@ -137,14 +136,13 @@ namespace Examples
                     }
 
                     var p = ZPollItem.CreateReceiver();
-                    ZMessage msg;
                     //  .split body of send 
                     //  On any blocking call, {{libzmq}} will return -1 if there was
                     //  an error; we could in theory check for different error codes,
                     //  but in practice it's OK to assume it was {{EINTR}} (Ctrl-C):
 
                     // Poll the client Message
-                    if (Client.PollIn(p, out msg, out error, Timeout))
+                    if (Client.PollIn(p, out var msg, out error, Timeout))
                     {
                         //  If we got a reply, process it
                         if (Verbose)
