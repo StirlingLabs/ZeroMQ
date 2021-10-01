@@ -12,18 +12,18 @@ namespace Examples
 	{
 		static int Main(string[] args)
 		{
-            int returnMain = 0; // C good
+            var returnMain = 0; // C good
 
-            int leaveOut = 0;
+            var leaveOut = 0;
             var dict = new Dictionary<string, string>();
-            FieldInfo[] fields = typeof(Program).GetFields(BindingFlags.Public | BindingFlags.Static).OrderBy(field => field.Name).ToArray();
-			foreach (string arg in args)
+            var fields = typeof(Program).GetFields(BindingFlags.Public | BindingFlags.Static).OrderBy(field => field.Name).ToArray();
+			foreach (var arg in args)
 			{
                 if (!arg.StartsWith("--", StringComparison.OrdinalIgnoreCase)) break;
 
 				leaveOut++;
 
-				int iOfEquals = arg.IndexOf('=');
+				var iOfEquals = arg.IndexOf('=');
 				string key, value;
 				if (-1 < iOfEquals)
 				{
@@ -36,7 +36,7 @@ namespace Examples
 				}
 				dict.Add(key, value);
 
-				FieldInfo keyField = fields.Where(field => string.Equals(field.Name, key.Substring(2), StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+				var keyField = fields.Where(field => string.Equals(field.Name, key.Substring(2), StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
 				if (keyField != null)
 				{
 					if (keyField.FieldType == typeof(string))
@@ -45,7 +45,7 @@ namespace Examples
 					}
 					else if (keyField.FieldType == typeof(bool))
 					{
-						bool equalsTrue = (value == null || value == string.Empty);
+						var equalsTrue = (value == null || value == string.Empty);
 						if (!equalsTrue)
 							equalsTrue = string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
 						if (!equalsTrue)
@@ -57,14 +57,14 @@ namespace Examples
 			}
 
 			var methods = typeof(Program).GetMethods(BindingFlags.Public | BindingFlags.Static).OrderBy(method => method.Name).ToList();
-            string command = (args.Length == 0) ? "help" : args[0 + leaveOut].ToLower();
+            var command = (args.Length == 0) ? "help" : args[0 + leaveOut].ToLower();
             if (command != "help")
 			{
 				var method = methods.FirstOrDefault(m => m.Name.Equals(command, StringComparison.OrdinalIgnoreCase));
 				if (method != null)
 				{
                     object[] parameters = null;
-                    ParameterInfo[] arguments = method.GetParameters();
+                    var arguments = method.GetParameters();
 
 					if (arguments.Length == 2)
 					{
@@ -79,7 +79,7 @@ namespace Examples
 						};
 					}
 
-                    object result = DebugStackTrace<TargetInvocationException>.Invoke(
+                    var result = DebugStackTrace<TargetInvocationException>.Invoke(
                         method, /* static */null, parameters);
 
                     if (method.ReturnType == typeof(bool))
@@ -106,7 +106,7 @@ namespace Examples
 				Console.WriteLine();
 				Console.WriteLine("Available [option]s:");
 				Console.WriteLine();
-				foreach (FieldInfo field in fields)
+				foreach (var field in fields)
 				{
 					Console.WriteLine("  --{0}", field.Name);
 				}
@@ -116,7 +116,7 @@ namespace Examples
 			Console.WriteLine("Available <command>s:");
 			Console.WriteLine();
 
-			foreach (MethodInfo method in methods)
+			foreach (var method in methods)
 			{
 				if (method.Name == "Main")
 					continue;

@@ -38,13 +38,11 @@
 		}
 
 		private static NotSupportedException VersionNotSupported(string methodName, string requiredVersion)
-		{
-			return new NotSupportedException(
+			=> new NotSupportedException(
 				string.Format(
 					"{0}libzmq version not supported. Required version {1}",
 					methodName == null ? string.Empty : methodName + ": ",
 					requiredVersion));
-		}
 
 		public static readonly Version LibraryVersion;
 

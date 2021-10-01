@@ -28,12 +28,12 @@ namespace ZeroMQ
 
 		public static byte[] Encode(byte[] decoded)
 		{
-			int dataLen = decoded.Length;
+			var dataLen = decoded.Length;
 			if (dataLen % 4 > 0)
 			{
 				throw new InvalidOperationException("decoded.Length must be divisible by 4");
 			}
-			int destLen = (Int32)(decoded.Length * 1.25);
+			var destLen = (Int32)(decoded.Length * 1.25);
 
 			var data = GCHandle.Alloc(decoded, GCHandleType.Pinned);
 
@@ -49,62 +49,48 @@ namespace ZeroMQ
 			}
 		}
 
-		public static byte[] ToZ85Encoded(this byte[] decoded) 
-		{
-			return Encode(decoded);
-		}
+		public static byte[] ToZ85Encoded(this byte[] decoded)
+			=> Encode(decoded);
 
-		public static string ToZ85Encoded(this string decoded) 
-		{
-			return Encode(decoded, ZContext.Encoding);
-		}
+		public static string ToZ85Encoded(this string decoded)
+			=> Encode(decoded, ZContext.Encoding);
 
-		public static string ToZ85Encoded(this string decoded, Encoding encoding) 
-		{
-			return Encode(decoded, encoding);
-		}
+		public static string ToZ85Encoded(this string decoded, Encoding encoding)
+			=> Encode(decoded, encoding);
 
-		public static byte[] ToZ85EncodedBytes(this string decoded) 
-		{
-			return EncodeBytes(decoded, ZContext.Encoding);
-		}
+		public static byte[] ToZ85EncodedBytes(this string decoded)
+			=> EncodeBytes(decoded, ZContext.Encoding);
 
-		public static byte[] ToZ85EncodedBytes(this string decoded, Encoding encoding) 
-		{
-			return EncodeBytes(decoded, encoding);
-		}
+		public static byte[] ToZ85EncodedBytes(this string decoded, Encoding encoding)
+			=> EncodeBytes(decoded, encoding);
 
 		public static string Encode(string strg)
-		{
-			return Encode(strg, ZContext.Encoding);
-		}
+			=> Encode(strg, ZContext.Encoding);
 
 		public static string Encode(string strg, Encoding encoding)
 		{
-			byte[] encoded = EncodeBytes(strg, encoding);
+			var encoded = EncodeBytes(strg, encoding);
 			return encoding.GetString(encoded);
 		}
 
 		public static byte[] EncodeBytes(string strg)
-		{
-			return EncodeBytes(strg, ZContext.Encoding);
-		}
+			=> EncodeBytes(strg, ZContext.Encoding);
 
 		public static byte[] EncodeBytes(string strg, Encoding encoding)
 		{
-			byte[] bytes = encoding.GetBytes(strg);
+			var bytes = encoding.GetBytes(strg);
 			return Encode(bytes);
 		}
 
 
 		public static byte[] Decode(byte[] encoded)
 		{
-			int dataLen = encoded.Length;
+			var dataLen = encoded.Length;
 			if (dataLen % 5 > 0)
 			{
 				throw new InvalidOperationException("encoded.Length must be divisible by 5");
 			}
-			int destLen = (Int32)(encoded.Length * .8);
+			var destLen = (Int32)(encoded.Length * .8);
 
 			var data = GCHandle.Alloc(encoded, GCHandleType.Pinned);
 
@@ -121,45 +107,33 @@ namespace ZeroMQ
 			}
 		}
 
-		public static byte[] ToZ85Decoded(this byte[] encoded) 
-		{
-			return Decode(encoded);
-		}
+		public static byte[] ToZ85Decoded(this byte[] encoded)
+			=> Decode(encoded);
 
-		public static string ToZ85Decoded(this string encoded) 
-		{
-			return Decode(encoded, ZContext.Encoding);
-		}
+		public static string ToZ85Decoded(this string encoded)
+			=> Decode(encoded, ZContext.Encoding);
 
-		public static string ToZ85Decoded(this string encoded, Encoding encoding) 
-		{
-			return Decode(encoded, encoding);
-		}
+		public static string ToZ85Decoded(this string encoded, Encoding encoding)
+			=> Decode(encoded, encoding);
 
-		public static byte[] ToZ85DecodedBytes(this string encoded) 
-		{
-			return DecodeBytes(encoded, ZContext.Encoding);
-		}
+		public static byte[] ToZ85DecodedBytes(this string encoded)
+			=> DecodeBytes(encoded, ZContext.Encoding);
 
-		public static byte[] ToZ85DecodedBytes(this string encoded, Encoding encoding) 
-		{
-			return DecodeBytes(encoded, encoding);
-		}
+		public static byte[] ToZ85DecodedBytes(this string encoded, Encoding encoding)
+			=> DecodeBytes(encoded, encoding);
 
 		public static string Decode(string strg)
-		{
-			return Decode(strg, ZContext.Encoding);
-		}
+			=> Decode(strg, ZContext.Encoding);
 
 		public static string Decode(string strg, Encoding encoding)
 		{
-			byte[] encoded = DecodeBytes(strg, encoding);
+			var encoded = DecodeBytes(strg, encoding);
 			return encoding.GetString(encoded);
 		}
 		
 		public static byte[] DecodeBytes(string strg, Encoding encoding)
 		{
-			byte[] bytes = encoding.GetBytes(strg);
+			var bytes = encoding.GetBytes(strg);
 			return Decode(bytes);
 		}
 	}

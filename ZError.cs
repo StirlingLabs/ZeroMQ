@@ -138,7 +138,7 @@ namespace ZeroMQ
 
 		public static ZError GetLastErr()
 		{
-			int errno = zmq.errno();
+			var errno = zmq.errno();
 
 			return FromErrno(errno);
 		}
@@ -146,7 +146,7 @@ namespace ZeroMQ
 		public static ZError FromErrno(int num)
 		{
             // TODO: this can be made more efficient
-			ZError symbol = Find("E", num).OfType<ZError>().FirstOrDefault();
+			var symbol = Find("E", num).OfType<ZError>().FirstOrDefault();
 			if (symbol != null) return symbol;
 
             // unexpected error
@@ -157,13 +157,7 @@ namespace ZeroMQ
 			: base(errno)
 		{ }
 
-		public static new ZError None
-		{
-			get
-			{
-				return default(ZError); // null
-			}
-		}
+		public static new ZError None => default(ZError); // null
 
 		public static ZError
 			// DEFAULT = new ZmqError(0),
