@@ -51,9 +51,7 @@ namespace Examples
 					var frame = ZFrame.Create(8);
 					var bytes = new byte[8];
 					using (var rng = new RNGCryptoServiceProvider())
-					{
 						rng.GetBytes(bytes);
-					}
 					frame.Write(bytes, 0, 8);
 					
 					if (!publisher.SendFrame(frame, out var error))
@@ -111,7 +109,6 @@ namespace Examples
 				while (true)
 				{
 					if (null != (frame = listener.ReceiveFrame(out var error)))
-					{
 						using (frame)
 						{
 							var first = frame.ReadAsByte();
@@ -126,12 +123,9 @@ namespace Examples
 								// Subscribe
 							}
 							else if (first == 0x00)
-							{
-								// Unsubscribe
+							// Unsubscribe
 								context.Shutdown();
-							}
 						}
-					}
 					else
 					{
 						if (error == ZError.ETERM)

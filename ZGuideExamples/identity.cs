@@ -24,9 +24,7 @@ namespace Examples
 					anonymous.Send(new ZFrame("ROUTER uses REQ's generated 5 byte identity"));
 				}
 				using (var msg = sink.ReceiveMessage())
-				{    
 					msg.DumpZmsg("--------------------------");
-				}
 
 				// Then set the identity ourselves
 				using (var identified = new ZSocket(context, ZSocketType.REQ))
@@ -36,9 +34,7 @@ namespace Examples
 					identified.Send(new ZFrame("ROUTER uses REQ's socket identity"));
 				}
 				using (var msg = sink.ReceiveMessage())
-				{
 					msg.DumpZmsg("--------------------------");
-				}
 			}
 		}
 	}

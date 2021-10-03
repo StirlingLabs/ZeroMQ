@@ -34,9 +34,7 @@ namespace Examples
 				{
 					// Send
 					using (var outgoing = new ZFrame(message))
-					{
 						client.Send(outgoing);
-					}
 
 					// Receive
 					var incoming = client.ReceiveFrame(out var error);
@@ -49,9 +47,7 @@ namespace Examples
 						throw new ZException(error);
 					}
 					using (incoming)
-					{
 						Console.WriteLine("Client {0}: {1}", name, incoming.ReadString());
-					}
 				}
 			}
 		}
@@ -93,9 +89,7 @@ namespace Examples
 
 						// Send
 						using (var outgoing = new ZFrame("OK"))
-						{
 							worker.Send(outgoing);
-						}
 					}
 				}
 			}
@@ -111,9 +105,7 @@ namespace Examples
 			if (args == null || args.Length < 3)
 			{
 				if (args != null && args.Length == 1)
-				{
 					args = new[] { args[0], "Me", "You" };
-				}
 				else
 				{
 					Console.WriteLine("Usage: {0} Peering2 Hello Me You", AppDomain.CurrentDomain.FriendlyName);
@@ -255,13 +247,9 @@ namespace Examples
 						// We'll do peer brokers first, to prevent starvation
 
 						if (localFrontend.PollIn(poll, out incoming, out error, TimeSpan.FromMilliseconds(64)))
-						{
 							reroutable = 0;
-						}
 						else if (error == ZError.EAGAIN && cloudFrontend.PollIn(poll, out incoming, out error, TimeSpan.FromMilliseconds(64)))
-						{
 							reroutable = 1;
-						}
 						else
 						{
 							if (error == ZError.ETERM)
@@ -327,9 +315,7 @@ namespace Examples
 		{
 			var hash = (short)name[0];
 			if (hash < 1024)
-			{
 				hash += 1024;
-			}
 			return hash;
 		}
 	}

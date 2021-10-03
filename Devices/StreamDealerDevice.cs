@@ -1,4 +1,6 @@
-﻿using ZeroMQ.lib;
+﻿using System;
+using System.Buffers;
+using ZeroMQ.lib;
 
 namespace ZeroMQ.Devices
 {
@@ -49,16 +51,15 @@ namespace ZeroMQ.Devices
         /// <summary>
         /// Forwards requests from the frontend socket to the backend socket.
         /// </summary>
-        protected override bool FrontendHandler(ZSocket sock, out ZMessage message, out ZError error)
+        protected override bool FrontendHandler(ZSocket sock, out ZMessage? message, out ZError? error)
         {
             error = default;
             message = null;
 
             // receiving scope
             // STREAM: get 2 frames, identity and body
-            ZMessage incoming = null;
             // IPAddress address = null;
-            if (!ReceiveMsg(sock, ref incoming, out var address, out error))
+            if (!ReceiveMsg(sock, out var incoming, out var address, out error) || incoming == null)
                 return false;
 
             // sending scope
@@ -83,7 +84,13 @@ namespace ZeroMQ.Devices
             }
         }
 
-        static bool ReceiveMsg(ZSocket sock, ref ZMessage message, out string address, out ZError error)
+        static bool ReceiveMsg(ZSocket sock, out ZMessage? message, out string address, out ZError? error, bool _ = false)
+        {
+            message = new ZMessage();
+            return ReceiveMsg(sock, ref message, out address, out error);
+        }
+
+        static bool ReceiveMsg(ZSocket sock, ref ZMessage? message, out string address, out ZError? error)
         {
             error = ZError.None;
             // address = IPAddress.None;
@@ -98,7 +105,7 @@ namespace ZeroMQ.Devices
             {
                 var frame = ZFrame.CreateEmpty();
 
-                while (-1 == zmq.msg_recv(frame.Ptr, sock.SocketPtr, (int)ZSocketFlags.More))
+                while (-1 == zmq.msg_recv(frame.Ptr, sock.SocketPtr, ZSocketFlags.More))
                 {
                     error = ZError.GetLastErr();
 
@@ -117,7 +124,7 @@ namespace ZeroMQ.Devices
                 if (receiveCount != 2)
                     continue;
 
-                if (default != (address = frame.GetOption("Peer-Address", out error)))
+                if (default != (address = frame.GetOption("Peer-Address", out error)!))
                     continue;
 
                 // just ignore
@@ -133,15 +140,14 @@ namespace ZeroMQ.Devices
         /// <summary>
         /// Forwards replies from the backend socket to the frontend socket.
         /// </summary>
-        protected override bool BackendHandler(ZSocket sock, out ZMessage message, out ZError error)
+        protected override bool BackendHandler(ZSocket sock, out ZMessage? message, out ZError? error)
         {
             error = default;
             message = null;
 
             // receiving scope
             // DEALER: normal movemsg
-            ZMessage incoming = null;
-            if (!sock.ReceiveMessage(ref incoming, /* ZSocketFlags.DontWait */ ZSocketFlags.None, out error))
+            if (!sock.ReceiveMessage(out var incoming, /* ZSocketFlags.DontWait */ ZSocketFlags.None, out error) || incoming is null)
                 return false;
 
             using (incoming)
@@ -169,13 +175,15 @@ namespace ZeroMQ.Devices
             return true;
         }
 
-        static bool SendMsg(ZSocket sock, ZMessage msg, out ZError error)
+        static bool SendMsg(ZSocket sock, ZMessage? msg, out ZError? error)
         {
+            if (msg is null) throw new ArgumentNullException(nameof(msg));
+
             error = ZError.None;
 
             foreach (var frame in msg)
             {
-                while (-1 == zmq.msg_send(frame.Ptr, sock.SocketPtr, (int)ZSocketFlags.More))
+                while (-1 == zmq.msg_send(frame.Ptr, sock.SocketPtr, ZSocketFlags.More))
                 {
                     error = ZError.GetLastErr();
 

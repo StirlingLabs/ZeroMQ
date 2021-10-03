@@ -45,7 +45,7 @@ namespace Examples
 					var action = BitConverter.GetBytes(workload);
 
 					Console.WriteLine("{0}", workload);
-					sender.Send(action, 0, action.Length);
+					sender.Send(action, 0, (nuint)action.Length);
 				}
 
 				Console.WriteLine("Total expected cost: {0} ms", total_msec);

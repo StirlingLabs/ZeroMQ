@@ -55,9 +55,9 @@ namespace Examples
 		public static string ToHexString(this MdpCommon.MdpwCmd cmd)
 			=> cmd.ToString("X");
 
-		public static void DumpString(this string format, params object[] args)
+		public static void DumpString(this string str)
 			// if you dont wanna see utc timeshift, remove zzz and use DateTime.UtcNow instead
-			=> Console.WriteLine("[{0}] - {1}", $"{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}", string.Format(format, args));
+			=> Console.WriteLine($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - {str}");
 
 		/// <summary>
 		/// Based on zmsg_dump 
@@ -66,21 +66,19 @@ namespace Examples
 		/// <param name="zmsg"></param>
 		/// <param name="format"></param>
 		/// <param name="args"></param>
-		public static void DumpZmsg(this ZMessage zmsg, string format = null, params object[] args)
+		public static void DumpZmsg(this ZMessage? zmsg, string format = null, params object[] args)
 		{
 			if (!string.IsNullOrWhiteSpace(format))
-				format.DumpString(args);
-			using (var dmsg = zmsg.Clone())
-				foreach (var zfrm in dmsg)
-				{
-					zfrm.DumpZfrm();
-				}
+				string.Format(format, args).DumpString();
+			using var dmsg = zmsg.Clone();
+			foreach (var zfrm in dmsg)
+				zfrm.DumpZfrm();
 		}
 
 		public static void DumpZfrm(this ZFrame zfrm, string format = null, params object[] args)
 		{
 			if(!string.IsNullOrWhiteSpace(format))
-				format.DumpString(args);
+				string.Format(format, args).DumpString();
 
 			var data = zfrm.Read();
 			var size = zfrm.Length;
@@ -88,10 +86,12 @@ namespace Examples
 			// Dump the message as text or binary
 			var isText = true;
 			for (var i = 0; i < size; i++)
+			{
 				if (data[i] < 32 || data[i] > 127)
 					isText = false;
+			}
 			var datastr = isText ? Encoding.UTF8.GetString(data) : data.ToHexString();
-			"\tD: [{0,3:D3}]:{1}".DumpString(size, datastr);
+			$"\tD: [{size,3:D3}]:{datastr}".DumpString();
 		}
 	}
 

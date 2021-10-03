@@ -24,19 +24,19 @@ namespace ZeroMQ
             ZSocket handler;
             bool Verbose;
 
-            public string Version { get; private set; }
+            public string? Version { get; private set; }
             public string Sequence { get; private set; }
-            public string Domain { get; private set; }
-            public string Address { get; private set; }
-            public string Identity { get; private set; }
-            public string Mechanism { get; private set; }
-            public string Password { get; private set; }
-            public string Username { get; private set; }
+            public string? Domain { get; private set; }
+            public string? Address { get; private set; }
+            public string? Identity { get; private set; }
+            public string? Mechanism { get; private set; }
+            public string? Password { get; private set; }
+            public string? Username { get; private set; }
 
-            public string UserId { get; set; }
+            public string? UserId { get; set; }
 
-            public string Principal { get; set; }
-            public string ClientTxt { get; set; }
+            public string? Principal { get; set; }
+            public string? ClientTxt { get; set; }
 
             /// <summary>
             /// Receive a valid ZAP request from the handler socket
@@ -92,7 +92,7 @@ namespace ZeroMQ
                     {
                         return;
                     }
-                    var cert = new ZCert(frame.Read(), new byte[32]);
+                    var cert = new ZCert(frame.Read());
                     ClientTxt = cert.PublicTxt;
                 }
                 else if (Mechanism == "GSSAPI")
@@ -159,7 +159,7 @@ namespace ZeroMQ
         /// </summary>
         bool verbose;
 
-        ZCertStore certStore;
+        ZCertStore? certStore;
 
         /// <summary>
         /// Actor command pipe
@@ -179,16 +179,11 @@ namespace ZeroMQ
         /// <param name="context"></param>
         /// <param name="pipe"></param>
         /// <param name="certStore"></param>
-        private ZAuth(ZContext context, ZSocket pipe, ZCertStore certStore = null)
+        private ZAuth(ZContext? context, ZSocket pipe, ZCertStore? certStore = null)
         {
-            if (context != null)
-            {
-                sockets = new[] { pipe, new ZSocket(context, ZSocketType.REP) };
-            }
-            else
-            {
-                sockets = new[] { pipe, new ZSocket(ZSocketType.REP) };
-            }
+            sockets = context != null
+                ? new[] { pipe, new ZSocket(context, ZSocketType.REP) }
+                : new[] { pipe, new ZSocket(ZSocketType.REP) };
             sockets[HANDLER].Bind(ZAP_ENDPOINT);
             pollers = new[] { ZPollItem.CreateReceiver(), ZPollItem.CreateReceiver() };
             allowAny = true;
@@ -197,7 +192,7 @@ namespace ZeroMQ
             this.certStore = certStore;
         }
 
-        private ZAuth(ZSocket pipe, ZCertStore certStore = null) : this(null, pipe, certStore) { }
+        private ZAuth(ZSocket pipe, ZCertStore? certStore = null) : this(null, pipe, certStore) { }
 
         /// <summary>
         /// Did caller ask us to quit?
@@ -209,15 +204,15 @@ namespace ZeroMQ
         /// </summary>
         /// <param name="context">The context used to create the ZSockets.</param>
         /// <param name="backend">ZActor backend socket.</param>
-        /// <param name="cancellor">Thread cancellation called when ZActor is disposed.</param>
+        /// <param name="canceller">Thread cancellation called when ZActor is disposed.</param>
         /// <param name="args">Arguments given to the ZActor. If the first object in this list is a a ZCertStore 
         /// this ZCertStore is used for ZCert handling.</param>
-        public static void Action(ZContext context, ZSocket backend, CancellationTokenSource cancellor, object[] args)
+        public static void Action(ZContext context, ZSocket backend, CancellationTokenSource canceller, object[]? args)
         {
-            var certStore = args != null && args.Length > 0 && args[0] is ZCertStore ? args[0] as ZCertStore : null;
+            var certStore = args is { Length: > 0 } && args[0] is ZCertStore ? args[0] as ZCertStore : null;
             using (var self = new ZAuth(context, backend, certStore))
             {
-                Run(cancellor, self);
+                Run(canceller, self);
             }
         }
 
@@ -225,21 +220,21 @@ namespace ZeroMQ
         /// Start an authorization action on the default context by polling the backend socket of a ZActor.
         /// </summary>
         /// <param name="backend">ZActor backend socket.</param>
-        /// <param name="cancellor">Thread cancellation called when ZActor is disposed.</param>
+        /// <param name="canceller">Thread cancellation called when ZActor is disposed.</param>
         /// <param name="args">Arguments given to the ZActor. If the first object in this list is a a ZCertStore 
         /// this ZCertStore is used for ZCert handling.</param>
-        public static void Action0(ZSocket backend, CancellationTokenSource cancellor, object[] args)
+        public static void Action0(ZSocket backend, CancellationTokenSource canceller, object[]? args)
         {
             var certStore = args != null && args.Length > 0 && args[0] is ZCertStore ? args[0] as ZCertStore : null;
             using (var self = new ZAuth(backend, certStore))
             {
-                Run(cancellor, self);
+                Run(canceller, self);
             }
         }
 
-        private static void Run(CancellationTokenSource cancellor, ZAuth self)
+        private static void Run(CancellationTokenSource canceller, ZAuth self)
         {
-            while (!self.Terminated && !cancellor.IsCancellationRequested)
+            while (!self.Terminated && !canceller.IsCancellationRequested)
             {
                 // we only poll for 50 ms so we can look at the cancellation flags from time to time...
                 TimeSpan? wait = TimeSpan.FromMilliseconds(50);
@@ -278,7 +273,7 @@ namespace ZeroMQ
             var denied = false;
             if (whitelist.Count > 0)
             {
-                if (whitelist.Contains(request.Address))
+                if (request.Address is not null && whitelist.Contains(request.Address))
                 {
                     allowed = true;
                     if (verbose)
@@ -294,9 +289,11 @@ namespace ZeroMQ
 
             if (blacklist.Count > 0)
             {
-                if (blacklist.Contains(request.Address))
+                if (request.Address is not null && blacklist.Contains(request.Address))
                 {
                     denied = true;
+                    // blacklist takes precedence
+                    allowed = false;
                     if (verbose)
                         Info("zauth: - denied (blacklist) address=" + request.Address);
                 }
@@ -315,7 +312,7 @@ namespace ZeroMQ
             //  Mechanism-specific checks
             if (!denied)
             {
-                if (request.Mechanism.ToUpper() == "NULL" && !allowed)
+                if (request.Mechanism?.ToUpper() == "NULL" && !allowed)
                 {
                     //  For NULL, we allow if the address wasn't blacklisted
                     if (verbose)

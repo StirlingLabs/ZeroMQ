@@ -59,7 +59,7 @@ namespace Examples
 			#endregion
 
 
-			public void SendToBroker(string command, string option, ZMessage msg)
+			public void SendToBroker(string command, string option, ZMessage? msg)
 			{
 				using (msg = msg != null ? msg.Clone() : new())
 				{
@@ -82,7 +82,7 @@ namespace Examples
 				Worker = new(_context, ZSocketType.DEALER);
 				Worker.Connect(Broker);
 				if (Verbose)
-					"I: connecting to broker at {0}...".DumpString(Broker);
+					$"I: connecting to broker at {Broker}...".DumpString();
 
 				// Register service with broker
 				SendToBroker(MdpCommon.MdpwCmd.READY.ToHexString(), Service, null);
@@ -121,16 +121,14 @@ namespace Examples
 			protected void Dispose(bool disposing)
 			{
 				if (disposing)
-				{
-					// Destructor
+				// Destructor
 
 					if (Worker != null)
 					{
 						Worker.Dispose();
 						Worker = null;
 					}
-					//Do not Dispose Context: cuz of weird shutdown behavior, stucks in using calls
-				}
+				//Do not Dispose Context: cuz of weird shutdown behavior, stucks in using calls
 			}
 
 			//  .split configure worker
@@ -152,7 +150,7 @@ namespace Examples
 			//  for this, let me know.
 
 			//  Send reply, if any, to broker and wait for next request.
-			public ZMessage Recv(ZMessage reply, CancellationTokenSource cancellor)
+			public ZMessage? Recv(ZMessage? reply, CancellationTokenSource canceller)
 			{
 				if (reply == null
 					&& _expectReply)
@@ -169,13 +167,12 @@ namespace Examples
 
 				while (true)
 				{
-					if (cancellor.IsCancellationRequested
+					if (canceller.IsCancellationRequested
 						|| Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)
 						_context.Shutdown();
 
 					var p = ZPollItem.CreateReceiver();
 					if (Worker.PollIn(p, out var msg, out var error, Heartbeat))
-					{
 						using (msg)
 						{
 							// If we got a reply
@@ -218,17 +215,14 @@ namespace Examples
 									// Do nothing for heartbeats
 								}
 								else if (command.StrHexEq(MdpCommon.MdpwCmd.DISCONNECT))
-								{
 									ConnectToBroker();
-								}
 								else
-									"E: invalid input message: '{0}'".DumpString(command.ToString());
+									$"E: invalid input message: '{command}'".DumpString();
 							}
 						}
-					}
 					else if (Equals(error, ZError.ETERM))
 					{
-						cancellor.Cancel();
+						canceller.Cancel();
 						break; // Interrupted
 					}
 					else if (Equals(error, ZError.EAGAIN) 
@@ -247,7 +241,7 @@ namespace Examples
 						HeartbeatAt = DateTime.UtcNow + Heartbeat;
 					}
 				}
-				if (cancellor.IsCancellationRequested)
+				if (canceller.IsCancellationRequested)
 					"W: interrupt received, killing worker...\n".DumpString();
 
 				return null;

@@ -32,16 +32,12 @@ namespace Examples
 
 				Console.WriteLine("I: echo service is ready at {0}", args[0]);
 
-				ZMessage message;
+				ZMessage? message;
 				while (true)
 				{
 					if (null != (message = server.ReceiveMessage(out var error)))
-					{
 						using (message)
-						{
 							server.Send(message);
-						}
-					}
 					else
 					{
 						if (error == ZError.ETERM)

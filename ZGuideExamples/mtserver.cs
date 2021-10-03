@@ -25,9 +25,7 @@ namespace Examples
 
 				// Launch pool of worker threads
 				for (var i = 0; i < 5; ++i)
-				{
 					new Thread(() => MTServer_Worker(ctx)).Start();
-				}
 
 				// Connect work threads to client threads via a queue proxy
 				ZContext.Proxy(clients, workers);

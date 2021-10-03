@@ -15,7 +15,7 @@ Now run the project using `mono bin/Release/ZGuideExamples.exe Espresso` if you 
 or do `dotnet run --project ZGuideExamples.netcore.csproj Espresso` if you're using dotnet framework.
 
 ```
-Usage: ./ZGuideExamples.exe [--option] <command> World
+Usage: ./ZGuideExamples.exe [--option] <command>
 
 Available [option]s:
 

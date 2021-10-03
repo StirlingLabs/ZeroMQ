@@ -19,9 +19,7 @@ namespace Examples
 
 			var rnd = new Random();
 			if (args == null || args.Length < 1)
-			{
 				args = new[] { "World" + rnd.Next() };
-			}
 			var name = args[0];
 
 			using (var context = new ZContext())
@@ -33,12 +31,10 @@ namespace Examples
 				Console.WriteLine("I: ({0}) worker ready", name);
 
 				using (var outgoing = new ZFrame("READY"))
-				{
 					worker.Send(outgoing);
-				}
 
 				var cycles = 0;
-				ZMessage incoming;
+				ZMessage? incoming;
 
 				while (true)
 				{

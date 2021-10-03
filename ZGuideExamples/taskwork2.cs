@@ -46,9 +46,7 @@ namespace Examples
 
 					// Any waiting controller command acts as 'KILL'
 					if (controller.PollIn(poll, out message, out error, TimeSpan.FromMilliseconds(64)))
-					{
 						break;	// Exit loop
-					}
 				}
 			}
 		}

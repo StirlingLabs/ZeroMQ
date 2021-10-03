@@ -27,8 +27,10 @@ namespace Examples
 					var request = new ZMessage();
 					request.Prepend(new("Hello world"));
 					using (var reply = session.Send("echo", request, cts))
+					{
 						if (reply == null)
 							break; // Interrupt or failure
+					}
 				}
 				Console.WriteLine("{0} requests/replies processed\n", count);
 			}

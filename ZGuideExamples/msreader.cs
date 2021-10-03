@@ -27,7 +27,7 @@ namespace Examples
 
 				// Process messages from both sockets
 				// We prioritize traffic from the task ventilator
-				ZError error;
+				ZError? error;
 				ZFrame frame;
 				while (true)
 				{

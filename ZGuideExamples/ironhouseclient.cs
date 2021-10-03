@@ -50,9 +50,7 @@ namespace Examples
 
                     // Receive
                     using (var reply = requester.ReceiveFrame())
-                    {
                         Console.WriteLine(" Received: {0} {1}!", requestText, reply.ReadString());
-                    }
                 }
             }
         }

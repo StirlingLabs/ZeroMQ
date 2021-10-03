@@ -15,9 +15,7 @@ namespace Examples
 			//
 
 			if (args == null || args.Length == 0)
-			{
 				args = new[] { "World" };
-			}
 
 			var name = args[0];
 
@@ -46,9 +44,7 @@ namespace Examples
 							context.Shutdown();
 						} /**/
 						if (info.Key == ConsoleKey.Escape)
-						{
 							context.Shutdown();
-						}
 					}
 
 					if (null == (request = responder.ReceiveFrame(ZSocketFlags.DontWait, out error)))

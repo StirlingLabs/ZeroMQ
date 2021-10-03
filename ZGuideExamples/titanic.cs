@@ -36,9 +36,7 @@ namespace Examples
 
 			var serializer = new XmlSerializer(typeof(List<byte[]>));
 			using (var writer = new StreamWriter(path))
-			{
 				serializer.Serialize(writer, l);
-			}
 		}
 
 		public static T DeserializeFromXml<T>(this string path)
@@ -51,9 +49,7 @@ namespace Examples
 			{
 				var res = (List<byte[]>)serializer.Deserialize(reader);
 				foreach (var e in res)
-				{
 					msg.Add(new(e));
-				}
 			}
 			return (T)msg; 
 		}
@@ -89,16 +85,16 @@ namespace Examples
 		//  The {{titanic.request}} task waits for requests to this service. It writes
 		//  each request to disk and returns a UUID to the client. The client picks
 		//  up the reply asynchronously using the {{titanic.reply}} service:
-		private static void Titanic_Request(ZContext ctx, ZSocket backendpipe, CancellationTokenSource cancellor, object[] args)
+		private static void Titanic_Request(ZContext ctx, ZSocket backendpipe, CancellationTokenSource canceller, object[] args)
 		{
 			using (var worker = new MajordomoWorker("tcp://127.0.0.1:5555", "titanic.request", (bool)args[0]))
 			{
-				ZMessage reply = null;
+				ZMessage? reply = null;
 				while (true)
 				{
 					// Send reply if it's not null
 					// And then get next request from broker
-					var request = worker.Recv(reply, cancellor);
+					var request = worker.Recv(reply, canceller);
 					if (request == null)
 						break; // Interrupted, exit
 
@@ -115,10 +111,8 @@ namespace Examples
 					reply = new();
 					reply.Add(new(uuid.ToString()));
 					if (!backendpipe.Send(reply, out var error))
-					{
 						if(error.Equals(ZError.ETERM))
 							break;
-					}
 					//backendpipe.Send(reply);
 
 					// Now send UUID back to client
@@ -138,7 +132,7 @@ namespace Examples
 		{
 			using (var worker = new MajordomoWorker("tcp://127.0.0.1:5555", "titanic.reply", verbose))
 			{
-				ZMessage reply = null;
+				ZMessage? reply = null;
 				while (true)
 				{
 					var request = worker.Recv(reply, cts);
@@ -174,7 +168,7 @@ namespace Examples
 		{
 			using (var worker = new MajordomoWorker("tcp://127.0.0.1:5555", "titanic.close", verbose))
 			{
-				ZMessage reply = null;
+				ZMessage? reply = null;
 				while (true)
 				{
 					var request = worker.Recv(reply, cts);
@@ -225,20 +219,24 @@ namespace Examples
 
 				bool service_ok;
 				using (var mmireply = client.Send("mmi.service", mmirequest, cts))
+				{
 					service_ok = mmireply != null
 						&& mmireply.First().ToString().Equals("200");
+				}
 
 				res = false;
 				if(service_ok)
-					using (var reply = client.Send(servicename, request, cts)) 
+					using (var reply = client.Send(servicename, request, cts))
+					{
 						if (reply != null)
 						{
 							fn = TitanicCommon.ReplyFilename(uuid);
 							reply.SerializeToXml(fn);
 							res = true; 
 						}
-				else
-					request.Dispose();
+						else
+							request.Dispose();
+					}
 			}
 			return res; 
 		}
@@ -247,21 +245,21 @@ namespace Examples
 		//  Implements server side of http://rfc.zeromq.org/spec:9
 		public static void Titanic(string[] args)
 		{
-			var cancellor = new CancellationTokenSource();
+			var canceller = new CancellationTokenSource();
 			Console.CancelKeyPress += (s, ea) =>
 			{
 				ea.Cancel = true;
-				cancellor.Cancel();
+				canceller.Cancel();
 			};
 
 			var ctx = new ZContext();
 			using (var requestPipe = new ZActor(ctx, Titanic_Request, Verbose))
 			{
-				new Thread(() => Titanic_Reply(ctx, cancellor, Verbose)).Start();
-				new Thread(() => Titanic_Close(ctx, cancellor, Verbose)).Start();
+				new Thread(() => Titanic_Reply(ctx, canceller, Verbose)).Start();
+				new Thread(() => Titanic_Close(ctx, canceller, Verbose)).Start();
 				////////////////////
-				/// HINT: Use requestPipe.Start instead of requestPipe.Start(cancellor) 
-				/// => with cancellor consturctor needed frontent pipe will not be initializes!!
+				/// HINT: Use requestPipe.Start instead of requestPipe.Start(canceller) 
+				/// => with canceller consturctor needed frontent pipe will not be initializes!!
 				////////////////////
 				requestPipe.Start(); 
 				Thread.Sleep(1500);
@@ -271,14 +269,13 @@ namespace Examples
 				while (true)
 				{
 					//continue;
-					if (cancellor.IsCancellationRequested
+					if (canceller.IsCancellationRequested
 					|| Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)
 						ctx.Shutdown();
 
 					var path = Path.Combine(TitanicCommon.TITANIC_DIR, TitanicCommon.QUEUE_FILE);
 					var p = ZPollItem.CreateReceiver();
 					if (requestPipe.Frontend.PollIn(p, out var msg, out var error, TimeSpan.FromMilliseconds(1000)))
-					{
 						using (msg)
 						{
 							// Ensure message directory exists
@@ -287,21 +284,16 @@ namespace Examples
 							// Append UUID to queue, prefixed with '-' for pending
 							var uuid = Guid.Parse(msg.PopString());
 							using (var sw = File.AppendText(path))
-							{
 								sw.Write(TitanicCommon.QUEUE_LINEFORMAT, uuid);
-							}
 						}
-					}
 					else if (error.Equals(ZError.ETERM))
 					{
-						cancellor.Cancel();
+						canceller.Cancel();
 						break; // Interrupted
 					}
 					else if (error.Equals(ZError.EAGAIN))
 						//continue;
-					{
 						Thread.Sleep(1);
-					}
 					else
 						break; // Interrupted
 
@@ -323,8 +315,8 @@ namespace Examples
 								{
 									var uuid = Guid.Parse(line.Substring(1, Guid.NewGuid().ToString().Length));
 									if (Verbose)
-										"I: processing request {0}".DumpString(uuid);
-									if (Titanic_ServiceSuccess(uuid, cancellor))
+										$"I: processing request {uuid}".DumpString();
+									if (Titanic_ServiceSuccess(uuid, canceller))
 									{
 										//  Mark queue entry as processed
 										var newval = new UTF8Encoding().GetBytes("+");
@@ -333,7 +325,7 @@ namespace Examples
 										fs.Seek(n - newval.Length, SeekOrigin.Current);
 									}
 								}
-								if (cancellor.IsCancellationRequested)
+								if (canceller.IsCancellationRequested)
 									break; 
 
 								numBytesRead += n;

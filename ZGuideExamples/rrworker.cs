@@ -25,11 +25,10 @@ namespace Examples
 				Console.WriteLine("    Endpoint  Where RRWorker should connect to.");
 				Console.WriteLine("              Default is tcp://127.0.0.1:5560");
 				Console.WriteLine();
-				if (args.Length < 1) {
+				if (args.Length < 1)
 					args = new[] { "World", "tcp://127.0.0.1:5560" };
-				} else {
+				else
 					args = new[] { args[0], "tcp://127.0.0.1:5560" };
-				}
 			}
 
 			var name = args[0];

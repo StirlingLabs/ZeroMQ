@@ -42,8 +42,8 @@ namespace Examples
                 Client = new(_context, ZSocketType.DEALER);
                 Client.Connect(Broker);
                 if (Verbose)
-                    "I: connecting to broker at '{0}'...".DumpString(Broker);
-                
+                    $"I: connecting to broker at '{Broker}'...".DumpString();
+
             }
 
             //  The constructor and destructor are the same as in mdcliapi, except
@@ -74,16 +74,14 @@ namespace Examples
             protected void Dispose(bool disposing)
             {
                 if (disposing)
-                {
-                    // Destructor
+                // Destructor
 
                     if (Client != null)
                     {
                         Client.Dispose();
                         Client = null;
                     }
-                    //Do not Dispose Context: cuz of weird shutdown behavior, stucks in using calls 
-                }
+                //Do not Dispose Context: cuz of weird shutdown behavior, stucks in using calls 
             }
 
             //  Set request timeout
@@ -97,12 +95,12 @@ namespace Examples
             //  frame at the start, to create the same envelope that the REQ socket
             //  would normally make for us:
 
-            public int Send(string service, ZMessage request, CancellationTokenSource cancellor)
+            public int Send(string service, ZMessage? request, CancellationTokenSource canceller)
             {
                 if (request == null)
                     throw new NotImplementedException();
 
-                if (cancellor.IsCancellationRequested
+                if (canceller.IsCancellationRequested
                         || Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)
                     _context.Shutdown();
 
@@ -118,11 +116,9 @@ namespace Examples
                     request.DumpZmsg("I: send request to '{0}' service:", service);
 
                 if(!Client.Send(request, out var error))
-                {
-                    if (Equals(error, ZError.ETERM))
-                        cancellor.Cancel(); // Interrupted
-                    //throw new ZException(error);
-                }
+                if (Equals(error, ZError.ETERM))
+                    canceller.Cancel(); // Interrupted
+                //throw new ZException(error);
                 return 0;
             }
 
@@ -133,7 +129,7 @@ namespace Examples
             //  Returns the reply message or NULL if there was no reply. Does not
             //  attempt to recover from a broker failure, this is not possible
             //  without storing all unanswered requests and resending them all...
-            public ZMessage Recv(CancellationTokenSource cancellor)
+            public ZMessage? Recv(CancellationTokenSource canceller)
             {
                 //  Poll socket for a reply, with timeout
                 var p = ZPollItem.CreateReceiver();
@@ -154,12 +150,16 @@ namespace Examples
                         throw new InvalidOperationException();
 
                     using (var empty = msg.Pop())
+                    {
                         if (!empty.ToString().Equals(string.Empty))
                             throw new InvalidOperationException();
+                    }
 
                     using (var header = msg.Pop())
+                    {
                         if (!header.ToString().Equals(MdpCommon.MDPC_CLIENT))
                             throw new InvalidOperationException();
+                    }
 
                     using (var replyService = msg.Pop())
                     {}
@@ -169,12 +169,12 @@ namespace Examples
                 if (Equals(error, ZError.ETERM))
                 {
                     "W: interrupt received, killing client...\n".DumpString();
-                    cancellor.Cancel();
+                    canceller.Cancel();
                 }
                 else 
                 {
                     if (Verbose)
-                        "W: permanent error, abandoning Error: {0}".DumpString(error);
+                        $"W: permanent error, abandoning Error: {error}".DumpString();
                 }
 
                 return null;

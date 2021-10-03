@@ -46,32 +46,24 @@ namespace Examples
 					for (var retries = 0; retries < FLClient1_MAX_RETRIES; ++retries)
 					{
 						if (null != (reply = FLClient1_TryRequest(context, endpoint, request)))
-						{
 							break;	// Successful
-						}
 						Console.WriteLine("W: no response from {0}, retrying...", endpoint);
 					}
 				}
 				else
-				{
-					// For multiple endpoints, try each at most once
+				// For multiple endpoints, try each at most once
 
 					for (var endpoint_nbr = 0; endpoint_nbr < args.Length; ++endpoint_nbr)
 					{
 						var endpoint = args[endpoint_nbr];
 
 						if (null != (reply = FLClient1_TryRequest(context, endpoint, request)))
-						{
 							break;	// Successful
-						}
 						Console.WriteLine("W: no response from {0}, retrying...", endpoint);
 					}
-				}
 
 				if (reply != null)
-				{
 					Console.WriteLine("Service is running OK");
-				}
 			}
 		}
 
@@ -85,16 +77,12 @@ namespace Examples
 
 				// Send request, wait safely for reply
 				using (var message = ZFrame.CopyFrom(request))
-				{
 					client.Send(message);
-				}
 
 				var poll = ZPollItem.CreateReceiver();
 
 				if (client.PollIn(poll, out var incoming, out var error, FLClient1_REQUEST_TIMEOUT))
-				{
 					return incoming[0];
-				}
 			}
 			return null;
 		}

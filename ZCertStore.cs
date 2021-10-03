@@ -27,17 +27,17 @@ namespace ZeroMQ
     /// create certificates on disk, use the ZCert class in code or any text editor.
     /// The format of a certificate file is defined in the ZCert man page of CZMQ.
     /// </remarks>
-    class ZCertStore
+    internal sealed class ZCertStore
     {
         // a dictionary with public keys (in text) and their certificates.
-        Dictionary<string, ZCert> certs = new();
+        Dictionary<string, ZCert?> certs = new();
 
         FileSystemWatcher watcher = new();
 
         /// <summary>
         /// The path to the certificate store (e.g. ".curve") or null if in memory only.
         /// </summary>
-        string Location { get; set; }
+        string? Location { get; set; }
 
         /// <summary>
         /// Certificate store in memory constructor,
@@ -53,7 +53,7 @@ namespace ZeroMQ
         /// which you can work with by inserting certificates at runtime.
         /// </summary>
         /// <param name="location">The location of the certificate store. May be null if a pure in memory store should be used.</param>
-        public ZCertStore(string location)
+        public ZCertStore(string? location)
         {
             if (location != null)
             {
@@ -78,7 +78,7 @@ namespace ZeroMQ
         /// </summary>
         /// <param name="publicTxt">Public key if certificate to search for.</param>
         /// <returns>Return the found certificate or null if it isn't found.</returns>
-        public ZCert Lookup(string publicTxt)
+        public ZCert? Lookup(string publicTxt)
         {
             lock (certs)
             {
@@ -118,7 +118,7 @@ namespace ZeroMQ
         /// Get a list with all certificates in this ZCertStore.
         /// </summary>
         /// <returns></returns>
-        public List<ZCert> Certs()
+        public List<ZCert?> Certs()
         {
             lock (certs)
             {
@@ -129,22 +129,22 @@ namespace ZeroMQ
         private void OnChanged(object sender, FileSystemEventArgs e)
             => Load(Location);
 
-        private void Load(string path)
+        private void Load(string? path)
         {
             lock (certs)
             {
                 certs.Clear();
-                if (Directory.Exists(path))
+                
+                if (path is null || !Directory.Exists(path))
+                    return;
+                
+                var files = Directory.GetFiles(path, "*", SearchOption.TopDirectoryOnly);
+                
+                foreach (var filename in files)
                 {
-                    var files = Directory.GetFiles(path, "*", SearchOption.TopDirectoryOnly);
-                    foreach (var filename in files)
-                    {
-                        var cert = ZCert.Load(Path.Combine(filename));
-                        if (cert != null && (filename.EndsWith("_secret") || !certs.ContainsKey(cert.PublicTxt)))
-                        {
-                            certs[cert.PublicTxt] = cert;
-                        }
-                    }
+                    var cert = ZCert.Load(Path.Combine(filename));
+                    if (cert != null && (filename.EndsWith("_secret") || !certs.ContainsKey(cert.PublicTxt)))
+                        certs[cert.PublicTxt] = cert;
                 }
             }
         }

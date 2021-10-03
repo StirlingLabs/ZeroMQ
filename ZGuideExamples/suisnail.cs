@@ -14,7 +14,7 @@ namespace Examples
 
 		static readonly TimeSpan SuiSnail_MAX_ALLOWED_DELAY = TimeSpan.FromMilliseconds(1000);
 
-		static void SuiSnail_Subscriber(ZContext context, ZSocket backend, CancellationTokenSource cancellor, object[] args)
+		static void SuiSnail_Subscriber(ZContext context, ZSocket backend, CancellationTokenSource canceller, object[] args)
 		{
 			// This is our subscriber. It connects to the publisher and subscribes
 			// to everything. It sleeps for a short time between messages to
@@ -29,7 +29,7 @@ namespace Examples
 
 				ZFrame incoming;
 				var rnd = new Random();
-				while (!cancellor.IsCancellationRequested)
+				while (!canceller.IsCancellationRequested)
 				{
 					// Get and process messages
 					if (null != (incoming = subscriber.ReceiveFrame(out var error)))
@@ -60,7 +60,7 @@ namespace Examples
 			}
 		}
 
-		static void SuiSnail_Publisher(ZContext context, ZSocket backend, CancellationTokenSource cancellor, object[] args)
+		static void SuiSnail_Publisher(ZContext context, ZSocket backend, CancellationTokenSource canceller, object[] args)
 		{
 			// This is our publisher task. It publishes a time-stamped message to its
 			// PUB socket every millisecond:
@@ -71,7 +71,7 @@ namespace Examples
 				publisher.Bind("tcp://*:5556");
 
 				ZFrame signal;
-				while (!cancellor.IsCancellationRequested)
+				while (!canceller.IsCancellationRequested)
 				{
 					// Send current clock (msecs) to subscribers
 					if (!publisher.Send(new ZFrame(DateTime.UtcNow.ToString("s")), out var error))

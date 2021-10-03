@@ -42,9 +42,7 @@ namespace Examples
 					{
 						var text = frame.ReadString();
 						if (text == "END")
-						{
 							break;
-						}
 
 						frame.Position = 0;
 						Console.WriteLine("Receiving {0}...", frame.ReadInt32());

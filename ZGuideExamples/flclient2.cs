@@ -79,7 +79,7 @@ namespace Examples
 				servers++;
 			}
 
-			public ZMessage Request(ZMessage request)
+			public ZMessage? Request(ZMessage request)
 			{
 				// This method does the hard work. It sends a request to all
 				// connected servers in parallel (for this to work, all connections
@@ -87,7 +87,7 @@ namespace Examples
 				// for a single successful reply, and returns that to the caller.
 				// Any other replies are just dropped:
 
-				ZMessage reply = null;
+				ZMessage? reply = null;
 				using (request)
 				{
 					// Prefix request with sequence number and empty envelope
@@ -99,9 +99,7 @@ namespace Examples
 					for (var server = 0; server < servers; ++server)
 					{
 						using (var outgoing = request.Clone())
-						{
 							socket.Send(outgoing);
-						}
 					}
 
 					// Wait for a matching reply to arrive from anywhere
@@ -114,9 +112,7 @@ namespace Examples
 						{
 							// Reply is [empty][sequence][OK]
 							if (reply.Count < 3)
-							{
 								throw new InvalidOperationException();
-							}
 
 							reply.RemoveAt(0);
 
@@ -125,9 +121,7 @@ namespace Examples
 								var sequence = sequenceFrame.ReadInt32();
 
 								if (sequence == this.sequence)
-								{
 									break;	// Reply is ok
-								}
 							}
 
 							reply.Dispose();
@@ -166,9 +160,7 @@ namespace Examples
 			{
 				// Connect to each endpoint
 				for (var i = 0; i < args.Length; ++i)
-				{
 					client.Connect(args[i]);
-				}
 
 				// Send a bunch of name resolution 'requests', measure time
 				var requests = 0;

@@ -13,11 +13,11 @@ namespace Examples
         //  MMI echo query example
         public static void MMIEcho(string[] args)
         {
-            var cancellor = new CancellationTokenSource();
+            var canceller = new CancellationTokenSource();
             Console.CancelKeyPress += (s, ea) =>
             {
                 ea.Cancel = true;
-                cancellor.Cancel();
+                canceller.Cancel();
             };
 
             using (var session = new MajordomoClient("tcp://127.0.0.1:5555", Verbose))
@@ -25,11 +25,11 @@ namespace Examples
                 var request  = new ZMessage();
                 request.Add(new("echo"));
 
-                var reply = session.Send("mmi.service", request, cancellor);
+                var reply = session.Send("mmi.service", request, canceller);
                 if (reply != null)
                 {
                     var replycode = reply[0].ToString();
-                    "Loopup echo service: {0}\n".DumpString(replycode);
+                    $"Loopup echo service: {replycode}\n".DumpString();
                     reply.Dispose();
                 }
                 else

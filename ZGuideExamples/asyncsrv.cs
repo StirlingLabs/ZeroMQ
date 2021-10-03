@@ -31,7 +31,7 @@ namespace Examples
 				// Connect
 				client.Connect("tcp://127.0.0.1:5570");
 
-				ZError error;
+				ZError? error;
 				var poll = ZPollItem.CreateReceiver();
 
 				var requests = 0;
@@ -114,7 +114,7 @@ namespace Examples
 			{
 				worker.Connect("inproc://backend");
 
-				ZMessage request;
+				ZMessage? request;
 				var rnd = new Random();
 
 				while (true)

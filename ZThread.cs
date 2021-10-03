@@ -6,11 +6,11 @@ namespace ZeroMQ
 {
     public abstract class ZThread : IDisposable
     {
-        public CancellationTokenSource Cancellor { get; protected set; }
+        public CancellationTokenSource? Canceller { get; protected set; }
 
-        protected Thread _thread;
+        protected Thread? Thread;
 
-        protected bool _disposed;
+        protected bool Disposed;
 
         /// <summary>
         /// Finalizes an instance of the <see cref="ZThread"/> class.
@@ -21,26 +21,27 @@ namespace ZeroMQ
         /// <summary>
         /// Gets a value indicating whether the device loop is running.
         /// </summary>
-        public bool IsCancellationRequested => Cancellor.IsCancellationRequested;
+        public bool IsCancellationRequested => Canceller?.IsCancellationRequested ?? false;
 
         public virtual void Start()
         {
-            var cancellor = new CancellationTokenSource();
-            Start(cancellor);
+            var canceller = new CancellationTokenSource();
+            Start(canceller);
         }
 
         /// <summary>
         /// Start the device in the current thread.
         /// </summary>
         /// <exception cref="ObjectDisposedException">The <see cref="ZThread"/> has already been disposed.</exception>
-        public virtual void Start(CancellationTokenSource cancellor)
+        public virtual void Start(CancellationTokenSource canceller)
         {
             EnsureNotDisposed();
 
-            Cancellor = cancellor;
+            Canceller = canceller;
 
-            if (_thread == null) _thread = new(Run);
-            _thread.Start();
+            Thread ??= new(Run);
+
+            Thread.Start();
         }
 
         /// <summary>
@@ -50,8 +51,8 @@ namespace ZeroMQ
         {
             EnsureNotDisposed();
 
-            if (_thread == null) return;
-            _thread.Join();
+            if (Thread == null) return;
+            Thread.Join();
         }
 
         /// <summary>
@@ -61,8 +62,8 @@ namespace ZeroMQ
         {
             EnsureNotDisposed();
 
-            if (_thread == null) return false;
-            return _thread.Join(ms);
+            if (Thread == null) return false;
+            return Thread.Join(ms);
         }
 
         /// <summary>
@@ -79,8 +80,8 @@ namespace ZeroMQ
         {
             EnsureNotDisposed();
 
-            if (_thread == null) return false;
-            return _thread.Join(timeout);
+            if (Thread == null) return false;
+            return Thread.Join(timeout);
         }
 
         /// <summary>
@@ -90,10 +91,10 @@ namespace ZeroMQ
         {
             EnsureNotDisposed();
 
-            if (_thread != null)
+            if (Thread != null)
             {
-                Debug.Assert(Cancellor != null);
-                Cancellor.Cancel();
+                Debug.Assert(Canceller != null);
+                Canceller.Cancel();
             }
         }
 
@@ -106,8 +107,8 @@ namespace ZeroMQ
 
             Stop();
 
-            if (_thread == null) return;
-            _thread.Join();
+            if (Thread == null) return;
+            Thread.Join();
         }
 
         /// <summary>
@@ -127,15 +128,15 @@ namespace ZeroMQ
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (_disposed) return;
+            if (Disposed) return;
 
             if (disposing) Close();
-            _disposed = true;
+            Disposed = true;
         }
 
         protected void EnsureNotDisposed()
         {
-            if (_disposed) throw new ObjectDisposedException(GetType().FullName);
+            if (Disposed) throw new ObjectDisposedException(GetType().FullName);
         }
     }
 }

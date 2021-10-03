@@ -18,11 +18,11 @@ namespace Examples
 
 		public static void TIClient(string[] args)
 		{
-			var cancellor = new CancellationTokenSource();
+			var canceller = new CancellationTokenSource();
 			Console.CancelKeyPress += (s, ea) =>
 			{
 				ea.Cancel = true;
-				cancellor.Cancel();
+				canceller.Cancel();
 			};
 
 			using (var session = new MajordomoClient("tcp://127.0.0.1:5555", Verbose))
@@ -33,34 +33,34 @@ namespace Examples
 				request.Add(new("Hello World"));
 
 				var uuid = Guid.Empty; 
-				using (var reply = TIClient_ServiceCall(session, "titanic.request", request, cancellor))
+				using (var reply = TIClient_ServiceCall(session, "titanic.request", request, canceller))
 				{
 					if (reply != null)
 					{
 						uuid = Guid.Parse(reply.PopString());
-						"I: request UUID {0}".DumpString(uuid);
+						$"I: request UUID {uuid}".DumpString();
 					}
 				}
 
 				// 2. Wait until we get a reply
-				while (!cancellor.IsCancellationRequested)
+				while (!canceller.IsCancellationRequested)
 				{
 					Thread.Sleep(100);
 					request.Dispose();
 					request = new();
 					request.Add(new(uuid.ToString()));
-					var reply = TIClient_ServiceCall(session, "titanic.reply", request, cancellor);
+					var reply = TIClient_ServiceCall(session, "titanic.reply", request, canceller);
 					if (reply != null)
 					{
 						var replystring = reply.Last().ToString();
-						"Reply: {0}\n".DumpString(replystring);
+						$"Reply: {replystring}\n".DumpString();
 						reply.Dispose();
 
 						// 3. Close Request
 						request.Dispose();
 						request = new();
 						request.Add(new(uuid.ToString()));
-						reply = TIClient_ServiceCall(session, "titanic.close", request, cancellor);
+						reply = TIClient_ServiceCall(session, "titanic.close", request, canceller);
 						reply.Dispose();
 						break;
 					}
@@ -72,7 +72,7 @@ namespace Examples
 
 		//  Calls a TSP service
 		//  Returns response if successful (status code 200 OK), else NULL
-		static ZMessage TIClient_ServiceCall (MajordomoClient session, string service, ZMessage request, CancellationTokenSource cts)
+		static ZMessage? TIClient_ServiceCall (MajordomoClient session, string service, ZMessage request, CancellationTokenSource cts)
 		{
 			using (var reply = session.Send(service, request, cts))
 			{
@@ -80,9 +80,7 @@ namespace Examples
 				{
 					var status = reply.PopString();
 					if (status.Equals("200"))
-					{
 						return reply.Clone();
-					}
 					if (status.Equals("400"))
 					{
 						"E: client fatal error, aborting".DumpString();
@@ -95,9 +93,7 @@ namespace Examples
 					}
 				}
 				else
-				{
 					cts.Cancel();   // Interrupted or failed
-				}
 			}
 			return null; 
 		}

@@ -12,9 +12,7 @@ namespace Examples
 			//
 
 			if (args == null || args.Length < 1)
-			{
 				args = new[] { "Hello World!" };
-			}
 
 			var txt = args[0];
 			var encoded = Z85.Encode(txt);
@@ -28,9 +26,7 @@ namespace Examples
 			//
 
 			if (args == null || args.Length < 1)
-			{
 				args = new[] { "nm=QNzY&b1A+]nf" };
-			}
 
 			var txt = args[0];
 			var decoded = Z85.Decode(txt);

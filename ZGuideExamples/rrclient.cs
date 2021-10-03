@@ -26,9 +26,7 @@ namespace Examples
 					requester.Send(new ZFrame("Hello"));
 
 					using (var reply = requester.ReceiveFrame())
-					{
 						Console.WriteLine("Hello {0}!", reply.ReadString());
-					}
 				}
 			}
 		}

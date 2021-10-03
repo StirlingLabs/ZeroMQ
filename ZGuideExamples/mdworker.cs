@@ -22,7 +22,7 @@ namespace Examples
 
 			using (var session = new MajordomoWorker("tcp://127.0.0.1:5555", "echo", Verbose))
 			{
-				ZMessage reply = null;
+				ZMessage? reply = null;
 				while (true)
 				{
 					var request = session.Recv(reply, cts);

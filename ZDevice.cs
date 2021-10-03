@@ -26,12 +26,12 @@ namespace ZeroMQ
         /// <summary>
         /// The frontend socket that will normally pass messages to <see cref="BackendSocket"/>.
         /// </summary>
-        public ZSocket FrontendSocket;
+        public ZSocket FrontendSocket = null!;
 
         /// <summary>
         /// The backend socket that will normally receive messages from (and possibly send replies to) <see cref="FrontendSocket"/>.
         /// </summary>
-        public ZSocket BackendSocket;
+        public ZSocket BackendSocket = null!;
 
         /// <summary>
         /// You are using ZContext.Current!
@@ -76,7 +76,7 @@ namespace ZeroMQ
             }
         }
 
-        protected virtual bool Initialize(ZSocketType frontendType, ZSocketType backendType, out ZError error)
+        protected virtual bool Initialize(ZSocketType frontendType, ZSocketType backendType, out ZError? error)
         {
             error = default;
 
@@ -109,12 +109,12 @@ namespace ZeroMQ
         /// <summary>
         /// Gets a <see cref="ZSocketSetup"/> for configuring the frontend socket.
         /// </summary>
-        public ZSocketSetup BackendSetup { get; protected set; }
+        public ZSocketSetup BackendSetup { get; protected set; } = null!;
 
         /// <summary>
         /// Gets a <see cref="ZSocketSetup"/> for configuring the backend socket.
         /// </summary>
-        public ZSocketSetup FrontendSetup { get; protected set; }
+        public ZSocketSetup FrontendSetup { get; protected set; } = null!;
 
         /*/ <summary>
         /// Gets a <see cref="ManualResetEvent"/> that can be used to block while the device is running.
@@ -222,7 +222,7 @@ namespace ZeroMQ
             } */
 
             // Because of using ZmqSocket.Forward, this field will always be null
-            ZMessage[] lastMessageFrames = null;
+            ZMessage[]? lastMessageFrames = null;
 
             if (FrontendSetup != null) FrontendSetup.BindConnect();
             if (BackendSetup != null) BackendSetup.BindConnect();
@@ -231,7 +231,7 @@ namespace ZeroMQ
             var error = default(ZError);
             try
             {
-                while (!Cancellor.IsCancellationRequested)
+                while (!Canceller.IsCancellationRequested)
                 {
 
                     if (!(isValid = sockets.Poll(polls, ZPoll.In, ref lastMessageFrames, out error, PollingInterval)))
@@ -255,7 +255,7 @@ namespace ZeroMQ
             catch (ZException)
             {
                 // Swallow any exceptions thrown while stopping
-                if (!Cancellor.IsCancellationRequested)
+                if (!Canceller.IsCancellationRequested)
                 {
                     throw;
                 }
@@ -274,13 +274,13 @@ namespace ZeroMQ
         /// Invoked when a message has been received by the frontend socket.
         /// </summary>
         /// <param name="args">A <see cref="SocketEventArgs"/> object containing the poll event args.</param>
-        protected abstract bool FrontendHandler(ZSocket socket, out ZMessage message, out ZError error);
+        protected abstract bool FrontendHandler(ZSocket socket, out ZMessage? message, out ZError? error);
 
         /// <summary>
         /// Invoked when a message has been received by the backend socket.
         /// </summary>
         /// <param name="args">A <see cref="SocketEventArgs"/> object containing the poll event args.</param>
-        protected abstract bool BackendHandler(ZSocket args, out ZMessage message, out ZError error);
+        protected abstract bool BackendHandler(ZSocket args, out ZMessage? message, out ZError? error);
 
         /// <summary>
         /// Stops the device and releases the underlying sockets. Optionally disposes of managed resources.

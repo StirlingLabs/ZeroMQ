@@ -39,10 +39,10 @@ namespace Examples
 			Console.WriteLine(renderer.ToString(), list.ToArray());
 		}
 
-		static void Console_WriteZMessage(string format, ZMessage message, params object[] data)
+		static void Console_WriteZMessage(string format, ZMessage? message, params object[] data)
 			=> Console_WriteZMessage(format, 0, message, data);
 
-		static void Console_WriteZMessage(string format, int messagesNotToRead, ZMessage message, params object[] data)
+		static void Console_WriteZMessage(string format, int messagesNotToRead, ZMessage? message, params object[] data)
 		{
 			var renderer = new StringBuilder();
 
@@ -57,9 +57,7 @@ namespace Examples
 					renderer.Append(": ");
 				}
 				else
-				{
 					renderer.Append(", ");
-				}
 				renderer.Append("{");
 				renderer.Append( i - messagesNotToRead + data.Length );
 				renderer.Append("}");
@@ -84,32 +82,26 @@ namespace Examples
 	public static class Ext {
 
 		public static string ToHexString(this byte[] hex) {
-			if (hex == null) {
+			if (hex == null)
 				return null;
-			}
-			if (hex.Length == 0) {
+			if (hex.Length == 0)
 				return string.Empty;
-			}
 			var s = new StringBuilder();
-			foreach (var b in hex) {
+			foreach (var b in hex)
 				s.Append(b.ToString("x2"));
-			}
 			return s.ToString();
 		}
 
 		public static byte[] ToHexBytes(this string hex)
 		{
-			if (hex == null) {
+			if (hex == null)
 				return null;
-			}
-			if (hex.Length == 0) {
+			if (hex.Length == 0)
 				return Array.Empty<byte>();
-			}
 			var l = hex.Length / 2;
 			var b = new byte[l];
-			for (var i = 0; i < l; ++i) {
+			for (var i = 0; i < l; ++i)
 				b[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
-			}
 			return b;
 		}
 	}

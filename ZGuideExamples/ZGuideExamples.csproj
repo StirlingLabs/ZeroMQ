@@ -1,24 +1,30 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.0;netstandard2.1</TargetFrameworks>
-    <IsPackable>false</IsPackable>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>ZGuideExamples</RootNamespace>
-    <AssemblyName>ZGuideExamples</AssemblyName>
-    <LangVersion>9</LangVersion>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ZeroMQ.csproj">
-      <SetTargetFramework>TargetFramework=$(TargetFramework)</SetTargetFramework>
-      <IncludeInPackage>false</IncludeInPackage>
-    </ProjectReference>
-  </ItemGroup>
-
-  <Target Name="CopyLocalBinToOutDir" AfterTargets="">
+    <PropertyGroup>
+        <TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.0;netstandard2.1</TargetFrameworks>
+        <IsPackable>false</IsPackable>
+        <OutputType>Exe</OutputType>
+        <RootNamespace>ZGuideExamples</RootNamespace>
+        <AssemblyName>ZGuideExamples</AssemblyName>
+        <LangVersion>9</LangVersion>
+        <RuntimeIdentifier>$(NETCoreSdkRuntimeIdentifier)</RuntimeIdentifier>
+        <SelfContained>false</SelfContained>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
     <ItemGroup>
-      <LocalBinFiles Include="..\LocalBin\**" />
+        <ProjectReference Include="..\ZeroMQ.csproj">
+            <SetTargetFramework>TargetFramework=$(TargetFramework)</SetTargetFramework>
+            <IncludeInPackage>false</IncludeInPackage>
+        </ProjectReference>
     </ItemGroup>
-    <Copy SourceFiles="@(LocalBinFiles)" DestinationFolder="$(OutDir)" UseHardlinksIfPossible="true" />
-  </Target>
+
+    <ItemGroup>
+        <Content Include="..\LocalBin\**" Exclude="..\LocalBin\.keep" Visible="false">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            <Link>%(Filename)%(Extension)</Link>
+            <Visible>false</Visible>
+        </Content>
+    </ItemGroup>
 </Project>

@@ -1,6 +1,4 @@
-﻿// using System.Runtime.Remoting.Messaging;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -12,8 +10,14 @@ namespace ZeroMQ
     /// <summary>
     /// TODO merge this with its sole subclass, ZError
     /// </summary>
-    public class ZSymbol
+    public class ZSymbol : IEquatable<ZSymbol>
     {
+        public static bool operator ==(ZSymbol? left, ZSymbol? right)
+            => Equals(left, right);
+
+        public static bool operator !=(ZSymbol? left, ZSymbol? right)
+            => !Equals(left, right);
+
         protected internal ZSymbol(int errno)
             => _num = errno;
 
@@ -22,52 +26,29 @@ namespace ZeroMQ
 
         public string Name => _zsymbolToName.TryGetValue(this, out var result) ? result : "<unknown>";
 
-        public string Text => Marshal.PtrToStringAnsi(zmq.strerror(_num));
+        public string? Text => Marshal.PtrToStringAnsi(zmq.strerror(_num));
 
-        private static void PickupConstantSymbols<T>(ref IDictionary<ZSymbol, string> symbols)
-            where T : ZSymbol
+        protected static int ResolveNumber<T>(string name)
         {
             var type = typeof(T);
 
-            var fields = type.GetFields(BindingFlags.Static | BindingFlags.Public);
-
             var codeType = type.GetNestedType("Code", BindingFlags.NonPublic);
 
-            // Pickup constant symbols
-            foreach (var symbolField in fields.Where(f => typeof(ZSymbol).IsAssignableFrom(f.FieldType)))
-            {
-                var symbolCodeField = codeType?.GetField(symbolField.Name);
+            var symbolCodeField = codeType?.GetField(name);
 
-                if (symbolCodeField == null)
-                    continue;
+            if (symbolCodeField == null)
+                throw new ArgumentException(nameof(name), $"Missing symbol definition for {name}.");
 
-                var symbolNumber = (int)symbolCodeField.GetValue(null);
+            if (symbolCodeField.GetValue(null) is IConvertible convertible)
+                return convertible.ToInt32(null);
 
-                var symbol = Activator.CreateInstance(
-                    type,
-                    BindingFlags.NonPublic | BindingFlags.Instance,
-                    null,
-                    new object[] { symbolNumber },
-                    null);
-                symbolField.SetValue(null, symbol);
-                symbols.Add((ZSymbol)symbol, symbolCodeField.Name);
-            }
+            
+            throw new ArgumentException(nameof(name), $"Invalid symbol definition for {name}.");
         }
 
-        public static readonly ZSymbol None = default;
+        public static readonly ZSymbol? None = default!;
 
-        static ZSymbol()
-        {
-            // System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(zmq).TypeHandle);
-
-            IDictionary<ZSymbol, string> symbols = new Dictionary<ZSymbol, string>();
-
-            PickupConstantSymbols<ZError>(ref symbols);
-
-            _zsymbolToName = symbols;
-        }
-
-        static IDictionary<ZSymbol, string> _zsymbolToName;
+        static IDictionary<ZSymbol, string> _zsymbolToName = new Dictionary<ZSymbol, string>();
 
         public static IEnumerable<ZSymbol> Find(string symbol)
             => _zsymbolToName
@@ -77,10 +58,13 @@ namespace ZeroMQ
             => _zsymbolToName
                 .Where(s => s.Value != null && s.Value.StartsWith(ns) && s.Key._num == num).Select(x => x.Key);
 
-        public override bool Equals(object obj)
+        public bool Equals(ZSymbol? other)
+            => _num == other?._num;
+
+        public override bool Equals(object? obj)
             => Equals(this, obj);
 
-        public new static bool Equals(object a, object b)
+        public new static bool Equals(object? a, object? b)
             => ReferenceEquals(a, b)
                 || a is ZSymbol symbolA
                 && b is ZSymbol symbolB

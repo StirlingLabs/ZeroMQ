@@ -91,7 +91,7 @@ namespace Examples
 				Thread.Sleep(64);	// Allow connection to come up
 			}
 
-			public ZMessage Request(ZMessage request)
+			public ZMessage? Request(ZMessage? request)
 			{
 				// To implement the request method, the frontend object sends a message
 				// to the backend, specifying a command "REQUEST" and the request message:
@@ -100,7 +100,7 @@ namespace Examples
 
 				Actor.Frontend.Send(request);
 
-				ZMessage reply;
+				ZMessage? reply;
 				if (null != (reply = Actor.Frontend.ReceiveMessage(out var error))) 
 				{
 					var status = reply.PopString();
@@ -113,7 +113,7 @@ namespace Examples
 				return reply;
 			}
 
-			public static void Agent(ZContext context, ZSocket backend, CancellationTokenSource cancellor, object[] args)
+			public static void Agent(ZContext context, ZSocket backend, CancellationTokenSource canceller, object[] args)
 			{
 				// Finally, here's the agent task itself, which polls its two sockets
 				// and processes incoming messages:
@@ -122,18 +122,14 @@ namespace Examples
 				{
 					var p = ZPollItem.CreateReceiver();
 
-					while (!cancellor.IsCancellationRequested)
+					while (!canceller.IsCancellationRequested)
 					{
 
 						// Poll the control message
 
 						if (agent.Pipe.PollIn(p, out var msg, out var error, TimeSpan.FromMilliseconds(64)))
-						{
 							using (msg)
-							{
 								agent.ControlMessage(msg);
-							}
-						}
 						else
 						{
 							if (error == ZError.ETERM)
@@ -145,12 +141,8 @@ namespace Examples
 						// Poll the router message
 
 						if (agent.Router.PollIn(p, out msg, out error, TimeSpan.FromMilliseconds(64)))
-						{
 							using (msg)
-							{
 								agent.RouterMessage(msg);
-							}
-						}
 						else
 						{
 							if (error == ZError.ETERM)
@@ -167,16 +159,13 @@ namespace Examples
 							{
 								// Request expired, kill it
 								using (var outgoing = new ZFrame("FAILED"))
-								{
 									agent.Pipe.Send(outgoing);
-								}
 
 								agent.Request.Dispose();
 								agent.Request = null;
 							}
 							else
-							{
-								// Find server to talk to, remove any expired ones
+							// Find server to talk to, remove any expired ones
 								foreach (var server in agent.Actives.ToList())
 								{
 									if (DateTime.UtcNow >= server.Expires)
@@ -185,8 +174,7 @@ namespace Examples
 										server.Alive = false;
 									}
 									else
-									{
-										// Copy the Request, Push the Endpoint and send on Router
+									// Copy the Request, Push the Endpoint and send on Router
 										using (var request = agent.Request.Clone())
 										{
 											request.Prepend(new(server.Endpoint));
@@ -194,17 +182,13 @@ namespace Examples
 											agent.Router.Send(request);
 											break;
 										}
-									}
 								}
-							}
 						}
 
 						// Disconnect and delete any expired servers
 						// Send heartbeats to idle servers if needed
 						foreach (var server in agent.Servers)
-						{
 							server.Ping(agent.Router);
-						}
 					}
 				}
 			}
@@ -235,7 +219,7 @@ namespace Examples
 			int sequence;
 
 			// Current request if any
-			public ZMessage Request;
+			public ZMessage? Request;
 
 			// Current reply if any
 			// ZMessage reply;
@@ -257,9 +241,7 @@ namespace Examples
 
 				Router = new(context, ZSocketType.ROUTER);
 				if (name != null)
-				{
 					Router.IdentityString = name;
-				}
 
 				Servers = new();
 				Actives = new();
@@ -302,7 +284,7 @@ namespace Examples
 				}
 			}
 
-			public void ControlMessage(ZMessage msg)
+			public void ControlMessage(ZMessage? msg)
 			{
 				// This method processes one message from our frontend class
 				// (it's going to be CONNECT or REQUEST):
@@ -323,10 +305,8 @@ namespace Examples
 				else if (command == "REQUEST")
 				{
 					if (Request != null)
-					{
-						// Strict request-reply cycle
+					// Strict request-reply cycle
 						throw new InvalidOperationException();
-					}
 
 					// Prefix request with sequence number and empty envelope
 					msg.Prepend(new(++sequence));
@@ -339,7 +319,7 @@ namespace Examples
 				}
 			}
 
-			public void RouterMessage(ZMessage reply)
+			public void RouterMessage(ZMessage? reply)
 			{
 				// This method processes one message from a connected
 				// server:

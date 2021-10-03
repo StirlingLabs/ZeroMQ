@@ -17,6 +17,8 @@ namespace ZeroMQ
 
         bool _isConfigured;
 
+        private byte[]? _subscription;
+
         public ZSocketSetup(ZSocket socket)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
@@ -57,10 +59,10 @@ namespace ZeroMQ
 
         public ZSocketSetup SetSocketOption<T>(Expression<Func<ZSocket, T>> property, T value)
         {
-            PropertyInfo propertyInfo;
+            PropertyInfo? propertyInfo;
 
-            if (property.Body is MemberExpression)
-                propertyInfo = ((MemberExpression)property.Body).Member as PropertyInfo;
+            if (property.Body is MemberExpression memExpr)
+                propertyInfo = memExpr.Member as PropertyInfo;
             else
                 propertyInfo = ((MemberExpression)((UnaryExpression)property.Body).Operand).Member as PropertyInfo;
 
@@ -71,8 +73,6 @@ namespace ZeroMQ
 
             return this;
         }
-
-        private byte[] _subscription;
 
         /// <summary>
         /// Configure the socket to subscribe to a specific prefix. See <see cref="ZSocket.Subscribe"/> for details.
@@ -129,7 +129,7 @@ namespace ZeroMQ
                 _socket.Unsubscribe(_subscription);
             } */
 
-            ZError error;
+            ZError? error;
 
             foreach (var endpoint in _bindings)
                 _socket.Unbind(endpoint, out error);

@@ -31,8 +31,8 @@ namespace Examples
 				server.Bind(bind_endpoint);
 				Console.WriteLine("I: service is ready as {0}", bind_endpoint);
 
-				ZError error;
-				ZMessage request;
+				ZError? error;
+				ZMessage? request;
 				while (true)
 				{
 					if (null == (request = server.ReceiveMessage(out error)))
@@ -82,9 +82,7 @@ namespace Examples
 					}
 				}
 				if (error == ZError.ETERM)
-				{
 					Console.WriteLine("W: interrupted");
-				}
 			}
 		}
 

@@ -28,7 +28,7 @@ namespace Examples
 
 				while (true)
 				{
-					ZMessage incoming;
+					ZMessage? incoming;
 					if (null == (incoming = responder.ReceiveMessage(out var error)))
 					{
 						if (error == ZError.ETERM)

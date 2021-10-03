@@ -40,9 +40,7 @@ namespace Examples
 				}
 				set {
 					if (Identity != null)
-					{
 						Identity.Dispose();
-					}
 					Identity = new(value);
 				}
 			}
@@ -67,13 +65,11 @@ namespace Examples
 			protected void Dispose(bool disposing)
 			{
 				if (disposing)
-				{
 					if (Identity != null)
 					{
 						Identity.Dispose();
 						Identity = null;
 					}
-				}
 			}
 		}
 
@@ -131,7 +127,6 @@ namespace Examples
 				{
 					// Handle worker activity on backend
 					if (backend.PollIn(poll, out var incoming, out var error, Worker.PPP_TICK))
-					{
 						using (incoming)
 						{
 							// Any sign of life from worker means it's ready
@@ -144,17 +139,11 @@ namespace Examples
 							{
 								var message = incoming[0].ReadString();
 								if (message == Worker.PPP_READY)
-								{
 									Console.WriteLine("I:        worker ready ({0})", worker.IdentityString);
-								}
 								else if (message == Worker.PPP_HEARTBEAT)
-								{
 									Console.WriteLine("I: receiving heartbeat ({0})", worker.IdentityString);
-								}
 								else
-								{
 									Console_WriteZMessage("E: invalid message from worker", incoming);
-								}
 							}
 							else
 							{
@@ -162,7 +151,6 @@ namespace Examples
 								frontend.Send(incoming);
 							}
 						}
-					}
 					else
 					{
 						if (error == ZError.ETERM)
@@ -176,8 +164,7 @@ namespace Examples
 					{
 						// Poll frontend only if we have available workers
 						if (frontend.PollIn(poll, out incoming, out error, Worker.PPP_TICK))
-						{
-							// Now get next client request, route to next worker
+						// Now get next client request, route to next worker
 							using (incoming)
 							{
 								var workerIdentity = workers.Next();
@@ -186,7 +173,6 @@ namespace Examples
 								if (Verbose) Console_WriteZMessage("I: [frontend sending to backend] ({0})", incoming, workerIdentity.ReadString());
 								backend.Send(incoming);
 							}
-						}
 						else
 						{
 							if (error == ZError.ETERM)
@@ -220,9 +206,7 @@ namespace Examples
 
 				// When we're done, clean up properly
 				foreach (var worker in workers)
-				{
 					worker.Dispose();
-				}
 			}
 		}
 	}

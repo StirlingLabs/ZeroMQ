@@ -43,9 +43,7 @@ namespace Examples
 
 				// Receive reply
 				using (var reply = client.ReceiveMessage())
-				{
 					Console.WriteLine("CLIENT{0}: {1}", i, reply[0].ReadString());
-				}
 			}
 		}
 
@@ -64,11 +62,9 @@ namespace Examples
 
 				// Tell broker we're ready for work
 				using (var ready = new ZFrame("READY"))
-				{
 					worker.Send(ready);
-				}
 
-				ZMessage request;
+				ZMessage? request;
 
 				while (true)
 				{
@@ -183,18 +179,15 @@ namespace Examples
 							}
 
 							if (--clients == 0)
-							{
-								// break the while (true) when all clients said Hello
+							// break the while (true) when all clients said Hello
 								break;
-							}
 						}
 						
 						// dispose to avoid memory leaks
 						incoming.Dispose();
 					}
 					if (worker_queue.Count > 0)
-					{
-						// Poll frontend only if we have available workers
+					// Poll frontend only if we have available workers
 
 						if (frontend.PollIn(poll, out incoming, out error, TimeSpan.FromMilliseconds(64)))
 						{
@@ -226,7 +219,6 @@ namespace Examples
 							// dispose to avoid memory leaks
 							incoming.Dispose();
 						}
-					}
 				}
 			}
 		}

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace ZeroMQ
@@ -178,16 +180,16 @@ namespace ZeroMQ
             return frame.ReadUInt64();
         }
 
-        public string PopString()
+        public string? PopString()
             => PopString(ZContext.Encoding);
 
-        public string PopString(Encoding encoding)
+        public string? PopString(Encoding encoding)
         {
             using var frame = Pop();
-            return frame.ReadString((int)frame.Length, encoding);
+            return frame.ReadString((nuint)frame.Length, encoding);
         }
 
-        public string PopString(int bytesCount, Encoding encoding)
+        public string? PopString(nuint bytesCount, Encoding encoding)
         {
             using var frame = Pop();
             return frame.ReadString(bytesCount, encoding);
@@ -204,16 +206,18 @@ namespace ZeroMQ
             var frame = RemoveAt(0, false);
 
             if (Count > 0 && this[0].Length == 0)
-            {
                 RemoveAt(0);
-            }
 
             return frame;
         }
 
         public ZFrame this[int index]
         {
+            [DebuggerStepThrough]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _frames[index];
+            [DebuggerStepThrough]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => _frames[index] = value;
         }
 
@@ -221,27 +225,35 @@ namespace ZeroMQ
 
         #region ICollection implementation
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Append(ZFrame item)
             => Add(item);
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AppendRange(IEnumerable<ZFrame> items)
             => AddRange(items);
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(ZFrame item)
             => _frames.Add(item);
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddRange(IEnumerable<ZFrame> items)
             => _frames.AddRange(items);
 
         public void Clear()
         {
             foreach (var frame in _frames)
-            {
                 frame.Dispose();
-            }
             _frames.Clear();
         }
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Contains(ZFrame item)
             => _frames.Contains(item);
 
@@ -257,10 +269,12 @@ namespace ZeroMQ
             }
         }
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Remove(ZFrame item)
             => null == Remove(item, true);
 
-        public ZFrame Remove(ZFrame item, bool dispose)
+        public ZFrame? Remove(ZFrame item, bool dispose)
         {
             if (!_frames.Remove(item))
                 return item;
@@ -272,7 +286,12 @@ namespace ZeroMQ
             return null;
         }
 
-        public int Count => _frames.Count;
+        public int Count
+        {
+            [DebuggerStepThrough]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _frames.Count;
+        }
 
         bool ICollection<ZFrame>.IsReadOnly => false;
 
@@ -280,9 +299,13 @@ namespace ZeroMQ
 
         #region IEnumerable implementation
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerator<ZFrame> GetEnumerator()
             => _frames.GetEnumerator();
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
 
@@ -290,6 +313,8 @@ namespace ZeroMQ
 
         #region ICloneable implementation
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         object ICloneable.Clone()
             => Clone();
 
@@ -297,9 +322,7 @@ namespace ZeroMQ
         {
             var message = new ZMessage();
             foreach (var frame in this)
-            {
                 message.Add(frame.Clone());
-            }
             return message;
         }
 

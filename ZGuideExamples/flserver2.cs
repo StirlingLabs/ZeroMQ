@@ -33,8 +33,8 @@ namespace Examples
 				server.Bind(endpoint);
 				Console.WriteLine("I: server is ready as {0}", endpoint);
 
-				ZError error;
-				ZMessage incoming;
+				ZError? error;
+				ZMessage? incoming;
 
 				while (true)
 				{
@@ -50,9 +50,7 @@ namespace Examples
 					{
 						// Fail nastily if run against wrong client
 						if (incoming.Count < 2)
-						{
 							throw new InvalidOperationException();
-						}
 
 						identity = incoming.RemoveAt(0, false);
 					}
@@ -72,9 +70,7 @@ namespace Examples
 				}
 
 				if (error == ZError.ETERM)
-				{
 					Console.WriteLine("W: interrupted");
-				}
 			}
 		}
 	}

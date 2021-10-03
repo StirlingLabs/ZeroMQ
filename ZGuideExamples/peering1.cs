@@ -90,9 +90,7 @@ namespace Examples
 		{
 			var hash = (short)name[0];
 			if (hash < 1024)
-			{
 				hash += 1024;
-			}
 			return hash;
 		}
 	}

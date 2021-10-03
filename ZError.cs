@@ -3,7 +3,7 @@ using ZeroMQ.lib;
 
 namespace ZeroMQ
 {
-    public class ZError : ZSymbol
+    public sealed class ZError : ZSymbol
     {
         static ZError()
         {
@@ -125,14 +125,14 @@ namespace ZeroMQ
             }
         }
 
-        public static ZError GetLastErr()
+        public static ZError? GetLastErr()
         {
             var errno = zmq.errno();
 
             return FromErrno(errno);
         }
 
-        public static ZError FromErrno(int num)
+        public static ZError? FromErrno(int num)
         {
             // TODO: this can be made more efficient
             var symbol = Find("E", num).OfType<ZError>().FirstOrDefault();
@@ -145,68 +145,83 @@ namespace ZeroMQ
         internal ZError(int errno)
             : base(errno) { }
 
-        public new static ZError None => default; // null
+        private ZError(string str)
+            : base(ResolveNumber<ZError>(str)) { }
 
-        public static ZError
+        public new static readonly ZError? None = default; // null
+
+        public static readonly ZError
             // DEFAULT = new ZmqError(0),
-            EPERM,
-            ENOENT,
-            ESRCH,
-            EINTR,
-            EIO,
-            ENXIO,
-            E2BIG,
-            ENOEXEC,
-            EBADF,
-            ECHILD,
-            EAGAIN,
-            ENOMEM,
-            EACCES,
-            EFAULT,
-            ENOTBLK,
-            EBUSY,
-            EEXIST,
-            EXDEV,
-            ENODEV,
-            ENOTDIR,
-            EISDIR,
-            EINVAL,
-            ENFILE,
-            EMFILE,
-            ENOTTY,
-            ETXTBSY,
-            EFBIG,
-            ENOSPC,
-            ESPIPE,
-            EROFS,
-            EMLINK,
-            EPIPE,
-            EDOM,
-            ERANGE, // 34
-            ENOTSUP,
-            EPROTONOSUPPORT,
-            ENOBUFS,
-            ENETDOWN,
-            EADDRINUSE,
-            EADDRNOTAVAIL,
-            ECONNREFUSED,
-            EINPROGRESS,
-            ENOTSOCK,
-            EMSGSIZE,
+            EPERM = new(nameof(EPERM)),
+            ENOENT = new(nameof(ENOENT)),
+            ESRCH = new(nameof(ESRCH)),
+            EINTR = new(nameof(EINTR)),
+            EIO = new(nameof(EIO)),
+            ENXIO = new(nameof(ENXIO)),
+            E2BIG = new(nameof(E2BIG)),
+            ENOEXEC = new(nameof(ENOEXEC)),
+            EBADF = new(nameof(EBADF)),
+            ECHILD = new(nameof(ECHILD)) // = HAUSNUMERO + 54
+            ;
+        public static readonly ZError?
+            // DEFAULT = new ZmqError(0),
+            EAGAIN = new(nameof(EAGAIN)) // = HAUSNUMERO + 54
+            ;
+        public static readonly ZError
+            // DEFAULT = new ZmqError(0),
+            ENOMEM = new(nameof(ENOMEM)),
+            EACCES = new(nameof(EACCES)),
+            EFAULT = new(nameof(EFAULT)),
+            ENOTBLK = new(nameof(ENOTBLK)),
+            EBUSY = new(nameof(EBUSY)),
+            EEXIST = new(nameof(EEXIST)),
+            EXDEV = new(nameof(EXDEV)),
+            ENODEV = new(nameof(ENODEV)),
+            ENOTDIR = new(nameof(ENOTDIR)),
+            EISDIR = new(nameof(EISDIR)),
+            EINVAL = new(nameof(EINVAL)),
+            ENFILE = new(nameof(ENFILE)),
+            EMFILE = new(nameof(EMFILE)),
+            ENOTTY = new(nameof(ENOTTY)),
+            ETXTBSY = new(nameof(ETXTBSY)),
+            EFBIG = new(nameof(EFBIG)),
+            ENOSPC = new(nameof(ENOSPC)),
+            ESPIPE = new(nameof(ESPIPE)),
+            EROFS = new(nameof(EROFS)),
+            EMLINK = new(nameof(EMLINK)),
+            EPIPE = new(nameof(EPIPE)),
+            EDOM = new(nameof(EDOM)),
+            ERANGE = new(nameof(ERANGE)), // 34
+            ENOTSUP = new(nameof(ENOTSUP)),
+            EPROTONOSUPPORT = new(nameof(EPROTONOSUPPORT)),
+            ENOBUFS = new(nameof(ENOBUFS)),
+            ENETDOWN = new(nameof(ENETDOWN)),
+            EADDRINUSE = new(nameof(EADDRINUSE)),
+            EADDRNOTAVAIL = new(nameof(EADDRNOTAVAIL)),
+            ECONNREFUSED = new(nameof(ECONNREFUSED)),
+            EINPROGRESS = new(nameof(EINPROGRESS)),
+            ENOTSOCK = new(nameof(ENOTSOCK)),
+            EMSGSIZE = new(nameof(EMSGSIZE)),
             // as of here are differences to nanomsg
-            EAFNOSUPPORT,
-            ENETUNREACH,
-            ECONNABORTED,
-            ECONNRESET,
-            ENOTCONN,
-            ETIMEDOUT,
-            EHOSTUNREACH,
-            ENETRESET,
+            EAFNOSUPPORT = new(nameof(EAFNOSUPPORT)),
+            ENETUNREACH = new(nameof(ENETUNREACH)),
+            ECONNABORTED = new(nameof(ECONNABORTED)),
+            ECONNRESET = new(nameof(ECONNRESET)),
+            ENOTCONN = new(nameof(ENOTCONN)),
+            ETIMEDOUT = new(nameof(ETIMEDOUT)),
+            EHOSTUNREACH = new(nameof(EHOSTUNREACH)),
+            ENETRESET = new(nameof(ENETRESET)),
             /*  Native ZeroMQ error codes. */
-            EFSM,
-            ENOCOMPATPROTO,
-            ETERM,
-            EMTHREAD // = HAUSNUMERO + 54
+            EFSM = new(nameof(EFSM)),
+            ENOCOMPATPROTO = new(nameof(ENOCOMPATPROTO)) // = HAUSNUMERO + 54
+            ;
+        public static readonly ZError?
+            // DEFAULT = new ZmqError(0),
+            ETERM = new(nameof(ETERM)) // = HAUSNUMERO + 54
+            ;
+        public static readonly ZError
+            // DEFAULT = new ZmqError(0),
+            EMTHREAD = new(nameof(EMTHREAD)) // = HAUSNUMERO + 54
             ;
     }
 }

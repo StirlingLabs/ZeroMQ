@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace ZeroMQ
@@ -27,15 +30,15 @@ namespace ZeroMQ
     /// section has a 'public-key = keyvalue' and, for secret certificates, a
     /// 'secret-key = keyvalue' line.The keyvalue is a Z85-encoded CURVE key.
     /// </remark>
-    public class ZCert
+    public class ZCert : ICloneable
     {
         /// <summary>
         /// Public key Z85 decoded. Byte array of length 32.
         /// </summary>
         public byte[] PublicKey
         {
-            get => publicKey;
-            private set => publicKey = value;
+            get => _publicKey;
+            private set => _publicKey = value;
         }
 
         /// <summary>
@@ -43,8 +46,8 @@ namespace ZeroMQ
         /// </summary>
         public byte[] SecretKey
         {
-            get => secretKey;
-            private set => secretKey = value;
+            get => _secretKey;
+            private set => _secretKey = value;
         }
 
         /// <summary>
@@ -53,10 +56,10 @@ namespace ZeroMQ
         /// </summary>
         public string PublicTxt
         {
-            get => new(publicTxt);
+            get => new(_publicTxt);
             private set {
-                publicTxt = value.ToCharArray();
-                publicKey = Z85.DecodeBytes(value, Encoding.UTF8);
+                _publicTxt = value.ToCharArray();
+                _publicKey = Z85.DecodeBytes(value, Encoding.UTF8);
             }
         }
 
@@ -66,10 +69,10 @@ namespace ZeroMQ
         /// </summary>
         public string SecretTxt
         {
-            get => new(secretTxt);
+            get => new(_secretTxt);
             private set {
-                secretTxt = value.ToCharArray();
-                secretKey = Z85.DecodeBytes(value, Encoding.UTF8);
+                _secretTxt = value.ToCharArray();
+                _secretKey = Z85.DecodeBytes(value, Encoding.UTF8);
             }
         }
 
@@ -78,24 +81,32 @@ namespace ZeroMQ
         /// </summary>
         private Dictionary<string, string> metadata = new();
 
-        private char[] publicTxt = new char[40];
-        private char[] secretTxt = new char[40];
-        private byte[] publicKey = new byte[32];
-        private byte[] secretKey = new byte[32];
+        private char[] _publicTxt = new char[40];
+        private char[] _secretTxt = new char[40];
+
+        private byte[] _publicKey = new byte[32];
+        private byte[] _secretKey = new byte[32];
+        private static readonly char[] ZeroKey = "0000000000000000000000000000000000000000".ToCharArray();
 
         /// <summary>
         /// Create a valid certificate with a random secret/public key pair.
         /// </summary>
         public ZCert()
         {
-            Z85.CurveKeypair(out var publictxt, out var secrettxt);
-            publicKey = Z85.Decode(publictxt);
-            secretKey = Z85.Decode(secrettxt);
+            Z85.CurveKeypair(out var publicKey, out var secretKey);
 
-            publicTxt = Encoding.UTF8.GetString(Z85.Encode(publicKey)).ToCharArray();
-            secretTxt = Encoding.UTF8.GetString(Z85.Encode(secretKey)).ToCharArray();
+            if (!Z85.TryDecode(publicKey, _publicKey))
+                throw new("Unable to decode generated public key.");
+            if (!Z85.TryDecode(secretKey, _secretKey))
+                throw new("Unable to decode generated secret key.");
 
-            var e = Z85.Encode(publicTxt.Select(c => (byte)c).ToArray());
+            var pk = Z85.Encode(_publicKey);
+            if (pk == default || pk.Array is null) throw new("Failed to Z85 encode generated public key.");
+            _publicTxt = Encoding.UTF8.GetString(pk.Array, pk.Offset, pk.Count).ToCharArray();
+
+            var sk = Z85.Encode(_secretKey);
+            if (sk == default || sk.Array is null) throw new("Failed to Z85 encode generated secret key.");
+            _secretTxt = Encoding.UTF8.GetString(sk.Array, sk.Offset, sk.Count).ToCharArray();
         }
 
         /// <summary>
@@ -104,21 +115,42 @@ namespace ZeroMQ
         /// <param name="publicKey">Public key of certificate. This byte array must have the length 32.</param>
         /// <param name="secretKey">Private key of certificate. This byte array must have the length 32.</param>
         /// <exception cref="InvalidOperationException">Exception thrown if the length of the public or secret key is incorrect.</exception>
-        public ZCert(byte[] publicKey, byte[] secretKey)
+        public ZCert(ReadOnlySpan<byte> publicKey, ReadOnlySpan<byte> secretKey)
         {
-            if (publicKey == null || publicKey.Length != 32)
-            {
-                throw new InvalidOperationException("public key length must be of length 32");
-            }
-            if (secretKey == null || secretKey.Length != 32)
-            {
-                throw new InvalidOperationException("secret key length must be of length 32");
-            }
-            Array.Copy(publicKey, this.publicKey, 32);
-            Array.Copy(secretKey, this.secretKey, 32);
+            if (publicKey is not { Length: 32 })
+                throw new ArgumentException("public key length must be of length 32", nameof(publicKey));
+            if (secretKey is not { Length: 32 })
+                throw new ArgumentException("secret key length must be of length 32", nameof(secretKey));
 
-            publicTxt = Encoding.UTF8.GetString(Z85.Encode(publicKey)).ToCharArray();
-            secretTxt = Encoding.UTF8.GetString(Z85.Encode(secretKey)).ToCharArray();
+            publicKey.CopyTo(_publicKey);
+            secretKey.CopyTo(_secretKey);
+
+            var pk = Z85.Encode(publicKey);
+            if (pk == default || pk.Array is null) throw new ArgumentException("Failed to Z85 encode public key.", nameof(publicKey));
+            _publicTxt = Encoding.UTF8.GetString(pk.Array, pk.Offset, pk.Count).ToCharArray();
+
+            var sk = Z85.Encode(secretKey);
+            if (sk == default || sk.Array is null) throw new ArgumentException("Failed to Z85 encode secret key.", nameof(secretKey));
+            _secretTxt = Encoding.UTF8.GetString(sk.Array, sk.Offset, sk.Count).ToCharArray();
+        }
+
+        /// <summary>
+        /// Create a certificate from the given public and secret key.
+        /// </summary>
+        /// <param name="publicKey">Public key of certificate. This byte array must have the length 32.</param>
+        /// <exception cref="InvalidOperationException">Exception thrown if the length of the public or secret key is incorrect.</exception>
+        public ZCert(ReadOnlySpan<byte> publicKey)
+        {
+            if (publicKey is not { Length: 32 })
+                throw new ArgumentException("public key length must be of length 32", nameof(publicKey));
+
+            publicKey.CopyTo(_publicKey);
+
+            var pk = Z85.Encode(publicKey);
+            if (pk == default || pk.Array is null) throw new ArgumentException("Failed to Z85 encode public key.", nameof(publicKey));
+            _publicTxt = Encoding.UTF8.GetString(pk.Array, pk.Offset, pk.Count).ToCharArray();
+
+            _secretTxt = ZeroKey;
         }
 
         /// <summary>
@@ -129,20 +161,18 @@ namespace ZeroMQ
         /// <exception cref="InvalidOperationException">Exception thrown if the length of the public or secret key is incorrect.</exception>
         public ZCert(string publicTxt, string secretTxt)
         {
-            if (publicTxt == null || publicTxt.Length != 40)
-            {
-                throw new InvalidOperationException("public text length must be of length 40.");
-            }
-            if (secretTxt == null || secretTxt.Length != 40)
-            {
-                throw new InvalidOperationException("secret text length must be of length 40.");
-            }
+            if (publicTxt is not { Length: 40 })
+                throw new ArgumentException("public text length must be of length 40.", nameof(publicTxt));
+            if (secretTxt is not { Length: 40 })
+                throw new ArgumentException("secret text length must be of length 40.", nameof(secretTxt));
 
             PublicTxt = publicTxt;
             SecretTxt = secretTxt;
 
-            publicKey = PublicTxt.ToZ85DecodedBytes();
-            secretKey = SecretTxt.ToZ85DecodedBytes();
+            if (!Z85.TryDecode(publicTxt, Encoding.UTF8, _publicKey))
+                throw new ArgumentException("Failed to Z85 decode public key.", nameof(publicTxt));
+            if (!Z85.TryDecode(secretTxt, Encoding.UTF8, _secretKey))
+                throw new ArgumentException("Failed to Z85 decode secret key.", nameof(secretTxt));
 
         }
 
@@ -171,13 +201,9 @@ namespace ZeroMQ
         /// <returns></returns>
         public string this[string name]
         {
-            get {
-                if (metadata.ContainsKey(name))
-                {
-                    return metadata[name];
-                }
-                return "";
-            }
+            [DebuggerStepThrough]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => metadata.TryGetValue(name, out var value) ? value : "";
         }
 
         public Dictionary<string, string> MetaData => metadata.ToDictionary(entry => entry.Key, entry => entry.Value);
@@ -196,45 +222,34 @@ namespace ZeroMQ
         /// <summary>
         /// Duplicate this certificate by doing a deep clone.
         /// </summary>
-        /// <param name="cert">Certificate to deep clone. Public and private keys must not be null.</param>
         /// <returns>A copy of the given certificate.</returns>
-        public static ZCert Dup(ZCert cert)
-        {
-            if (cert == null)
-                return null;
-            return new((
-                    byte[])cert.PublicKey.Clone(),
-                cert.SecretKey != null ? (byte[])cert.SecretKey.Clone() : new byte[32])
-            {
-                metadata = new(cert.metadata)
-            };
-        }
+        public ZCert Clone()
+            => new(
+                    (byte[])PublicKey.Clone(),
+                    (byte[])SecretKey.Clone())
+                { metadata = new(metadata) };
+
+        object ICloneable.Clone() => Clone();
 
         /// <summary>
         /// Compare to certificate. Return true if public and private keys are equal.
         /// </summary>
         /// <param name="obj"></param>
         /// <returns>Return true if public and private keys are equal.</returns>
-        public override bool Equals(object obj)
-        {
-            if (obj is ZCert)
-            {
-                return Equals(obj as ZCert);
-            }
-            return false;
-        }
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override bool Equals(object? obj)
+            => obj is ZCert cert && Equals(cert);
 
         /// <summary>
         /// Compare to certificate. Return true if public and private keys are equal.
         /// </summary>
         /// <param name="obj"></param>
         /// <returns>Return true if public and private keys are equal.</returns>
-        public bool Equals(ZCert obj)
+        public bool Equals(ZCert? obj)
         {
             if (obj == null)
-            {
                 return false;
-            }
             return obj.SecretTxt == SecretTxt && obj.PublicTxt == PublicTxt;
         }
 
@@ -243,10 +258,10 @@ namespace ZeroMQ
         /// </summary>
         /// <returns>Hash code of public key.</returns>
         public override int GetHashCode()
-            => PublicTxt != null ? PublicTxt.GetHashCode() : 0;
+            => PublicTxt.GetHashCode();
 
 
-        private delegate void LineRead(string line, ZCert cert);
+        private delegate void LineRead(string line, ZCert? cert);
 
         /// <summary>
         /// Load a certificate from file. This will first try to open the secret file by append _secret to the
@@ -254,7 +269,7 @@ namespace ZeroMQ
         /// </summary>
         /// <param name="filename">Filename (excluding the "_secret" ending).</param>
         /// <returns>Return the loaded certificate. OBS! null is returned if the file isn't found.</returns>
-        public static ZCert Load(string filename)
+        public static ZCert? Load(string filename)
         {
             var cert = new ZCert();
             //  Try first to load secret certificate, which has both keys
@@ -273,7 +288,7 @@ namespace ZeroMQ
             {
                 return null;
             }
-            LineRead reader = null;
+            LineRead? reader = null;
             while (lines.Count > 0)
             {
                 var line = lines.Dequeue();
@@ -283,40 +298,43 @@ namespace ZeroMQ
                 {
                     reader = (str, c) => {
                         var metadata = Split(str);
-                        if (metadata.Length == 2)
-                        {
-                            c.SetMeta(metadata[0].Trim(), metadata[1].Trim('"', ' ', '\t'));
-                        }
+                        if (metadata.Length != 2)
+                            return;
+                        if (c is null) throw new InvalidOperationException($"Missing Certificate for {metadata}");
+                        c.SetMeta(metadata[0].Trim(), metadata[1].Trim('"', ' ', '\t'));
                     };
                 }
                 if (line.TrimStart().StartsWith("curve"))
                 {
                     reader = (str, c) => {
                         var key = Split(str);
-                        if (key.Length == 2)
+                        if (key.Length != 2)
+                            return;
+                        if (key[0].Trim() == "public-key")
                         {
-                            if (key[0].Trim() == "public-key")
-                                c.PublicTxt = key[1].Trim('"', ' ', '\t');
-                            if (key[0].Trim() == "secret-key")
-                                c.SecretTxt = key[1].Trim('"', ' ', '\t');
+                            var pubKey = key[1].Trim('"', ' ', '\t');
+                            if (c is null) throw new InvalidOperationException($"Missing Certificate for PK {pubKey}");
+                            c.PublicTxt = pubKey;
+                        }
+                        if (key[0].Trim() == "secret-key")
+                        {
+                            if (c is null) throw new InvalidOperationException("Missing Certificate");
+                            c.SecretTxt = key[1].Trim('"', ' ', '\t');
                         }
                     };
                 }
-                if (reader != null)
-                {
-                    reader(line, cert);
-                }
+                reader?.Invoke(line, cert);
             }
             return cert;
         }
 
         private static string[] Split(string str)
         {
-            var splitindex = str.IndexOf('"');
+            var splitIndex = str.IndexOf('"');
             var metadata = Array.Empty<string>();
-            if (splitindex > 2)
+            if (splitIndex > 2)
             {
-                metadata = new string[2] { str.Substring(0, splitindex - 2).Trim(), str.Substring(splitindex).Trim() };
+                metadata = new string[2] { str.Substring(0, splitIndex - 2).Trim(), str.Substring(splitIndex).Trim() };
             }
 
             return metadata;

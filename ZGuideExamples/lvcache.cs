@@ -37,7 +37,6 @@ namespace Examples
 				{
 					// Any new topic data we cache and then forward
 					if (frontend.PollIn(p, out var msg, out var error, TimeSpan.FromMilliseconds(1)))
-					{
 						using (msg)
 						{
 							var topic = msg[0].ReadString();
@@ -45,15 +44,12 @@ namespace Examples
 
 							var previous = cache.FirstOrDefault(item => topic == item.Topic);
 							if (previous != null)
-							{
 								cache.Remove(previous);
-							}
 							cache.Add(new()
 								{ Topic = topic, Current = current });
 
 							backend.Send(msg);
 						}
-					}
 					else
 					{
 						if (error == ZError.ETERM)
@@ -64,7 +60,6 @@ namespace Examples
 
 					// When we get a new subscription, we pull data from the cache:
 					if (backend.PollIn(p, out msg, out error, TimeSpan.FromMilliseconds(1)))
-					{
 						using (msg)
 						{
 							// Event is one byte 0=unsub or 1=sub, followed by topic
@@ -80,12 +75,9 @@ namespace Examples
 									backend.Send(new ZFrame(previous.Current));
 								}
 								else
-								{
 									Console.WriteLine("Failed to send cached topic {0}!", topic);
-								}
 							}
 						}
-					}
 					else
 					{
 						if (error == ZError.ETERM)

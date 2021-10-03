@@ -65,9 +65,9 @@ namespace Examples
             }
         }
 
-        private static ZCert GetOrCreateCert(string name, string curvpath = ".curve")
+        private static ZCert? GetOrCreateCert(string name, string curvpath = ".curve")
         {
-            ZCert cert;
+            ZCert? cert;
             var keyfile = Path.Combine(curvpath, name + ".pub");
             if (!File.Exists(keyfile))
             {
@@ -77,9 +77,7 @@ namespace Examples
                 cert.Save(keyfile);
             }
             else
-            {
                 cert = ZCert.Load(keyfile);
-            }
             return cert;
         }
     }

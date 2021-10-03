@@ -16,7 +16,7 @@ namespace Examples
 		static TimeSpan LPClient_RequestTimeout = TimeSpan.FromMilliseconds(2000);
 		static int LPClient_RequestRetries = 3;
 
-		static ZSocket LPClient_CreateZSocket(ZContext context, string name, out ZError error)
+		static ZSocket LPClient_CreateZSocket(ZContext context, string name, out ZError? error)
 		{
 			// Helper function that returns a new configured socket
 			// connected to the Lazy Pirate queue
@@ -26,9 +26,7 @@ namespace Examples
 			requester.Linger = TimeSpan.FromMilliseconds(1);
 
 			if (!requester.Connect("tcp://127.0.0.1:5555", out error))
-			{
 				return null;
-			}
 			return requester;
 		}
 
@@ -88,7 +86,6 @@ namespace Examples
 
 							// Poll socket for a reply, with timeout
 							if (requester.PollIn(poll, out var incoming, out error, LPClient_RequestTimeout))
-							{
 								using (incoming)
 								{
 									// We got a reply from the server
@@ -101,7 +98,6 @@ namespace Examples
 									}
 									Console_WriteZMessage("E: malformed reply from server", incoming);
 								}
-							}
 							else
 							{
 								if (error == ZError.EAGAIN)

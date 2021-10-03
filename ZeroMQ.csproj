@@ -1,25 +1,36 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.0;netstandard2.1</TargetFrameworks>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <RootNamespace>ZeroMQ</RootNamespace>
-    <AssemblyName>ZeroMQ</AssemblyName>
-    <AssemblyOriginatorKeyFile>ZeroMQ.snk</AssemblyOriginatorKeyFile>
-    <DefaultItemExcludes>$(DefaultItemExcludes);ZGuideExamples\**\*</DefaultItemExcludes>
-    <LangVersion>9</LangVersion>
-    <PackageProjectUrl>https://github.com/StirlingLabs/ZeroMQ</PackageProjectUrl>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>git@github.com:StirlingLabs/ZeroMQ.git</RepositoryUrl>
-    <Version>4.3.0</Version>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.0;netstandard2.1</TargetFrameworks>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <RootNamespace>ZeroMQ</RootNamespace>
+        <AssemblyName>ZeroMQ</AssemblyName>
+        <AssemblyOriginatorKeyFile>ZeroMQ.snk</AssemblyOriginatorKeyFile>
+        <DefaultItemExcludes>$(DefaultItemExcludes);ZGuideExamples\**\*</DefaultItemExcludes>
+        <LangVersion>9</LangVersion>
+        <Nullable>enable</Nullable>
+        <PackageProjectUrl>https://github.com/StirlingLabs/ZeroMQ</PackageProjectUrl>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>git@github.com:StirlingLabs/ZeroMQ.git</RepositoryUrl>
+        <Version>4.3.0</Version>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="LocalBin\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Remove="LocalBin\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="LocalBin\**" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="LocalBin\**" />
+    </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Remove="LocalBin\**" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Remove="LocalBin\**" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="JetBrains.Annotations" Version="2021.2.0" />
+    </ItemGroup>
+    <ItemGroup Condition="$(TargetFramework.Equals('netstandard2.0'))">
+        <PackageReference Include="System.Memory" Version="4.5.4" />
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3" />
+    </ItemGroup>
+    <ItemGroup Condition="$(TargetFramework.Equals('netstandard2.1'))">
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
+    </ItemGroup>
 </Project>

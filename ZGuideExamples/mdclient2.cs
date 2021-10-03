@@ -31,8 +31,10 @@ namespace Examples
                 for (count = 0; count < 100000 && !cts.IsCancellationRequested; count++)
                 {
                     using (var reply = session.Recv(cts))
+                    {
                         if (reply == null)
                             break; // Interrupt or failure
+                    }
                 }
                 Console.WriteLine("{0} replies received\n", count);
             }

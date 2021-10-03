@@ -31,7 +31,6 @@ namespace Examples
 				while (true)
 				{
 					if (backend.PollIn(poll, out var incoming, out var error, TimeSpan.FromMilliseconds(64)))
-					{
 						using (incoming)
 						{
 							// Handle worker activity on backend
@@ -47,9 +46,7 @@ namespace Examples
 							var client_id = incoming[2].ReadString();
 
 							if (client_id == "READY")
-							{
 								Console.WriteLine("I: ({0}) worker ready", worker_id);
-							}
 							else
 							{
 								// incoming[3] is empty
@@ -71,7 +68,6 @@ namespace Examples
 								}
 							}
 						}
-					}
 					else
 					{
 						if (error == ZError.ETERM)
@@ -85,7 +81,6 @@ namespace Examples
 						// Poll frontend only if we have available workers
 
 						if (frontend.PollIn(poll, out incoming, out error, TimeSpan.FromMilliseconds(64)))
-						{
 							using (incoming)
 							{
 								// Here is how we handle a client request
@@ -117,7 +112,6 @@ namespace Examples
 									backend.Send(outgoing);
 								}
 							}
-						}
 						else
 						{
 							if (error == ZError.ETERM)

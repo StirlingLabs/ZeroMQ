@@ -45,8 +45,8 @@ namespace Examples
                 Client = new(_context, ZSocketType.REQ);
                 Client.Connect(Broker);
                 if (Verbose)
-                    "I: connecting to broker at '{0}'...".DumpString(Broker);
-                
+                    $"I: connecting to broker at '{Broker}'...".DumpString();
+
             }
 
             public MajordomoClient(string broker, bool verbose)
@@ -74,16 +74,14 @@ namespace Examples
             protected void Dispose(bool disposing)
             {
                 if (disposing)
-                {
-                    // Destructor
+                // Destructor
 
                     if (Client != null)
                     {
                         Client.Dispose();
                         Client = null;
                     }
-                    //Do not Dispose Context: cuz of weird shutdown behavior, stucks in using calls 
-                }
+                //Do not Dispose Context: cuz of weird shutdown behavior, stucks in using calls 
             }
 
             //  .split configure retry behavior
@@ -103,7 +101,7 @@ namespace Examples
             //  a reply even if it has to retry several times. It takes ownership of 
             //  the request message, and destroys it when sent. It returns the reply
             //  message, or NULL if there was no reply after multiple attempts:
-            public ZMessage Send(string service, ZMessage request, CancellationTokenSource cancellor)
+            public ZMessage? Send(string service, ZMessage request, CancellationTokenSource canceller)
             {
                 if (request == null)
                     throw new InvalidOperationException();
@@ -117,9 +115,9 @@ namespace Examples
                     request.DumpZmsg("I: send request to '{0}' service:", service);
 
                 var retriesLeft = Retries;
-                while (retriesLeft > 0 && !cancellor.IsCancellationRequested)
+                while (retriesLeft > 0 && !canceller.IsCancellationRequested)
                 {
-                    if (cancellor.IsCancellationRequested
+                    if (canceller.IsCancellationRequested
                         || Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)
                         _context.Shutdown();
 
@@ -127,13 +125,11 @@ namespace Examples
                     var msgreq = request.Clone();
 
                     if (!Client.Send(msgreq, out var error))
-                    {
                         if (Equals(error, ZError.ETERM))
                         {
-                            cancellor.Cancel();
+                            canceller.Cancel();
                             break; // Interrupted
                         }
-                    }
 
                     var p = ZPollItem.CreateReceiver();
                     //  .split body of send 
@@ -152,19 +148,23 @@ namespace Examples
                             throw new InvalidOperationException();
 
                         using (var header = msg.Pop())
+                        {
                             if (!header.ToString().Equals(MdpCommon.MDPC_CLIENT))
                                 throw new InvalidOperationException();
+                        }
 
                         using (var replyService = msg.Pop())
+                        {
                             if(!replyService.ToString().Equals(service))
                                 throw new InvalidOperationException();
+                        }
 
                         request.Dispose();
                         return msg;
                     }
                     if (Equals(error, ZError.ETERM))
                     {
-                        cancellor.Cancel();
+                        canceller.Cancel();
                         break; // Interrupted
                     }
                     if (Equals(error, ZError.EAGAIN))
@@ -184,10 +184,8 @@ namespace Examples
                         }
                     }
                 }
-                if (cancellor.IsCancellationRequested)
-                {
+                if (canceller.IsCancellationRequested)
                     "W: interrupt received, killing client...\n".DumpString();
-                }
                 request.Dispose();
                 return null;
             }

@@ -42,10 +42,8 @@ namespace Examples
 					requester.Send(new ZFrame(requestText));
 
 					// Receive
-					using (var reply = requester.ReceiveFrame()) 
-					{
+					using (var reply = requester.ReceiveFrame())
 						Console.WriteLine(" Received: {0} {1}!", requestText, reply.ReadString());
-					}
 				}
 			}
 		}

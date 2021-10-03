@@ -30,13 +30,9 @@ namespace Examples
 			using (var publisher = new ZSocket(context, ZSocketType.PUB))
 			{
 				if (args[0] != null)
-				{
 					publisher.Connect(args[0]);
-				}
 				else
-				{
 					publisher.Bind("tcp://*:5556");
-				}
 
 				// Ensure subscriber connection has time to complete
 				Thread.Sleep(100);

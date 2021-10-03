@@ -9,9 +9,9 @@ namespace ZeroMQ
     [Serializable]
     public class ZException : Exception
     {
-        private ZError _error;
+        private ZError? _error;
 
-        public ZError Error => _error;
+        public ZError? Error => _error;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ZException"/> class.
@@ -23,21 +23,21 @@ namespace ZeroMQ
         /// Initializes a new instance of the <see cref="ZException"/> class.
         /// </summary>
         /// <param name="errorCode">The error code returned by the ZeroMQ library call.</param>
-        public ZException(ZError errorSymbol)
+        public ZException(ZError? errorSymbol)
             : this(errorSymbol, default, default) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ZException"/> class.
         /// </summary>
         /// <param name="errorCode">The error code returned by the ZeroMQ library call.</param>
-        public ZException(ZError errorSymbol, string message)
+        public ZException(ZError? errorSymbol, string message)
             : this(errorSymbol, message, default) { }
 
-        public ZException(ZError errorSymbol, string message, Exception inner)
+        public ZException(ZError? errorSymbol, string message, Exception inner)
             : base(MakeMessage(errorSymbol, message), inner)
             => _error = errorSymbol;
 
-        static string MakeMessage(ZError error, string additionalMessage)
+        static string MakeMessage(ZError? error, string additionalMessage)
             => error != null
                 ? string.IsNullOrEmpty(additionalMessage)
                     ? error.ToString()

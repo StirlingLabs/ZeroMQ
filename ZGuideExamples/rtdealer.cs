@@ -46,17 +46,13 @@ namespace Examples
 
 						// Encourage workers until it's time to fire them
 						if (stopwatch.Elapsed < TimeSpan.FromSeconds(5))
-						{
 							broker.Send(new ZFrame("Work harder!"));
-						}
 						else
 						{
 							broker.Send(new ZFrame("Fired!"));
 
 							if (++workers_fired == RTDealer_Workers)
-							{
 								break;
-							}
 						}
 					}
 				}
@@ -85,9 +81,7 @@ namespace Examples
 						var finished = msg[1].ReadString() == "Fired!";
 
 						if (finished)
-						{
 							break;
-						}
 					}
 
 					total++;

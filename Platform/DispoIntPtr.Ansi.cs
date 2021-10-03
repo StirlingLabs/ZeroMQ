@@ -4,49 +4,22 @@ using System.Text;
 
 namespace ZeroMQ.lib
 {
-    internal sealed partial class DispoIntPtr : IDisposable
+    internal sealed partial class ZSafeHandle : IDisposable
     {
         public static class Ansi
         {
-            internal static DispoIntPtr AllocStringNative(string str, out int byteCount)
+            internal static ZSafeHandle AllocStringNative(string str, out nuint byteCount)
             {
-                // use builtin allocation
-                var dispPtr = new DispoIntPtr();
-                dispPtr._ptr = Marshal.StringToHGlobalAnsi(str);
-                dispPtr.isAllocated = true;
-
-                byteCount = Encoding.Default.GetByteCount(str);
-                return dispPtr; /**/
-
-                /* use encoding or Encoding.Default ( system codepage of ANSI )
-                var enc = Encoding.Default.GetEncoder();
-        
-                // var encoded = new byte[length];
-                // Marshal.Copy(encoded, 0, dispPtr._ptr, length);
-        
-                IntPtr ptr;
-                int charCount = str.Length;
-        
-                fixed (char* strP = str) 
+                // use built in allocation
+                var p = new ZSafeHandle
                 {
-                  byteCount = enc.GetByteCount(strP, charCount, false);
-        
-                  ptr = Marshal.AllocHGlobal(byteCount + 1);
-        
-                  enc.GetBytes(strP, charCount, (byte*)ptr, byteCount, true);
-        
-                  *((byte*)ptr + byteCount) = 0x00;
-                }
-        
-                var dispPtr = new DispoIntPtr ();
-                dispPtr._ptr = ptr; 
-                dispPtr.isAllocated = true;
-        
-                // and a C char 0x00 terminator
-                // Marshal.WriteByte(dispPtr._ptr + length, byte.MinValue);
-                // *((byte*)dispPtr._ptr + length) = 0x00;
-        
-                return dispPtr; /**/
+                    _ptr = Marshal.StringToHGlobalAnsi(str),
+                    _isAllocated = true
+                };
+
+                byteCount = (uint)Encoding.Default.GetByteCount(str);
+
+                return p;
             }
         }
     }

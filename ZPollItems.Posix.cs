@@ -12,7 +12,7 @@ namespace ZeroMQ
             internal static unsafe bool PollMany(
                 IEnumerable<ZSocket> sockets,
                 IEnumerable<ZPollItem> items, ZPoll pollEvents,
-                out ZError error, TimeSpan? timeout = null)
+                out ZError? error, TimeSpan? timeout = null)
             {
                 error = default;
                 var result = false;
@@ -60,7 +60,7 @@ namespace ZeroMQ
             internal static unsafe bool PollSingle(
                 ZSocket socket,
                 ZPollItem item, ZPoll pollEvents,
-                out ZError error, TimeSpan? timeout = null)
+                out ZError? error, TimeSpan? timeout = null)
             {
                 error = default;
                 var result = false;

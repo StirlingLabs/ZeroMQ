@@ -18,7 +18,7 @@ namespace Examples
 
 	static partial class Program
 	{
-		static ZSocket PPWorker_CreateZSocket(ZContext context, string name, out ZError error)
+		static ZSocket PPWorker_CreateZSocket(ZContext context, string name, out ZError? error)
 		{
 			// Helper function that returns a new configured socket
 			// connected to the Paranoid Pirate queue
@@ -27,15 +27,11 @@ namespace Examples
 			worker.IdentityString = name;
 
 			if (!worker.Connect("tcp://127.0.0.1:5556", out error))
-			{
 				return null;	// Interrupted
-			}
 
 			// Tell queue we're ready for work
 			using (var outgoing = new ZFrame(Worker.PPP_READY))
-			{
 				worker.Send(outgoing);
-			}
 
 			Console.WriteLine("I:        worker ready");
 			return worker;
@@ -127,14 +123,10 @@ namespace Examples
 										liveness = Worker.PPP_HEARTBEAT_LIVENESS;
 									}
 									else
-									{
 										Console_WriteZMessage("E: invalid message", incoming);
-									}
 								}
 								else
-								{
 									Console_WriteZMessage("E: invalid message", incoming);
-								}
 							}
 							interval = Worker.PPP_INTERVAL_INIT;
 						}
@@ -147,10 +139,9 @@ namespace Examples
 						}
 
 						if (error == ZError.EAGAIN)
-						{
-							// If the queue hasn't sent us heartbeats in a while, destroy the
-							// socket and reconnect. This is the simplest most brutal way of
-							// discarding any messages we might have sent in the meantime:
+						// If the queue hasn't sent us heartbeats in a while, destroy the
+						// socket and reconnect. This is the simplest most brutal way of
+						// discarding any messages we might have sent in the meantime:
 							if (--liveness == 0)
 							{
 								Console.WriteLine("W: heartbeat failure, can't reach queue");
@@ -158,9 +149,7 @@ namespace Examples
 								Thread.Sleep(interval);
 
 								if (interval < Worker.PPP_INTERVAL_MAX)
-								{
 									interval *= 2;
-								}
 								else {
 									Console.WriteLine("E: interrupted");
 									break;
@@ -175,7 +164,6 @@ namespace Examples
 								}
 								liveness = Worker.PPP_HEARTBEAT_LIVENESS;
 							}
-						}
 
 						// Send heartbeat to queue if it's time
 						if (DateTime.UtcNow > heartbeat_at) 
@@ -184,9 +172,7 @@ namespace Examples
 
 							Console.WriteLine("I:   sending heartbeat");
 							using (var outgoing = new ZFrame(Worker.PPP_HEARTBEAT))
-							{
 								worker.Send(outgoing);
-							}
 						}
 					}
 				}

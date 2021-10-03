@@ -40,9 +40,7 @@ namespace Examples
 			{
 				// Connect to one or more endpoints
 				for (var i = 0; i < args.Length - 1; ++i)
-				{
 					client.Connect(args[1]);
-				}
 
 				// Send a bunch of name resolution 'requests', measure time
 				var stopwatch = new Stopwatch();

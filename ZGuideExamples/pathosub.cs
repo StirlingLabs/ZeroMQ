@@ -34,7 +34,7 @@ namespace Examples
 				var subscription = $"{rnd.Next(1000):D3}";
 				subscriber.Subscribe(subscription);
 
-				ZMessage msg;
+				ZMessage? msg;
 				while (true)
 				{
 					if (null == (msg = subscriber.ReceiveMessage(out var error)))
@@ -46,9 +46,7 @@ namespace Examples
 					using (msg)
 					{
 						if (msg[0].ReadString() != subscription)
-						{
 							throw new InvalidOperationException();
-						}
 						Console.WriteLine(msg[1].ReadString());
 					}
 				}

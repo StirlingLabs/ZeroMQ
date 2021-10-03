@@ -6,7 +6,7 @@ namespace Examples
 {
 	static partial class Program
 	{
-		public static void TaskWork(string[] args)
+		public static unsafe void TaskWork(string[] args)
 		{
 			//
 			// Task worker
@@ -30,9 +30,9 @@ namespace Examples
 				// Process tasks forever
 				while (true)
 				{
-					var replyBytes = new byte[4];
-					receiver.ReceiveBytes(replyBytes, 0, replyBytes.Length);
-					var workload = BitConverter.ToInt32(replyBytes, 0);
+					int workload;
+					var replyBytes = new Span<byte>(&workload, 4);
+					receiver.ReceiveBytes(replyBytes, 0, (nuint)replyBytes.Length);
 					Console.WriteLine("{0}.", workload);	// Show progress
 
 					Thread.Sleep(workload);	// Do the work

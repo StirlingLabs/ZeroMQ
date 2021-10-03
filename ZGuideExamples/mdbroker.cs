@@ -105,13 +105,13 @@ namespace Examples
             {
                 Socket.Bind(endpoint);
                 // if you dont wanna see utc timeshift, remove zzz and use DateTime.UtcNow instead
-                "I: MDP broker/0.2.0 is active at {0}".DumpString(endpoint);
+                $"I: MDP broker/0.2.0 is active at {endpoint}".DumpString();
             }
 
             //  .split broker worker_msg method
             //  This method processes one READY, REPLY, HEARTBEAT, or
             //  DISCONNECT message sent to the broker by a worker:
-            public void WorkerMsg(ZFrame sender, ZMessage msg)
+            public void WorkerMsg(ZFrame sender, ZMessage? msg)
             {
                 if(msg.Count < 1) // At least, command
                     throw new InvalidOperationException();
@@ -139,15 +139,13 @@ namespace Examples
                             // Reserd servicee name
                             worker.Delete(true);
                         else
-                        {
-                            // Attach worker to service and mark as idle
+                        // Attach worker to service and mark as idle
                             using (var serviceFrame = msg.Pop())
                             {
                                 worker.Service = RequireService(serviceFrame);
                                 worker.Service.Workers++;
                                 worker.Waiting();
                             }
-                        }
                     }
                     else if (command.StrHexEq(MdpCommon.MdpwCmd.REPLY))
                     {
@@ -163,34 +161,26 @@ namespace Examples
                             worker.Waiting();
                         }
                         else
-                        {
                             worker.Delete(true);
-                        }
                     }
                     else if (command.StrHexEq(MdpCommon.MdpwCmd.HEARTBEAT))
                     {
                         if (isWorkerReady)
-                        {
                             worker.Expiry = DateTime.UtcNow + MdpCommon.HEARTBEAT_EXPIRY;
-                        }
                         else
-                        {
                             worker.Delete(true);
-                        }
                     }
                     else if (command.StrHexEq(MdpCommon.MdpwCmd.DISCONNECT))
                         worker.Delete(false);
                     else
-                    {
                         msg.DumpZmsg("E: invalid input message");
-                    }
                 }
             }
 
             //  .split broker client_msg method
             //  Process a request coming from a client. We implement MMI requests
             //  directly here (at present, we implement only the mmi.service request):
-            public void ClientMsg(ZFrame sender, ZMessage msg)
+            public void ClientMsg(ZFrame sender, ZMessage? msg)
             {
                 // service & body
                 if(msg.Count < 2)
@@ -230,10 +220,8 @@ namespace Examples
                         Socket.Send(msg);
                     }
                     else
-                    {
-                        // Else dispatch the message to the requested Service
+                    // Else dispatch the message to the requested Service
                         service.Dispatch(msg);
-                    }
                 }
             }
 
@@ -252,8 +240,8 @@ namespace Examples
                     if (DateTime.UtcNow < worker.Expiry)
                         break;   // Worker is alive, we're done here
                     if(Verbose)
-                        "I: deleting expired worker: '{0}'".DumpString(worker.IdString);
-                    
+                        $"I: deleting expired worker: '{worker.IdString}'".DumpString();
+
                     worker.Delete(false);
                     worker = Waiting.FirstOrDefault();
                 }
@@ -273,9 +261,7 @@ namespace Examples
 
                 Service service;
                 if (Services.ContainsKey(name))
-                {
                     service = Services[name];
-                }
                 else
                 {
                     service = new(this, name);
@@ -283,7 +269,7 @@ namespace Examples
 
                     //zhash_freefn(self->workers, id_string, s_worker_destroy);
                     if (Verbose)
-                        "I: added service: '{0}'".DumpString(name);
+                        $"I: added service: '{name}'".DumpString();
                 }
 
                 return service;
@@ -301,10 +287,8 @@ namespace Examples
 
                 string idString;
                 using (var tstfrm = identity.Clone())
-                {
                     idString = tstfrm.Read().ToHexString();
-                }
-                
+
                 var worker = Workers.ContainsKey(idString)
                     ? Workers[idString]
                     : null;
@@ -314,7 +298,7 @@ namespace Examples
                     worker = new(idString, this, identity);
                     Workers[idString] = worker;
                     if(Verbose)
-                        "I: registering new worker: '{0}'".DumpString(idString);
+                        $"I: registering new worker: '{idString}'".DumpString();
                 }
                 
                 return worker;
@@ -330,7 +314,7 @@ namespace Examples
             public string Name { get; protected set; }
 
             // List of client requests
-            public List<ZMessage> Requests { get; protected set; }
+            public List<ZMessage?> Requests { get; protected set; }
 
             // List of waiting workers
             public List<Worker> Waiting { get; protected set; }
@@ -359,7 +343,6 @@ namespace Examples
             protected void Dispose(bool disposing)
             {
                 if (disposing)
-                {
                     foreach (var r in Requests)
                     {
                         // probably obsolete?
@@ -367,12 +350,11 @@ namespace Examples
                         {
                         }
                     }
-                }
             }
 
             //  .split service dispatch method
             //  This method sends requests to waiting workers:
-            public void Dispatch(ZMessage msg)
+            public void Dispatch(ZMessage? msg)
             {
                 if (msg != null) // queue msg if any
                     Requests.Add(msg);
@@ -436,10 +418,8 @@ namespace Examples
             protected void Dispose(bool disposing)
             {
                 if (disposing)
-                {
                     using (Identity)
                     {}
-                }
             }
 
             public void Delete(bool disconnect)
@@ -461,7 +441,7 @@ namespace Examples
             //  .split worker send method
             //  This method formats and sends a command to a worker. The caller may
             //  also provide a command option, and a message payload:
-            public void Send(string command, string option, ZMessage msg)
+            public void Send(string command, string option, ZMessage? msg)
             {
                 msg = msg != null
                         ? msg.Clone()
@@ -503,11 +483,11 @@ namespace Examples
         //  then process messages on the broker Socket:
         public static void MDBroker(string[] args)
         {
-            var cancellor = new CancellationTokenSource();
+            var canceller = new CancellationTokenSource();
             Console.CancelKeyPress += (s, ea) =>
             {
                 ea.Cancel = true;
-                cancellor.Cancel();
+                canceller.Cancel();
             };
 
             using (var broker = new Broker(Verbose))
@@ -516,7 +496,7 @@ namespace Examples
                 // Get and process messages forever or until interrupted
                 while (true)
                 {
-                    if (cancellor.IsCancellationRequested
+                    if (canceller.IsCancellationRequested
                         || Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)
                         broker.ShutdownContext();
 
@@ -558,9 +538,7 @@ namespace Examples
                         broker.Purge();
 
                         foreach (var waitingworker in broker.Waiting)
-                        {
                             waitingworker.Send(MdpCommon.MdpwCmd.HEARTBEAT.ToHexString(), null, null);
-                        }
                         broker.HeartbeatAt = DateTime.UtcNow + MdpCommon.HEARTBEAT_INTERVAL;
                     }
                 }

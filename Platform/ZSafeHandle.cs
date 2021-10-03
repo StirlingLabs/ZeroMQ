@@ -3,9 +3,9 @@ using System.Runtime.InteropServices;
 
 namespace ZeroMQ.lib
 {
-    internal sealed partial class DispoIntPtr : IDisposable
+    internal sealed partial class ZSafeHandle : IDisposable
     {
-        private delegate DispoIntPtr AllocStringNativeDelegate(string str, out int byteCount);
+        private delegate ZSafeHandle AllocStringNativeDelegate(string str, out nuint byteCount);
 
         private static readonly AllocStringNativeDelegate AllocStringNative = Ansi.AllocStringNative;
 
@@ -13,60 +13,60 @@ namespace ZeroMQ.lib
           // Platform.SetupPlatformImplementation(typeof(DispoIntPtr));
         } */
 
-        public static DispoIntPtr Alloc(int size)
+        public static ZSafeHandle Alloc(nuint size)
         {
-            var dispPtr = new DispoIntPtr();
-            dispPtr._ptr = Marshal.AllocHGlobal(size);
-            dispPtr.isAllocated = true;
-            return dispPtr;
+            var handle = new ZSafeHandle();
+            handle._ptr = Marshal.AllocHGlobal((nint)size);
+            handle._isAllocated = true;
+            return handle;
         }
 
-        public static DispoIntPtr AllocString(string str)
+        public static ZSafeHandle AllocString(string str)
             => AllocString(str, out var byteCount);
 
-        public static DispoIntPtr AllocString(string str, out int byteCount)
+        public static ZSafeHandle AllocString(string str, out nuint byteCount)
             => AllocStringNative(str, out byteCount);
 
-        public static implicit operator IntPtr(DispoIntPtr dispoIntPtr)
+        public static implicit operator IntPtr(ZSafeHandle? dispoIntPtr)
             => dispoIntPtr?._ptr ?? default;
 
-        public static unsafe explicit operator void*(DispoIntPtr dispoIntPtr)
+        public static unsafe explicit operator void*(ZSafeHandle? dispoIntPtr)
             => dispoIntPtr == null ? null : (void*)dispoIntPtr._ptr;
 
-        public static unsafe explicit operator byte*(DispoIntPtr dispoIntPtr)
+        public static unsafe explicit operator byte*(ZSafeHandle? dispoIntPtr)
             => dispoIntPtr == null ? null : (byte*)dispoIntPtr._ptr;
 
-        public static unsafe explicit operator sbyte*(DispoIntPtr dispoIntPtr)
+        public static unsafe explicit operator sbyte*(ZSafeHandle? dispoIntPtr)
             => dispoIntPtr == null ? null : (sbyte*)dispoIntPtr._ptr;
 
-        public static unsafe explicit operator short*(DispoIntPtr dispoIntPtr)
+        public static unsafe explicit operator short*(ZSafeHandle? dispoIntPtr)
             => dispoIntPtr == null ? null : (short*)dispoIntPtr._ptr;
 
-        public static unsafe explicit operator ushort*(DispoIntPtr dispoIntPtr)
+        public static unsafe explicit operator ushort*(ZSafeHandle? dispoIntPtr)
             => dispoIntPtr == null ? null : (ushort*)dispoIntPtr._ptr;
 
-        public static unsafe explicit operator char*(DispoIntPtr dispoIntPtr)
+        public static unsafe explicit operator char*(ZSafeHandle? dispoIntPtr)
             => dispoIntPtr == null ? null : (char*)dispoIntPtr._ptr;
 
-        public static unsafe explicit operator int*(DispoIntPtr dispoIntPtr)
+        public static unsafe explicit operator int*(ZSafeHandle? dispoIntPtr)
             => dispoIntPtr == null ? null : (int*)dispoIntPtr._ptr;
 
-        public static unsafe explicit operator uint*(DispoIntPtr dispoIntPtr)
+        public static unsafe explicit operator uint*(ZSafeHandle? dispoIntPtr)
             => dispoIntPtr == null ? null : (uint*)dispoIntPtr._ptr;
 
-        public static unsafe explicit operator long*(DispoIntPtr dispoIntPtr)
+        public static unsafe explicit operator long*(ZSafeHandle? dispoIntPtr)
             => dispoIntPtr == null ? null : (long*)dispoIntPtr._ptr;
 
-        public static unsafe explicit operator ulong*(DispoIntPtr dispoIntPtr)
+        public static unsafe explicit operator ulong*(ZSafeHandle? dispoIntPtr)
             => dispoIntPtr == null ? null : (ulong*)dispoIntPtr._ptr;
 
-        private bool isAllocated;
+        private bool _isAllocated;
 
         private IntPtr _ptr;
 
         public IntPtr Ptr => _ptr;
 
-        ~DispoIntPtr()
+        ~ZSafeHandle()
             => Dispose(false);
 
         public void Dispose()
@@ -82,10 +82,10 @@ namespace ZeroMQ.lib
             if (handle == default)
                 return;
 
-            if (isAllocated)
+            if (_isAllocated)
             {
                 Marshal.FreeHGlobal(handle);
-                isAllocated = false;
+                _isAllocated = false;
             }
             _ptr = default;
         }

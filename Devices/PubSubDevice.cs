@@ -47,13 +47,13 @@
         /// <summary>
         /// Forwards requests from the frontend socket to the backend socket.
         /// </summary>
-        protected override bool FrontendHandler(ZSocket socket, out ZMessage message, out ZError error)
+        protected override bool FrontendHandler(ZSocket socket, out ZMessage? message, out ZError? error)
             => FrontendSocket.Forward(BackendSocket, out message, out error);
 
         /// <summary>
         /// PubSub Forwards the Subscription messages
         /// </summary>
-        protected override bool BackendHandler(ZSocket args, out ZMessage message, out ZError error)
+        protected override bool BackendHandler(ZSocket args, out ZMessage? message, out ZError? error)
             => BackendSocket.Forward(FrontendSocket, out message, out error);
     }
 }
