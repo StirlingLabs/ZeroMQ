@@ -49,7 +49,7 @@ namespace Examples
 				var requests = 0;
 				while (requests++ < 100)
 				{
-					using (var request = new ZMessage())
+					using (var request = ZMessage.Create())
 					{
 						request.Add(new(name));
 

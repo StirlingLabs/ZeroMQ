@@ -1,21 +1,20 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
 namespace ZeroMQ.lib
 {
     internal sealed partial class ZSafeHandle : IDisposable
     {
+        private static readonly ConcurrentStack<ZSafeHandle> freeHandles = new();
+
         private delegate ZSafeHandle AllocStringNativeDelegate(string str, out nuint byteCount);
 
         private static readonly AllocStringNativeDelegate AllocStringNative = Ansi.AllocStringNative;
 
-        /* static DispoIntPtr() {
-          // Platform.SetupPlatformImplementation(typeof(DispoIntPtr));
-        } */
-
         public static ZSafeHandle Alloc(nuint size)
         {
-            var handle = new ZSafeHandle();
+            var handle = freeHandles.TryPop(out var h) ? h : new();
             handle._ptr = Marshal.AllocHGlobal((nint)size);
             handle._isAllocated = true;
             return handle;
@@ -67,15 +66,12 @@ namespace ZeroMQ.lib
         public IntPtr Ptr => _ptr;
 
         ~ZSafeHandle()
-            => Dispose(false);
+            => Dispose(true);
 
         public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+            => Dispose(false);
 
-        void Dispose(bool disposing)
+        void Dispose(bool final)
         {
             // TODO: instance ThreadStatic && do ( o == null ? return : ( lock(o, ms), check threadId, .. ) ) 
             var handle = _ptr;
@@ -88,10 +84,11 @@ namespace ZeroMQ.lib
                 _isAllocated = false;
             }
             _ptr = default;
-        }
 
-        /* public void ReAlloc(long size) {
-          _ptr = Marshal.ReAllocHGlobal(_ptr, new IntPtr(size));
-        } */
+            if (!final)
+            {
+                    freeHandles.Push(this);
+            }
+        }
     }
 }

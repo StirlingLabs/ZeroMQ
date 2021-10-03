@@ -86,7 +86,7 @@ namespace ZeroMQ.Devices
 
         static bool ReceiveMsg(ZSocket sock, out ZMessage? message, out string address, out ZError? error, bool _ = false)
         {
-            message = new ZMessage();
+            message = ZMessage.Create();
             return ReceiveMsg(sock, ref message, out address, out error);
         }
 
@@ -118,7 +118,7 @@ namespace ZeroMQ.Devices
                     error = default;
                 }
 
-                message ??= new();
+                message ??= ZMessage.Create();
                 message.Add(frame);
 
                 if (receiveCount != 2)

@@ -168,7 +168,7 @@ namespace Examples
 				var error = ZError.None;
 				while (++requests < 10000)
 				{
-					var outgoing = new ZMessage();
+					using var outgoing = ZMessage.Create();
 					outgoing.Add(new("random name"));
 
 					var incoming = client.Request(outgoing);

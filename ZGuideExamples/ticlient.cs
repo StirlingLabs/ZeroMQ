@@ -28,7 +28,7 @@ namespace Examples
 			using (var session = new MajordomoClient("tcp://127.0.0.1:5555", Verbose))
 			{
 				//  1. Send 'echo' request to Titanic
-				var request = new ZMessage();
+				var request = ZMessage.Create();
 				request.Add(new("echo"));
 				request.Add(new("Hello World"));
 
@@ -47,7 +47,7 @@ namespace Examples
 				{
 					Thread.Sleep(100);
 					request.Dispose();
-					request = new();
+					request = ZMessage.Create();
 					request.Add(new(uuid.ToString()));
 					var reply = TIClient_ServiceCall(session, "titanic.reply", request, canceller);
 					if (reply != null)
@@ -58,7 +58,7 @@ namespace Examples
 
 						// 3. Close Request
 						request.Dispose();
-						request = new();
+						request = ZMessage.Create();
 						request.Add(new(uuid.ToString()));
 						reply = TIClient_ServiceCall(session, "titanic.close", request, canceller);
 						reply.Dispose();

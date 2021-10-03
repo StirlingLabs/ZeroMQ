@@ -57,7 +57,7 @@ namespace Examples
 
 								Console.WriteLine("I: ({0}) work complete", worker_id);
 
-								using (var outgoing = new ZMessage())
+								using (var outgoing = ZMessage.Create())
 								{
 									outgoing.Add(new(client_id));
 									outgoing.Add(new());
@@ -100,7 +100,7 @@ namespace Examples
 
 								Console.WriteLine("I: ({0}) working on ({1}) {2}", worker_id, client_id, request);
 
-								using (var outgoing = new ZMessage())
+								using (var outgoing = ZMessage.Create())
 								{
 									outgoing.Add(new(worker_id));
 									outgoing.Add(new());

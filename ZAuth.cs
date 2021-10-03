@@ -51,9 +51,7 @@ namespace ZeroMQ
                 Verbose = verbose;
 
                 if (request.Count == 0)
-                {
                     return;
-                }
 
                 //  Get all standard frames off the handler socket
                 Version = request.Pop().ReadLine();
@@ -114,7 +112,7 @@ namespace ZeroMQ
                 if (Verbose)
                     Info($"zauth: - ZAP reply status_code={status_code} status_text={status_text}");
 
-                var msg = new ZMessage();
+                using var msg = ZMessage.Create();
                 msg.Add(new("1.0"));
                 msg.Add(new(Sequence));
                 msg.Add(new(status_code));

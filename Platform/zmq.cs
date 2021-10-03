@@ -100,7 +100,7 @@ namespace ZeroMQ.lib
         [SuppressGCTransition]
 #endif
         [DllImport(LibName, EntryPoint = "zmq_msg_init_data", CallingConvention = Cdecl)]
-        public static extern int msg_init_data(IntPtr msg, IntPtr data, nuint size, FreeMessageDataDelegate ffn, IntPtr hint);
+        public static extern int msg_init_data(IntPtr msg, IntPtr data, nuint size, FreeMessageDataDelegate? ffn, IntPtr hint);
 
 #if NET5_0_OR_GREATER
         public static int msg_send(IntPtr msg, IntPtr socket, ZSocketFlags flags)

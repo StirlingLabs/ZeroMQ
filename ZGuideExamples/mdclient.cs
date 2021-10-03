@@ -24,13 +24,11 @@ namespace Examples
 				int count;
 				for (count = 0; count < 100000; count++)
 				{
-					var request = new ZMessage();
+					using var request = ZMessage.Create();
 					request.Prepend(new("Hello world"));
-					using (var reply = session.Send("echo", request, cts))
-					{
-						if (reply == null)
-							break; // Interrupt or failure
-					}
+					using var reply = session.Send("echo", request, cts);
+					if (reply == null)
+						break; // Interrupt or failure
 				}
 				Console.WriteLine("{0} requests/replies processed\n", count);
 			}

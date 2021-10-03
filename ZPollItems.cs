@@ -151,7 +151,7 @@ namespace ZeroMQ
         }
 
         internal static bool PollManyResult(IEnumerable<ZSocket> sockets, IEnumerable<ZPollItem> items, ZPoll pollEvents,
-            ref ZMessage[] messages)
+             ref ZMessage[] messages)
         {
             var count = items.Count();
             var readyCount = 0;

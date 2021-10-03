@@ -445,7 +445,7 @@ namespace Examples
             {
                 msg = msg != null
                         ? msg.Clone()
-                        : new();
+                        : ZMessage.Create();
 
                 // Stack protocol envelope to start of message
                 if (!string.IsNullOrEmpty(option))

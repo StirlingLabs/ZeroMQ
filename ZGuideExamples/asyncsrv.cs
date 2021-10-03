@@ -57,7 +57,7 @@ namespace Examples
 							Console.WriteLine("[CLIENT{0}] {1}", i, messageText);
 						}
 					}
-					using (var outgoing = new ZMessage())
+					using (var outgoing = ZMessage.Create())
 					{
 						outgoing.Add(new(client.Identity));
 						outgoing.Add(new("request " + ++requests));
@@ -138,7 +138,7 @@ namespace Examples
 							// Sleep for some fraction of a second
 							Thread.Sleep(rnd.Next(1000) + 1);
 
-							using (var response = new ZMessage())
+							using (var response = ZMessage.Create())
 							{
 								response.Add(new(identity));
 								response.Add(new(content));

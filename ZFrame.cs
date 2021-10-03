@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -12,7 +14,7 @@ namespace ZeroMQ
     /// <summary>
     /// A single part message, sent or received via a <see cref="ZSocket"/>.
     /// </summary>
-    public sealed class ZFrame : Stream, ICloneable
+    public sealed partial class ZFrame : Stream, ICloneable
     {
         public static ZFrame FromStream(Stream stream, nint i, nuint l)
         {
@@ -53,6 +55,23 @@ namespace ZeroMQ
         {
             if (size < 0) throw new ArgumentOutOfRangeException(nameof(size));
             return new(CreateNative(size), size);
+        }
+
+        public static ZFrame Create(byte[] data)
+        {
+            var size = (nuint)data.Length;
+            return size == 0
+                ? CreateEmpty()
+                : new(CreatePinned(data), size);
+        }
+
+        [Obsolete("Not yet implemented", true)]
+        public static ZFrame Create(Memory<byte> data)
+        {
+            var size = (nuint)data.Length;
+            return size == 0
+                ? CreateEmpty()
+                : new(CreatePinned(data), size);
         }
 
         public static ZFrame CreateEmpty()
@@ -171,6 +190,70 @@ namespace ZeroMQ
                 throw new ZException(error, "zmq_msg_init_size");
             }
             return msg;
+        }
+
+        internal static ZSafeHandle CreatePinned(byte[] data)
+        {
+            if (data is null) throw new ArgumentNullException(nameof(data));
+            var size = (nuint)data.Length;
+            if (size == 0) throw new ArgumentException("Array must not be empty.", nameof(data));
+            return CreatePinned(GCHandle.Alloc(data, GCHandleType.Pinned), size);
+        }
+
+        internal static unsafe ZSafeHandle CreatePinned(GCHandle pin, nuint size)
+        {
+            var msg = ZSafeHandle.Alloc(zmq.sizeof_zmq_msg_t);
+
+            if (pin.Target is not byte[] bytes)
+                throw new InvalidOperationException(
+                    $"GCHandle must point to a simple byte array, but was {pin.Target?.GetType().AssemblyQualifiedName ?? "null"} (allocated: {pin.IsAllocated} @ 0x{pin.AddrOfPinnedObject():X8})");
+
+            //Console.Error.WriteLine($"[{CallStackHelpers.GetCallStackDepth()}] ZFrame.CreatePinned(GCH 0x{(IntPtr)pin:X8}, {size})");
+
+#if NET5_0_OR_GREATER
+            var pBytes = (IntPtr)Unsafe.AsPointer(ref MemoryMarshal.GetArrayDataReference(bytes));
+#else
+            var pBytes = (IntPtr)Unsafe.AsPointer(ref bytes[0]);
+#endif
+
+            while (-1 == zmq.msg_init_data(msg, pBytes, size, PinnedGcHandleFreeCallbackDelegate, GCHandle.ToIntPtr(pin)))
+            {
+                var error = ZError.GetLastErr();
+
+                if (error == ZError.EINTR)
+                    continue;
+
+                msg.Dispose();
+
+                if (error == ZError.ENOMEM)
+                    throw new OutOfMemoryException("zmq_msg_init_data");
+
+                throw new ZException(error, "zmq_msg_init_data");
+            }
+            return msg;
+        }
+
+        private static readonly zmq.FreeMessageDataDelegate PinnedGcHandleFreeCallbackDelegate = PinnedGcHandleFreeCallback;
+        private static void PinnedGcHandleFreeCallback(IntPtr dataAddr, IntPtr pinPtr)
+        {
+            //Console.Error.WriteLine($"[{CallStackHelpers.GetCallStackDepth()}] ZFrame.PinnedGcHandleFreeCallbackDelegate({dataAddr:X8}, GCH 0x{pinPtr:X8})");
+            var handle = GCHandle.FromIntPtr(pinPtr);
+            handle.Free();
+        }
+
+        [Obsolete("Not yet implemented", true)]
+        internal static ZSafeHandle CreatePinned(Memory<byte> data)
+        {
+            if (data.IsEmpty) throw new ArgumentException("Data must not be empty.", nameof(data));
+            var size = (nuint)data.Length;
+            var pin = data.Pin();
+            return CreatePinned(pin, size);
+        }
+
+        [Obsolete("Not yet implemented", true)]
+        internal static unsafe ZSafeHandle CreatePinned(MemoryHandle pin, nuint size)
+        {
+            throw new NotImplementedException();
         }
 
         protected override void Dispose(bool disposing)
@@ -435,22 +518,38 @@ namespace ZeroMQ
 
         public string? ReadString()
             => ReadString(ZContext.Encoding);
+        public bool TryReadString(out string? value)
+            => TryReadString(ZContext.Encoding, out value);
 
         public string? ReadString(Encoding encoding)
             => ReadString( /* byteCount */ GetLength() - _position, encoding);
 
+        public bool TryReadString(Encoding encoding, out string? value)
+            => TryReadString( /* byteCount */ GetLength() - _position, encoding, out value);
+
         public string? ReadString(nuint length)
             => ReadString( /* byteCount */ length, ZContext.Encoding);
+        public bool TryReadString(nuint length, string? value)
+            => TryReadString( /* byteCount */ length, ZContext.Encoding, out value);
 
         public string? ReadString(nuint byteCount, Encoding encoding)
+            => TryReadString(byteCount, encoding, out var str) ? str : null;
+
+        public bool TryReadString(nuint byteCount, Encoding encoding, out string? value)
         {
             var remaining = checked((int)Math.Min(byteCount, Math.Max(0, GetLength() - _position)));
 
             if (remaining == 0)
-                return string.Empty;
+            {
+                value = string.Empty;
+                return true;
+            }
 
             if (remaining < 0)
-                return null;
+            {
+                value = null;
+                return false;
+            }
 
             unsafe
             {
@@ -460,7 +559,10 @@ namespace ZeroMQ
                 var charCount = dec.GetCharCount(bytes, remaining, false);
 
                 if (charCount == 0)
-                    return string.Empty;
+                {
+                    value = string.Empty;
+                    return true;
+                }
 
                 var resultChars = new char[charCount];
                 fixed (char* chars = resultChars)
@@ -484,9 +586,10 @@ namespace ZeroMQ
                     var enc = encoding.GetEncoder();
                     _position += (nuint)enc.GetByteCount(chars, charCount + z, true);
 
-                    return charCount == 0
+                    value = charCount == 0
                         ? string.Empty
                         : new(chars, 0, charCount);
+                    return true;
                 }
             }
         }
@@ -677,25 +780,75 @@ namespace ZeroMQ
                 return;
             }
 
-            var charCount = str.Length;
-            var enc = encoding.GetEncoder();
+            var interned = string.IsInterned(str);
+            if (interned != null) str = interned;
 
-            fixed (char* strP = str)
+            if (create)
             {
-                var byteCount = checked((uint)enc.GetByteCount(strP, charCount, false));
+                //Console.Error.WriteLine($"[{CallStackHelpers.GetCallStackDepth()}] WriteStringNative({str}, {encoding.EncodingName}, {create})");
+                var cache = EncodedStringCaches.GetOrAdd(encoding, EncodedStringCache.Factory);
 
-                if (create)
-                {
-                    _framePtr = CreateNative(byteCount);
-                    _length = byteCount;
-                    _position = 0;
-                }
-                else if (_position + byteCount > GetLength())
+                var bytes = cache.Get(str);
+
+                var size = (nuint)bytes.LongLength;
+                _framePtr = CreatePinned(bytes);
+                _length = size;
+                _position = _length;
+            }
+            else
+            {
+                //Console.Error.WriteLine($"[{CallStackHelpers.GetCallStackDepth()}] Writing {str}");
+                var byteCount = checked((uint)encoding.GetByteCount(str));
+                if (_position + byteCount > GetLength())
                     // fail if frame is too small
                     throw new InvalidOperationException();
 
-                byteCount = (uint)enc.GetBytes(strP, charCount, Data() + _position, (int)byteCount, true);
+                var charCount = str.Length;
+                var enc = encoding.GetEncoder();
+                fixed (char* strP = str)
+                    byteCount = (uint)enc.GetBytes(strP, charCount, Data() + _position, (int)byteCount, true);
+
                 _position += byteCount;
+            }
+        }
+
+        internal void WriteStringNative2(string str, Encoding encoding, bool create)
+        {
+            if (str == null) throw new ArgumentNullException(nameof(str));
+
+            if (str == string.Empty)
+            {
+                if (!create)
+                    return;
+
+                _framePtr = CreateNative(0);
+                _length = 0;
+                _position = 0;
+                return;
+            }
+
+            var charCount = str.Length;
+            var enc = encoding.GetEncoder();
+
+            unsafe
+            {
+                fixed (char* strP = str)
+                {
+                    var byteCount = checked((uint)enc.GetByteCount(strP, charCount, false));
+
+                    if (create)
+                    {
+                        _framePtr = CreateNative(byteCount);
+                        _length = byteCount;
+                        _position = 0;
+                    }
+                    else if (_position + byteCount > GetLength())
+                        // fail if frame is too small
+                        throw new InvalidOperationException();
+
+                    byteCount = (uint)enc.GetBytes(strP, charCount, Data() + _position, (int)byteCount, true);
+                    _position += byteCount;
+                }
             }
         }
 

@@ -43,7 +43,7 @@ namespace Examples
 			where T : ZMessage
 		{
 
-			var msg = new ZMessage();
+			using var msg = ZMessage.Create();
 			var serializer = new XmlSerializer(typeof(List<byte[]>));
 			using (var reader = new StreamReader(path))
 			{
@@ -108,7 +108,7 @@ namespace Examples
 					request.Dispose();
 
 					// Send UUID through tho message queue
-					reply = new();
+					reply = ZMessage.Create();
 					reply.Add(new(uuid.ToString()));
 					if (!backendpipe.Send(reply, out var error))
 						if(error.Equals(ZError.ETERM))
@@ -117,7 +117,7 @@ namespace Examples
 
 					// Now send UUID back to client
 					// Done by the mdwrk_recv() at the top of the loop
-					reply = new();
+					reply = ZMessage.Create();
 					reply.Add(new("200"));
 					reply.Add(new(uuid.ToString()));
 				}
@@ -149,7 +149,7 @@ namespace Examples
 					}
 					else
 					{
-						reply = new();
+						reply = ZMessage.Create();
 						if(File.Exists(reqfn))
 							reply.Prepend(new("300")); //Pending
 						else
@@ -181,7 +181,7 @@ namespace Examples
 					File.Delete(reqfn);
 					File.Delete(repfn);
 					request.Dispose();
-					reply = new();
+					reply = ZMessage.Create();
 					reply.Add(new("200"));
 				}
 			}
@@ -215,7 +215,8 @@ namespace Examples
 				client.Set_Retries(1);    // only 1 retry
 
 				// Use MMI protocol to check if service is available
-				var mmirequest = new ZMessage {service};
+				var mmirequest = ZMessage.Create();
+				mmirequest.Add(service);
 
 				bool service_ok;
 				using (var mmireply = client.Send("mmi.service", mmirequest, cts))

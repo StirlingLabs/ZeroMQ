@@ -24,7 +24,7 @@ namespace Examples
                 int count;
                 for (count = 0; count < 100000 && !cts.IsCancellationRequested; count++)
                 {
-                    var request = new ZMessage();
+                    using var request = ZMessage.Create();
                     request.Prepend(new("Hello world"));
                     session.Send("echo", request, cts);
                 }

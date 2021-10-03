@@ -16,8 +16,6 @@ namespace Examples
         //  main when it's ready.
         public static void Tripping(string[] args)
         {
-            "Tripping".DumpString();
-
             var canceller = new CancellationTokenSource();
             Console.CancelKeyPress += (s, ea) => {
                 ea.Cancel = true;
@@ -109,7 +107,6 @@ namespace Examples
                 var asyncMaxTimeSpent = maxTimeSpent - new TimeSpan(breakInterval.Ticks / 2);
                 do
                 {
-
                     while (sw.Elapsed <= asyncMaxTimeSpent && !WantsToExit())
                     {
                         using var outgoing = new ZFrame("hello");
@@ -192,7 +189,7 @@ namespace Examples
 
             while (true)
             {
-                var msg = worker.ReceiveMessage(out var error);
+                using var msg = worker.ReceiveMessage(out var error);
                 if (error == null && worker.Send(msg, out error))
                     continue;
                 // errorhandling, context terminated or sth else

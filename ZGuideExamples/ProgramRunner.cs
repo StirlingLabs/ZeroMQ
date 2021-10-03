@@ -45,10 +45,10 @@ namespace Examples
 
                 if (keyField == null)
                     continue;
-                
+
                 if (keyField.FieldType == typeof(string))
                     keyField.SetValue(null, value);
-                
+
                 else if (keyField.FieldType == typeof(bool))
                 {
                     var equalsTrue = string.IsNullOrEmpty(value);
@@ -72,7 +72,7 @@ namespace Examples
                 var method = methods.FirstOrDefault(m => m.Name.Equals(command, StringComparison.OrdinalIgnoreCase));
                 if (method != null)
                 {
-                    object[] parameters = null;
+                    object[]? parameters = null;
                     var arguments = method.GetParameters();
 
                     parameters = arguments.Length switch
@@ -136,6 +136,7 @@ namespace Examples
         [DebuggerStepThrough]
         public static object Invoke(MethodInfo method, object target, params object[] args)
         {
+            $"Invoking \"{method.Name}\"".DumpString();
             try
             {
                 return method.Invoke(target, args);
@@ -149,9 +150,12 @@ namespace Examples
 
                 throw;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.Error.WriteLine(ex.ToString());
                 // wtf
+                Debugger.Launch();
+                Debugger.Break();
                 throw;
             }
         }

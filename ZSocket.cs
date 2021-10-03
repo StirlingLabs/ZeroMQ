@@ -363,12 +363,18 @@ namespace ZeroMQ
         public bool Send(ReadOnlySpan<byte> buffer, nuint offset, nuint count, ZSocketFlags flags, out ZError? error)
             => SendBytes(buffer, offset, count, flags, out error); // just Send*
 
+
+        [MustUseReturnValue]
         public ZMessage? ReceiveMessage()
             => ReceiveMessage(ZSocketFlags.None);
 
+
+        [MustUseReturnValue]
         public ZMessage? ReceiveMessage(out ZError? error)
             => ReceiveMessage(ZSocketFlags.None, out error);
 
+
+        [MustUseReturnValue]
         public ZMessage? ReceiveMessage(ZSocketFlags flags)
         {
             var message = ReceiveMessage(flags, out var error);
@@ -377,6 +383,7 @@ namespace ZeroMQ
             return message;
         }
 
+        [MustUseReturnValue]
         public ZMessage? ReceiveMessage(ZSocketFlags flags, out ZError? error)
         {
             ZMessage? message = null;
@@ -440,7 +447,7 @@ namespace ZeroMQ
 
         public IEnumerable<ZFrame>? ReceiveFrames(int framesToReceive, ZSocketFlags flags, out ZError? error)
         {
-            List<ZFrame>? frames = null;
+            ZMessage? frames = null;
             while (!ReceiveFrames(ref framesToReceive, ref frames, flags, out error))
             {
                 if (error == ZError.EAGAIN && (flags & ZSocketFlags.DontWait) == ZSocketFlags.DontWait)
@@ -450,8 +457,7 @@ namespace ZeroMQ
             return frames;
         }
 
-        public bool ReceiveFrames<TList>(ref int framesToReceive, ref TList? frames, ZSocketFlags flags, out ZError? error)
-            where TList : IList<ZFrame>, new()
+        public bool ReceiveFrames(ref int framesToReceive, ref ZMessage? frames, ZSocketFlags flags, out ZError? error)
         {
             EnsureNotDisposed();
 
@@ -478,14 +484,26 @@ namespace ZeroMQ
                     if (error == ZError.ENOMEM
                         || error == ZError.EFSM
                         || error == ZError.ENOTSUP
+                        || error == ZError.ENOTSOCK
+                        || error == ZError.EFAULT
                         || error == ZError.EFSM)
+                    {
+                        frame.Dispose();
                         throw new ZException(error);
+                    }
+
+                    if (error == ZError.EAGAIN
+                        && (flags & ZSocketFlags.DontWait) == 0)
+                    {
+                        frame.Dispose();
+                        throw new ZException(error, "Was not using DontWait flag.");
+                    }
 
                     frame.Dispose();
                     return false;
                 }
 
-                frames ??= new();
+                frames ??= ZMessage.Create();
 
                 frames.Add(frame);
 
@@ -732,9 +750,7 @@ namespace ZeroMQ
             EnsureNotDisposed();
 
             if (frame.IsDismissed)
-            {
                 throw new ObjectDisposedException("frame");
-            }
 
             error = default;
 

@@ -37,10 +37,12 @@ namespace Examples
                 actor.Start();
                 // send CURVE settings to ZAuth
                 actor.Frontend.Send(new ZFrame("VERBOSE"));
-                actor.Frontend.Send(new ZMessage(new List<ZFrame>
-                    { new("ALLOW"), new("127.0.0.1") } ));
-                actor.Frontend.Send(new ZMessage(new List<ZFrame>
-                    { new("CURVE"), new(".curve") }));
+                using (var msg = ZMessage.Create(new List<ZFrame>
+                    { new("ALLOW"), new("127.0.0.1") }))
+                    actor.Frontend.Send(msg);
+                using (var msg = ZMessage.Create(new List<ZFrame>
+                    { new("CURVE"), new(".curve") }))
+                    actor.Frontend.Send(msg);
 
                 responder.CurvePublicKey = serverCert.PublicKey;
                 responder.CurveSecretKey = serverCert.SecretKey;

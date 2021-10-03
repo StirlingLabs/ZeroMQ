@@ -55,7 +55,7 @@ namespace Examples
 						identity = incoming.RemoveAt(0, false);
 					}
 					using (identity)
-					using (var outgoing = new ZMessage())
+					using (var outgoing = ZMessage.Create())
 					{
 						outgoing.Add(identity);
 						outgoing.Add(new("OK"));

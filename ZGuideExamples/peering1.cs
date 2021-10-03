@@ -58,7 +58,7 @@ namespace Examples
 					{
 						if (error == ZError.EAGAIN)
 						{
-							using (var output = new ZMessage())
+							using (var output = ZMessage.Create())
 							{
 								output.Add(new(self));
 

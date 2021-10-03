@@ -33,7 +33,7 @@ namespace Examples
 				// Connect
 				client.Connect("inproc://frontend");
 
-				using (var request = new ZMessage())
+				using (var request = ZMessage.Create())
 				{
 					request.Add(new("Hello"));
 
@@ -87,7 +87,7 @@ namespace Examples
 						Console.WriteLine("WORKER{0}: {1}", i, requestText);
 
 						// Send reply
-						using (var commit = new ZMessage())
+						using (var commit = ZMessage.Create())
 						{
 							commit.Add(new(worker_id));
 							commit.Add(new());
@@ -168,7 +168,7 @@ namespace Examples
 							// incoming[4] is reply
 							var reply = incoming[4].ReadString();
 
-							using (var outgoing = new ZMessage())
+							using (var outgoing = ZMessage.Create())
 							{
 								outgoing.Add(new(client_id));
 								outgoing.Add(new());
@@ -201,7 +201,7 @@ namespace Examples
 							// incoming[2] is request
 							var requestText = incoming[2].ReadString();
 
-							using (var outgoing = new ZMessage())
+							using (var outgoing = ZMessage.Create())
 							{
 								outgoing.Add(new(worker_queue[0]));
 								outgoing.Add(new());

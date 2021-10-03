@@ -26,7 +26,7 @@ namespace Examples
 				{
 					// Write two messages, each with an envelope and content
 
-					using (var message = new ZMessage())
+					using (var message = ZMessage.Create())
 					{
 						published++;
 						message.Add(new($"A {published}"));
@@ -37,7 +37,7 @@ namespace Examples
 						publisher.Send(message);
 					}
 
-					using (var message = new ZMessage())
+					using (var message = ZMessage.Create())
 					{
 						published++;
 						message.Add(new($"B {published}"));

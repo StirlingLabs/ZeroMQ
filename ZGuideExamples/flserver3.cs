@@ -41,7 +41,7 @@ namespace Examples
 							break;	// Interrupted
 						throw new ZException(error);
 					}
-					using (var response = new ZMessage())
+					using (var response = ZMessage.Create())
 					{
 						ZFrame identity;
 

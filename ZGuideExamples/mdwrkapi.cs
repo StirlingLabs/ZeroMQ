@@ -61,7 +61,7 @@ namespace Examples
 
 			public void SendToBroker(string command, string option, ZMessage? msg)
 			{
-				using (msg = msg != null ? msg.Clone() : new())
+				using (msg = msg != null ? msg.Clone() : ZMessage.Create())
 				{
 					if (!string.IsNullOrEmpty(option))
 						msg.Prepend(new(option));

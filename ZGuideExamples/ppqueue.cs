@@ -191,14 +191,12 @@ namespace Examples
 
 						foreach (var worker in workers)
 						{
-							using (var outgoing = new ZMessage())
-							{
-								outgoing.Add(ZFrame.CopyFrom(worker.Identity));
-								outgoing.Add(new(Worker.PPP_HEARTBEAT));
+							using var outgoing = ZMessage.Create();
+							outgoing.Add(ZFrame.CopyFrom(worker.Identity));
+							outgoing.Add(new(Worker.PPP_HEARTBEAT));
 
-								Console.WriteLine("I:   sending heartbeat ({0})", worker.IdentityString);
-								backend.Send(outgoing);
-							}
+							Console.WriteLine("I:   sending heartbeat ({0})", worker.IdentityString);
+							backend.Send(outgoing);
 						}
 					}
 					workers.Purge();
