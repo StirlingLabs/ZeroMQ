@@ -4,7 +4,7 @@ using ZeroMQ;
 
 namespace Examples
 {
-	static partial class Program
+	internal static partial class Program
 	{
 		public static void Interrupt(string[] args)
 		{
@@ -19,7 +19,7 @@ namespace Examples
 
 			var name = args[0];
 
-			var error = default(ZError);
+			var error = default(ZError?);
 
 			using (var context = new ZContext())
 			using (var responder = new ZSocket(context, ZSocketType.REP))

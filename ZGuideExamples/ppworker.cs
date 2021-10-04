@@ -16,7 +16,7 @@ namespace Examples
 	// Author: metadings
 	//
 
-	static partial class Program
+	internal static partial class Program
 	{
 		static ZSocket PPWorker_CreateZSocket(ZContext context, string name, out ZError? error)
 		{

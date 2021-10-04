@@ -78,7 +78,7 @@ namespace Examples
 		}
 	}
 
-	static partial class Program
+	internal static partial class Program
 	{
 
 		//  .split Titanic request service
@@ -316,7 +316,7 @@ namespace Examples
 								{
 									var uuid = Guid.Parse(line.Substring(1, Guid.NewGuid().ToString().Length));
 									if (Verbose)
-										$"I: processing request {uuid}".DumpString();
+										Trace($"I: processing request {uuid}");
 									if (Titanic_ServiceSuccess(uuid, canceller))
 									{
 										//  Mark queue entry as processed

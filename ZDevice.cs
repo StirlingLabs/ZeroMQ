@@ -228,7 +228,7 @@ namespace ZeroMQ
             if (BackendSetup != null) BackendSetup.BindConnect();
 
             var isValid = false;
-            var error = default(ZError);
+            var error = default(ZError?);
             try
             {
                 while (!Canceller.IsCancellationRequested)

@@ -4,7 +4,7 @@ using ZeroMQ;
 
 namespace Examples
 {
-	static partial class Program
+	internal static partial class Program
 	{
 		public static unsafe void TaskWork(string[] args)
 		{

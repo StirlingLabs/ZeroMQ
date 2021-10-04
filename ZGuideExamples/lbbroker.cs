@@ -5,7 +5,7 @@ using ZeroMQ;
 
 namespace Examples
 {
-	static partial class Program
+	internal static partial class Program
 	{
 		//
 		// Load-balancing broker in C#

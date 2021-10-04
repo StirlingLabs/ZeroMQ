@@ -41,6 +41,8 @@ namespace ZeroMQ
 
         private ZSocketType _socketType;
 
+        public bool ForceBlockingMode { get; set; }
+
         /// <summary>
         /// Create a <see cref="ZSocket"/> instance.
         /// You are using ZContext.Current!
@@ -83,7 +85,7 @@ namespace ZeroMQ
             if (default != (_socketPtr = zmq.socket(_context.ContextPtr, (int)_socketType)))
                 return true;
 
-            error = ZError.GetLastErr();
+            error = ZError.GetLastError();
             return false;
         }
 
@@ -128,7 +130,7 @@ namespace ZeroMQ
 
             if (-1 == zmq.close(_socketPtr))
             {
-                error = ZError.GetLastErr();
+                error = ZError.GetLastError();
                 return false;
             }
             _socketPtr = default;
@@ -171,7 +173,7 @@ namespace ZeroMQ
             if (-1 != zmq.bind(_socketPtr, endpointPtr))
                 return true;
 
-            error = ZError.GetLastErr();
+            error = ZError.GetLastError();
             return false;
         }
 
@@ -202,7 +204,7 @@ namespace ZeroMQ
             if (-1 != zmq.unbind(_socketPtr, endpointPtr))
                 return true;
 
-            error = ZError.GetLastErr();
+            error = ZError.GetLastError();
             return false;
         }
 
@@ -233,7 +235,7 @@ namespace ZeroMQ
             if (-1 != zmq.connect(_socketPtr, endpointPtr))
                 return true;
 
-            error = ZError.GetLastErr();
+            error = ZError.GetLastError();
             return false;
         }
 
@@ -263,7 +265,7 @@ namespace ZeroMQ
             if (-1 != zmq.disconnect(_socketPtr, endpointPtr))
                 return true;
 
-            error = ZError.GetLastErr();
+            error = ZError.GetLastError();
             return false;
         }
 
@@ -301,7 +303,7 @@ namespace ZeroMQ
                 {
                     //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-RECV_DONE");
                     //Console.Error.Flush();
-                    error = ZError.GetLastErr();
+                    error = ZError.GetLastError();
 
                     if (error != ZError.EINTR
                         || error == ZError.ETERM
@@ -350,7 +352,7 @@ namespace ZeroMQ
                 {
                     //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-SEND_DONE");
                     //Console.Error.Flush();
-                    error = ZError.GetLastErr();
+                    error = ZError.GetLastError();
 
                     if (error != ZError.EINTR)
                         return false;
@@ -777,7 +779,7 @@ namespace ZeroMQ
 
             while (-1 == zmq.getsockopt(_socketPtr, (int)option, optionValue, ref optionLength))
             {
-                var error = ZError.GetLastErr();
+                var error = ZError.GetLastError();
 
                 if (error != ZError.EINTR)
                     throw new ZException(error);
@@ -795,7 +797,7 @@ namespace ZeroMQ
             {
                 while (-1 == zmq.getsockopt(_socketPtr, (int)option, (IntPtr)pOptionValue, ref optionLength))
                 {
-                    var error = ZError.GetLastErr();
+                    var error = ZError.GetLastError();
 
                     if (error != ZError.EINTR)
                         throw new ZException(error);
@@ -904,6 +906,9 @@ namespace ZeroMQ
 
         }
 
+        public T GetOption<T>(ZSocketOption option, T @default = default) where T : unmanaged
+            => GetOption<T>(option, out var value) ? value : @default;
+
         public int GetOptionInt32(ZSocketOption option)
             => GetOption(option, out int result)
                 ? result
@@ -945,7 +950,7 @@ namespace ZeroMQ
 
             while (-1 == zmq.setsockopt(_socketPtr, (int)option, optionValue, optionLength))
             {
-                var error = ZError.GetLastErr();
+                var error = ZError.GetLastError();
 
                 if (error != ZError.EINTR)
                     return false;
@@ -1433,6 +1438,15 @@ namespace ZeroMQ
         {
             if (_socketPtr == default)
                 throw new ObjectDisposedException(GetType().FullName);
+        }
+
+        /// <summary>
+        /// Gets or sets the underlying kernel transmit buffer size for the current socket (bytes). (Default = 0, OS default).
+        /// </summary>
+        public ZSocketType Type
+        {
+            get => GetOption<ZSocketType>(ZSocketOption.TYPE);
+            set => SetOption(ZSocketOption.TYPE, value);
         }
     }
 }

@@ -5,7 +5,7 @@ using ZeroMQ;
 
 namespace Examples
 {
-	static partial class Program
+	internal static partial class Program
 	{
 		static void AsyncSrv_Client(ZContext context, int i) 
 		{

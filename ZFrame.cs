@@ -36,16 +36,46 @@ namespace ZeroMQ
         private static readonly IProducerConsumerCollection<ZSafeHandle> FreeMsgs
             = new ConcurrentQueue<ZSafeHandle>();
 
+        private static bool _isCachingEnabled = false;
+
+        public static bool IsCachingEnabled
+        {
+            get => _isCachingEnabled;
+            set {
+                var currentlyEnabled = _isCachingEnabled;
+
+                if (value == currentlyEnabled)
+                    return;
+
+                if (currentlyEnabled && !value)
+                {
+                    _isCachingEnabled = false;
+                    FlushObjectCaches();
+                }
+
+                _isCachingEnabled = value;
+            }
+        }
+
         public static void FlushObjectCaches()
         {
-            while (FreeMsgs.TryTake(out _)) {}
+            while (FreeMsgs.TryTake(out var handle))
+                handle.Dispose();
+        }
+
+        private static bool TryReclaimMsg(out ZSafeHandle m)
+        {
+            if (!FreeMsgs.TryTake(out m))
+                return false;
+            m.ClearMemory();
+            return true;
         }
 
         private ZFrame()
-            => _msg_handle
-                = FreeMsgs.TryTake(out var m)
-                    ? m.ClearMemory()
-                    : ZSafeHandle.Alloc(zmq.sizeof_zmq_msg_t);
+            => _msg_handle = TryReclaimMsg(out ZSafeHandle m)
+                ? m
+                : ZSafeHandle.Alloc(zmq.sizeof_zmq_msg_t);
+
 
         public static ZFrame FromStream(Stream stream, nint i, nuint l)
         {
@@ -181,7 +211,7 @@ namespace ZeroMQ
             {
                 while (-1 == zmq.msg_init(_msg))
                 {
-                    var error = ZError.GetLastErr();
+                    var error = ZError.GetLastError();
 
                     if (error == ZError.EINTR)
                         continue;
@@ -201,7 +231,7 @@ namespace ZeroMQ
                 Debug.Assert(_msg != default);
                 while (-1 == zmq.msg_init_size(_msg, size))
                 {
-                    var error = ZError.GetLastErr();
+                    var error = ZError.GetLastError();
 
                     if (error == ZError.EINTR)
                         continue;
@@ -249,7 +279,7 @@ namespace ZeroMQ
                 while (-1 == zmq.msg_init_data(_msg, pBytes, size, PinnedGcHandleFreeCallback, GCHandle.ToIntPtr(pin)))
 #endif
                 {
-                    var error = ZError.GetLastErr();
+                    var error = ZError.GetLastError();
 
                     if (error == ZError.EINTR)
                         continue;
@@ -263,7 +293,10 @@ namespace ZeroMQ
 
         }
 
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
+        [SuppressGCTransition]
+        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
+#elif NET5_0_OR_GREATER
         [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
 #endif
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -295,10 +328,19 @@ namespace ZeroMQ
                 if (IsDismissed) return;
                 IsDismissed = true;
 
-                if (_msg_handle == null) return;
-                FreeMsgs.TryAdd(_msg_handle);
+                if (TryRecycleMsg()) return;
+
+                _msg_handle?.Dispose();
+                _msg_handle = null;
             }
         }
+
+
+        [MustUseReturnValue]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool TryRecycleMsg()
+            => _msg_handle != null
+                && FreeMsgs.TryAdd(_msg_handle);
 
         public bool CanRead => true;
 
@@ -969,7 +1011,7 @@ namespace ZeroMQ
                 Debug.Assert(_msg != default, "Closing unallocated message?");
                 while (-1 == zmq.msg_close(_msg))
                 {
-                    var error = ZError.GetLastErr();
+                    var error = ZError.GetLastError();
 
                     if (error == ZError.EINTR)
                         continue;
@@ -1006,7 +1048,7 @@ namespace ZeroMQ
                 Debug.Assert(_msg != default);
                 while (-1 == zmq.msg_copy(other._msg, _msg))
                 {
-                    var error = ZError.GetLastErr();
+                    var error = ZError.GetLastError();
 
                     if (error == ZError.EINTR)
                         continue;
@@ -1038,7 +1080,7 @@ namespace ZeroMQ
                 Debug.Assert(_msg != default);
                 while (-1 == zmq.msg_move(other._msg, _msg))
                 {
-                    var error = ZError.GetLastErr();
+                    var error = ZError.GetLastError();
 
                     if (error == ZError.EINTR)
                         continue;
@@ -1079,7 +1121,7 @@ namespace ZeroMQ
                     return result;
             }
 
-            error = ZError.GetLastErr();
+            error = ZError.GetLastError();
             return -1;
         }
 
@@ -1109,7 +1151,7 @@ namespace ZeroMQ
 
             if (default == resultPtr)
             {
-                error = ZError.GetLastErr();
+                error = ZError.GetLastError();
                 return null;
             }
             var result = Marshal.PtrToStringAnsi(resultPtr);
@@ -1164,13 +1206,20 @@ namespace ZeroMQ
             }
 
             Debug.Assert(_msg != default);
+
+            var actuallyDontWait = (flags & ZSocketFlags.DontWait) != 0;
+
+            if (!sock.ForceBlockingMode)
+                flags |= ZSocketFlags.DontWait;
+
             //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-RECV_MSG");
             //Console.Error.Flush();
+            var wait = -200;
             while (-1 == zmq.msg_recv(_msg, sock.SocketPtr, flags))
             {
                 //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-RECV_MSG_DONE");
                 //Console.Error.Flush();
-                error = ZError.GetLastErr();
+                error = ZError.GetLastError();
 
                 if (error == ZError.EINTR)
                     continue;
@@ -1187,12 +1236,19 @@ namespace ZeroMQ
                     return false;
 
                 // might be out of memory / system resources
-                if ((flags & ZSocketFlags.DontWait) == 0)
+                var isDontWait = (flags & ZSocketFlags.DontWait) != 0;
+
+                if (!isDontWait)
                     throw new ZException(error, "Resource temporarily unavailable.");
 
-                Console.Error.WriteLine("EAGAIN");
-                Console.Error.Flush();
-                Thread.Yield();
+                if (actuallyDontWait)
+                    return false;
+
+                if (wait++ == 0)
+                {
+                    if (isDontWait && !actuallyDontWait)
+                        flags &= ~ ZSocketFlags.DontWait;
+                }
             }
 
 #if !NET5_0_OR_GREATER || !NETSTANDARD2_1_OR_GREATER
@@ -1224,7 +1280,7 @@ namespace ZeroMQ
             {
                 //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-SEND_MSG_DONE");
                 //Console.Error.Flush();
-                error = ZError.GetLastErr();
+                error = ZError.GetLastError();
 
                 if (error == ZError.EINTR)
                     continue;
@@ -1244,8 +1300,8 @@ namespace ZeroMQ
                 if ((flags & ZSocketFlags.DontWait) == 0)
                     throw new ZException(error, "Resource temporarily unavailable.");
 
-                Console.Error.WriteLine("EAGAIN");
-                Console.Error.Flush();
+                //Console.Error.WriteLine("EAGAIN");
+                //Console.Error.Flush();
                 Thread.Yield();
             }
 

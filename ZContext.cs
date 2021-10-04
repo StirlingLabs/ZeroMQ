@@ -110,7 +110,7 @@ namespace ZeroMQ
 
             while (-1 == zmq.proxy(frontend.SocketPtr, backend.SocketPtr, capture?.SocketPtr ?? default))
             {
-                error = ZError.GetLastErr();
+                error = ZError.GetLastError();
 
                 if (error != ZError.EINTR)
                     return false;
@@ -149,7 +149,7 @@ namespace ZeroMQ
             while (-1 == zmq.proxy_steerable(frontend.SocketPtr, backend.SocketPtr, capture?.SocketPtr ?? default,
                 control?.SocketPtr ?? default))
             {
-                error = ZError.GetLastErr();
+                error = ZError.GetLastError();
 
                 if (error != ZError.EINTR)
                     return false;
@@ -163,11 +163,11 @@ namespace ZeroMQ
         {
             EnsureNotDisposed();
 
-            var rc = zmq.ctx_set(_contextPtr, (int)option, optionValue);
+            var rc = zmq.ctx_set(_contextPtr, option, optionValue);
             if (rc != -1)
                 return;
 
-            var error = ZError.GetLastErr();
+            var error = ZError.GetLastError();
 
             if (error == ZError.EINVAL)
                 throw new ArgumentOutOfRangeException($"The requested option optionName \"{option}\" is invalid.");
@@ -179,10 +179,10 @@ namespace ZeroMQ
         {
             EnsureNotDisposed();
 
-            var rc = zmq.ctx_get(_contextPtr, (int)option);
+            var rc = zmq.ctx_get(_contextPtr, option);
             if (rc != -1)
                 return rc;
-            var error = ZError.GetLastErr();
+            var error = ZError.GetLastError();
 
             if (error == ZError.EINVAL)
                 throw new ArgumentOutOfRangeException($"The requested option optionName \"{option}\" is invalid.");
@@ -240,7 +240,7 @@ namespace ZeroMQ
 
             while (-1 == zmq.ctx_shutdown(_contextPtr))
             {
-                error = ZError.GetLastErr();
+                error = ZError.GetLastError();
 
                 if (error != ZError.EINTR)
                     return false;
@@ -274,7 +274,7 @@ namespace ZeroMQ
 
             while (-1 == zmq.ctx_term(_contextPtr))
             {
-                error = ZError.GetLastErr();
+                error = ZError.GetLastError();
 
                 if (error != ZError.EINTR)
                     return false;

@@ -8,7 +8,7 @@ using ZeroMQ;
 namespace Examples
 {
     //  Lets us build this source without creating a library
-    static partial class Program
+    internal static partial class Program
     {
         //  MMI echo query example
         public static void MMIEcho(string[] args)
@@ -29,11 +29,11 @@ namespace Examples
                 if (reply != null)
                 {
                     var replycode = reply[0].ToString();
-                    $"Loopup echo service: {replycode}\n".DumpString();
+                    Trace($"Loopup echo service: {replycode}\n");
                     reply.Dispose();
                 }
                 else
-                    "E: no response from broker, make sure it's running\n".DumpString();
+                    Trace("E: no response from broker, make sure it's running\n");
             }
         }
     }

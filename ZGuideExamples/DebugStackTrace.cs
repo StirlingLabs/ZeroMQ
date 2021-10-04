@@ -13,7 +13,7 @@ namespace Examples
         [DebuggerStepThrough]
         public static object? Invoke(MethodInfo method, object target, params object[] args)
         {
-            $"Invoking \"{method.Name}\"".DumpString();
+            Program.Trace($"Invoking \"{method.Name}\"");
             try
             {
                 return method.Invoke(target, args);
@@ -42,10 +42,8 @@ namespace Examples
                     Console.Error.WriteLine(ex.GetType().AssemblyQualifiedName);
                     Console.Error.WriteLine(ex.ToString());
                 }
-
-                // wtf
-                Debugger.Launch();
-                Debugger.Break();
+                
+                Console.Error.Flush();
                 throw;
             }
         }

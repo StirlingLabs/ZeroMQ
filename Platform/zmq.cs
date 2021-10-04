@@ -42,7 +42,13 @@ namespace ZeroMQ.lib
             private ulong a, b, c, d;
         }
 
-        public static readonly nuint sizeof_zmq_msg_t = sizeof_zmq_msg_t_v4;
+        public static nuint? lazy_sizeof_zmq_msg_t;
+
+        public static nuint sizeof_zmq_msg_t
+        {
+            get => lazy_sizeof_zmq_msg_t ?? sizeof_zmq_msg_t_v4;
+            set => lazy_sizeof_zmq_msg_t = value;
+        }
 
         // The static constructor prepares static readonly fields
         static zmq()
@@ -55,6 +61,14 @@ namespace ZeroMQ.lib
 
             if (minor == 0)
                 sizeof_zmq_msg_t = sizeof_zmq_msg_t_v3;
+            else if (minor >= 3)
+            {
+#pragma warning disable CA1806
+                var ctx = ctx_new();
+                sizeof_zmq_msg_t = (nuint)ctx_get(ctx, ZContextOption.MSG_T_SIZE);
+                ctx_term(ctx);
+#pragma warning restore CA1806
+            }
         }
 
         private static NotSupportedException VersionNotSupported(string requiredVersion)
@@ -78,13 +92,13 @@ namespace ZeroMQ.lib
         [SuppressGCTransition]
 #endif
         [DllImport(LibName, EntryPoint = "zmq_ctx_get", CallingConvention = Cdecl)]
-        public static extern int ctx_get(IntPtr context, int option);
+        public static extern int ctx_get(IntPtr context, ZContextOption option);
 
 #if NET5_0_OR_GREATER
         [SuppressGCTransition]
 #endif
         [DllImport(LibName, EntryPoint = "zmq_ctx_set", CallingConvention = Cdecl)]
-        public static extern int ctx_set(IntPtr context, int option, int optVal);
+        public static extern int ctx_set(IntPtr context, ZContextOption option, int optVal);
 
 #if NET5_0_OR_GREATER
         [SuppressGCTransition]
@@ -115,9 +129,9 @@ namespace ZeroMQ.lib
 #endif
 
 #if NET5_0_OR_GREATER
-            [DllImport(LibName, EntryPoint = "zmq_msg_init_data", CallingConvention = Cdecl)]
-            public static extern int msg_init_data(IntPtr msg, IntPtr data, nuint size,
-                    delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void> ffn, IntPtr hint);
+        [DllImport(LibName, EntryPoint = "zmq_msg_init_data", CallingConvention = Cdecl)]
+        public static extern int msg_init_data(IntPtr msg, IntPtr data, nuint size,
+            delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void> ffn, IntPtr hint);
 #else
         [UnmanagedFunctionPointer(Cdecl)]
         public delegate void free_fn(IntPtr data, IntPtr hint);

@@ -12,7 +12,7 @@ namespace Examples
 	//  Implements client side of http://rfc.zeromq.org/spec:9
 
 	//  Lets us build this source without creating a library
-	static partial class Program
+	internal static partial class Program
 	{
 
 
@@ -38,7 +38,7 @@ namespace Examples
 					if (reply != null)
 					{
 						uuid = Guid.Parse(reply.PopString());
-						$"I: request UUID {uuid}".DumpString();
+						Trace($"I: request UUID {uuid}");
 					}
 				}
 
@@ -53,7 +53,7 @@ namespace Examples
 					if (reply != null)
 					{
 						var replystring = reply.Last().ToString();
-						$"Reply: {replystring}\n".DumpString();
+						Trace($"Reply: {replystring}\n");
 						reply.Dispose();
 
 						// 3. Close Request
@@ -64,7 +64,7 @@ namespace Examples
 						reply.Dispose();
 						break;
 					}
-					"I: no reply yet, trying again...\n".DumpString();
+					Trace("I: no reply yet, trying again...\n");
 					Thread.Sleep(5000); // try again in 5 seconds
 				}
 			}
@@ -83,12 +83,12 @@ namespace Examples
 						return reply.Clone();
 					if (status.Equals("400"))
 					{
-						"E: client fatal error, aborting".DumpString();
+						Trace("E: client fatal error, aborting");
 						cts.Cancel();
 					}
 					else if (status.Equals("500"))
 					{
-						"E: server fatal error, aborting".DumpString();
+						Trace("E: server fatal error, aborting");
 						cts.Cancel();
 					}
 				}

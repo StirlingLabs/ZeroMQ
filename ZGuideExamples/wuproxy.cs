@@ -7,7 +7,7 @@ using ZeroMQ;
 
 namespace Examples
 {
-	static partial class Program
+	internal static partial class Program
 	{
 		public static void WUProxy(string[] args)
 		{

@@ -26,11 +26,49 @@ namespace ZeroMQ
         private static readonly IProducerConsumerCollection<LinkedListNode<ZFrame>> FreeNodes
             = new ConcurrentQueue<LinkedListNode<ZFrame>>();
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool TryRecycleMessage()
+            => IsCachingEnabled && FreeMessages.TryAdd(this);
+
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool TryRecycleList(LinkedList<ZFrame> list)
+            => IsCachingEnabled && FreeLists.TryAdd(list);
+
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool TryRecycleNode(LinkedListNode<ZFrame> node)
+            => IsCachingEnabled && FreeNodes.TryAdd(node);
+
+        private static bool _isCachingEnabled = false;
+
+        public static bool IsCachingEnabled
+        {
+            [DebuggerStepThrough]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _isCachingEnabled;
+            set {
+                var currentlyEnabled = _isCachingEnabled;
+
+                if (value == currentlyEnabled)
+                    return;
+
+                if (currentlyEnabled && !value)
+                {
+                    _isCachingEnabled = false;
+                    FlushObjectCaches();
+                }
+
+                _isCachingEnabled = value;
+            }
+        }
+
         public static void FlushObjectCaches()
         {
-            while (FreeMessages.TryTake(out _)) {}
-            while (FreeLists.TryTake(out _)) {}
-            while (FreeNodes.TryTake(out _)) {}
+            while (FreeMessages.TryTake(out _)) { }
+            while (FreeLists.TryTake(out _)) { }
+            while (FreeNodes.TryTake(out _)) { }
         }
 
         private readonly object _lock = new();
@@ -95,17 +133,17 @@ namespace ZeroMQ
                         frame.Dispose();
 
                         _frames.Remove(node);
-                        FreeNodes.TryAdd(node);
+                        TryRecycleNode(node);
                     }
                     _frames.Clear();
-                    FreeLists.TryAdd(_frames);
+                    TryRecycleList(_frames);
                 }
                 _frames = null;
             }
 
             if (final) return;
 
-            FreeMessages.TryAdd(this);
+            TryRecycleMessage();
         }
 
         public void Dismiss()
@@ -120,10 +158,10 @@ namespace ZeroMQ
                         frame.Dismiss();
 
                         _frames.Remove(node);
-                        FreeNodes.TryAdd(node);
+                        TryRecycleNode(node);
                     }
                     _frames.Clear();
-                    FreeLists.TryAdd(_frames);
+                    TryRecycleList(_frames);
                 }
                 _frames = null;
             }
@@ -244,7 +282,7 @@ namespace ZeroMQ
                 var frame = node.Value;
 
                 _frames.Remove(node);
-                FreeNodes.TryAdd(node);
+                TryRecycleNode(node);
 
                 if (!dispose)
                     return frame;
@@ -467,7 +505,7 @@ namespace ZeroMQ
                     node.Value.Dispose();
 
                     _frames.Remove(node);
-                    FreeNodes.TryAdd(node);
+                    TryRecycleNode(node);
                 }
                 _frames.Clear();
             }
@@ -523,7 +561,7 @@ namespace ZeroMQ
                     node.Value = null!;
 
                     _frames.Remove(node);
-                    FreeNodes.TryAdd(node);
+                    TryRecycleNode(node);
                 }
 
                 if (!dispose)

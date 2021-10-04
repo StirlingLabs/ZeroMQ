@@ -1,108 +1,166 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Net.Mime;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using ZeroMQ;
 
 namespace Examples
 {
-	static partial class Program
-	{
-		// INFO: You will find a "static int Main(string[] args)" in ProgramRunner.cs
+    internal static partial class Program
+    {
+        internal static event Action<ConsoleKeyInfo> ConsoleKeyPressed;
 
-		public static bool Verbose = false;
+        // INFO: You will find a "static int Main(string[] args)" in ProgramRunner.cs
 
-		static void Console_WriteZFrame(string format, ZFrame frame, params object[] data)
-		{
-			var renderer = new StringBuilder();
+        public static bool Verbose = false;
+        public static bool Quiet = false;
 
-			var list = new List<object>(data);
+        [Conditional("TRACE")]
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void Trace(string? str, params object[]? args)
+            => str.Trace(args);
 
-			// here the renderer
+        [Conditional("TRACE")]
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void Trace(FormattableString str)
+            => MdpExtensions.Trace(str);
 
-			renderer.Append(format);
-			renderer.Append(": ");
-			renderer.Append("{");
-			renderer.Append(0 + data.Length);
-			renderer.Append("}");
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void Info(string? str, params object[]? args)
+            => str.Info(args);
 
-			// now the message
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void Info(FormattableString str)
+            => MdpExtensions.Info(str);
 
-			frame.Position = 0;
+        static void Console_WriteZFrame(string format, ZFrame frame, params object[] data)
+        {
+            var renderer = new StringBuilder();
 
-			if (frame.Length == 0)
-				list.Add("0");
-			else
-				list.Add(frame.ReadString());
+            var list = new List<object>(data);
 
-			frame.Position = 0;
+            // here the renderer
 
-			Console.WriteLine(renderer.ToString(), list.ToArray());
-		}
+            renderer.Append(format);
+            renderer.Append(": ");
+            renderer.Append("{");
+            renderer.Append(0 + data.Length);
+            renderer.Append("}");
 
-		static void Console_WriteZMessage(string format, ZMessage? message, params object[] data)
-			=> Console_WriteZMessage(format, 0, message, data);
+            // now the message
 
-		static void Console_WriteZMessage(string format, int messagesNotToRead, ZMessage? message, params object[] data)
-		{
-			var renderer = new StringBuilder();
+            frame.Position = 0;
 
-			var list = new List<object>(data);
+            if (frame.Length == 0)
+                list.Add("0");
+            else
+                list.Add(frame.ReadString());
 
-			for (int i = messagesNotToRead, c = message.Count; i < c; ++i)
-			{
-				// here the renderer
-				if (i == messagesNotToRead)
-				{
-					renderer.Append(format);
-					renderer.Append(": ");
-				}
-				else
-					renderer.Append(", ");
-				renderer.Append("{");
-				renderer.Append( i - messagesNotToRead + data.Length );
-				renderer.Append("}");
+            frame.Position = 0;
 
-				// now the message
-				var frame = message[i];
+            Console.WriteLine(renderer.ToString(), list.ToArray());
+        }
 
-				frame.Position = 0;
+        static void Console_WriteZMessage(string format, ZMessage? message, params object[] data)
+            => Console_WriteZMessage(format, 0, message, data);
 
-				if (frame.Length == 0)
-					list.Add("0");
-				else
-					list.Add(frame.ReadString());
+        static void Console_WriteZMessage(string format, int messagesNotToRead, ZMessage? message, params object[] data)
+        {
+            var renderer = new StringBuilder();
 
-				frame.Position = 0;
-			}
+            var list = new List<object>(data);
 
-			Console.WriteLine(renderer.ToString(), list.ToArray());
-		}
-	}
+            for (int i = messagesNotToRead, c = message.Count; i < c; ++i)
+            {
+                // here the renderer
+                if (i == messagesNotToRead)
+                {
+                    renderer.Append(format);
+                    renderer.Append(": ");
+                }
+                else
+                    renderer.Append(", ");
+                renderer.Append("{");
+                renderer.Append(i - messagesNotToRead + data.Length);
+                renderer.Append("}");
 
-	public static class Ext {
+                // now the message
+                var frame = message[i];
 
-		public static string ToHexString(this byte[] hex) {
-			if (hex == null)
-				return null;
-			if (hex.Length == 0)
-				return string.Empty;
-			var s = new StringBuilder();
-			foreach (var b in hex)
-				s.Append(b.ToString("x2"));
-			return s.ToString();
-		}
+                frame.Position = 0;
 
-		public static byte[] ToHexBytes(this string hex)
-		{
-			if (hex == null)
-				return null;
-			if (hex.Length == 0)
-				return Array.Empty<byte>();
-			var l = hex.Length / 2;
-			var b = new byte[l];
-			for (var i = 0; i < l; ++i)
-				b[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
-			return b;
-		}
-	}
+                if (frame.Length == 0)
+                    list.Add("0");
+                else
+                    list.Add(frame.ReadString());
+
+                frame.Position = 0;
+            }
+
+            Console.WriteLine(renderer.ToString(), list.ToArray());
+        }
+
+        public static void ConsoleKeyPressedProcLoop()
+        {
+            var keyPressedLoopThread = Thread.CurrentThread;
+            AppDomain.CurrentDomain.ProcessExit += (_, _) => {
+                keyPressedLoopThread.Interrupt();
+                if (!keyPressedLoopThread.Join(1000))
+#pragma warning disable 618
+                    keyPressedLoopThread.Abort();
+#pragma warning restore 618
+            };
+            try
+            {
+                var magicSleepTime = TimeSpan.FromMilliseconds(15.625);
+                for (;;)
+                {
+                    if (Console.KeyAvailable)
+                        ConsoleKeyPressed?.Invoke(Console.ReadKey(true));
+                    else
+                        try
+                        {
+                            Thread.Sleep(magicSleepTime);
+                        }
+                        catch (ThreadInterruptedException) { break; }
+                }
+            }
+            catch (ThreadAbortException) { }
+        }
+    }
+
+    public static class Ext
+    {
+        public static string ToHexString(this byte[] hex)
+        {
+            if (hex == null)
+                return null;
+            if (hex.Length == 0)
+                return string.Empty;
+            var s = new StringBuilder();
+            foreach (var b in hex)
+                s.Append(b.ToString("x2"));
+            return s.ToString();
+        }
+
+        public static byte[] ToHexBytes(this string hex)
+        {
+            if (hex == null)
+                return null;
+            if (hex.Length == 0)
+                return Array.Empty<byte>();
+            var l = hex.Length / 2;
+            var b = new byte[l];
+            for (var i = 0; i < l; ++i)
+                b[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
+            return b;
+        }
+    }
 }

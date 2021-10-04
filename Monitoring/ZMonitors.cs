@@ -58,7 +58,7 @@ namespace ZeroMQ.Monitoring
 
             while (-1 == zmq.socket_monitor(socket.SocketPtr, endpointPtr, (int)eventsToMonitor))
             {
-                error = ZError.GetLastErr();
+                error = ZError.GetLastError();
 
                 if (error != ZError.EINTR)
                     return false;

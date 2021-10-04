@@ -3,7 +3,7 @@ using ZeroMQ;
 
 namespace Examples
 {
-	public partial class Program
+	internal partial class Program
 	{
 		public static void Z85Encode(string[] args)
 		{

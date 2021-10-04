@@ -2,6 +2,8 @@
 using System.Threading;
 using ZeroMQ;
 
+using static Examples.MdpExtensions;
+
 namespace Examples
 {
 	namespace MDWrkApi
@@ -82,7 +84,7 @@ namespace Examples
 				Worker = new(_context, ZSocketType.DEALER);
 				Worker.Connect(Broker);
 				if (Verbose)
-					$"I: connecting to broker at {Broker}...".DumpString();
+					Trace($"I: connecting to broker at {Broker}...");
 
 				// Register service with broker
 				SendToBroker(MdpCommon.MdpwCmd.READY.ToHexString(), Service, null);
@@ -217,7 +219,7 @@ namespace Examples
 								else if (command.StrHexEq(MdpCommon.MdpwCmd.DISCONNECT))
 									ConnectToBroker();
 								else
-									$"E: invalid input message: '{command}'".DumpString();
+									Trace($"E: invalid input message: '{command}'");
 							}
 						}
 					else if (Equals(error, ZError.ETERM))
@@ -229,7 +231,7 @@ namespace Examples
 							 && --Liveness == 0)
 					{
 						if (Verbose)
-							"W: disconnected from broker - retrying...".DumpString();
+							Trace("W: disconnected from broker - retrying...");
 						Thread.Sleep(Reconnect);
 						ConnectToBroker();
 					}
@@ -242,7 +244,7 @@ namespace Examples
 					}
 				}
 				if (canceller.IsCancellationRequested)
-					"W: interrupt received, killing worker...\n".DumpString();
+					Trace("W: interrupt received, killing worker...\n");
 
 				return null;
 			}

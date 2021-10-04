@@ -2,6 +2,8 @@
 using System.Threading;
 using ZeroMQ;
 
+using static Examples.MdpExtensions;
+
 namespace Examples
 {
     namespace MDCliApi2
@@ -42,7 +44,7 @@ namespace Examples
                 Client = new(_context, ZSocketType.DEALER);
                 Client.Connect(Broker);
                 if (Verbose)
-                    $"I: connecting to broker at '{Broker}'...".DumpString();
+                    Trace($"I: connecting to broker at '{Broker}'...");
 
             }
 
@@ -168,13 +170,13 @@ namespace Examples
                 }
                 if (Equals(error, ZError.ETERM))
                 {
-                    "W: interrupt received, killing client...\n".DumpString();
+                    Trace("W: interrupt received, killing client...\n");
                     canceller.Cancel();
                 }
                 else 
                 {
                     if (Verbose)
-                        $"W: permanent error, abandoning Error: {error}".DumpString();
+                        Trace($"W: permanent error, abandoning Error: {error}");
                 }
 
                 return null;

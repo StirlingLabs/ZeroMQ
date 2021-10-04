@@ -5,6 +5,8 @@ using System.Threading;
 using Examples.MDBroker;
 using ZeroMQ;
 
+using static Examples.MdpExtensions;
+
 namespace Examples
 {
     namespace MDBroker
@@ -24,8 +26,11 @@ namespace Examples
             //Socket for clients & workers
             public ZSocket Socket;
 
-            //  Print activity to console
+            //  Print more activity to console
             public bool Verbose { get; protected set; }
+
+            //  Print less activity to console
+            public bool Quiet { get; protected set; }
 
             //  Broker binds to this endpoint
             public string Endpoint { get; protected set; }
@@ -105,7 +110,7 @@ namespace Examples
             {
                 Socket.Bind(endpoint);
                 // if you dont wanna see utc timeshift, remove zzz and use DateTime.UtcNow instead
-                $"I: MDP broker/0.2.0 is active at {endpoint}".DumpString();
+                Trace($"I: MDP broker/0.2.0 is active at {endpoint}");
             }
 
             //  .split broker worker_msg method
@@ -240,7 +245,7 @@ namespace Examples
                     if (DateTime.UtcNow < worker.Expiry)
                         break;   // Worker is alive, we're done here
                     if(Verbose)
-                        $"I: deleting expired worker: '{worker.IdString}'".DumpString();
+                        Trace($"I: deleting expired worker: '{worker.IdString}'");
 
                     worker.Delete(false);
                     worker = Waiting.FirstOrDefault();
@@ -269,7 +274,7 @@ namespace Examples
 
                     //zhash_freefn(self->workers, id_string, s_worker_destroy);
                     if (Verbose)
-                        $"I: added service: '{name}'".DumpString();
+                        Trace($"I: added service: '{name}'");
                 }
 
                 return service;
@@ -298,7 +303,7 @@ namespace Examples
                     worker = new(idString, this, identity);
                     Workers[idString] = worker;
                     if(Verbose)
-                        $"I: registering new worker: '{idString}'".DumpString();
+                        Trace($"I: registering new worker: '{idString}'");
                 }
                 
                 return worker;
@@ -476,7 +481,7 @@ namespace Examples
         }
     }
 
-    static partial class Program
+    internal static partial class Program
     {
         //  .split main task
         //  Finally, here is the main task. We create a new broker instance and
@@ -525,7 +530,7 @@ namespace Examples
                     {
                         if (Equals(error, ZError.ETERM))
                         {
-                            "W: interrupt received, shutting down...".DumpString();
+                            Trace("W: interrupt received, shutting down...");
                             break; // Interrupted
                         }
                         if (!Equals(error, ZError.EAGAIN))

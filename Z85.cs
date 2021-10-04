@@ -19,7 +19,7 @@ namespace ZeroMQ
             fixed (byte* pSecretKey = secretKeyData)
             {
                 if (0 != zmq.curve_keypair((IntPtr)pPublicKey, (IntPtr)pSecretKey))
-                    throw new InvalidOperationException("Failed to create key pair.", new ZException(ZError.GetLastErr()));
+                    throw new InvalidOperationException("Failed to create key pair.", new ZException(ZError.GetLastError()));
             }
 
             publicKey = new(publicKeyData, 0, destLen);
@@ -41,7 +41,7 @@ namespace ZeroMQ
             if (TryEncode(decoded, bytes))
                 return new(bytes, 0, bytes.Length - 1);
 
-            throw new InvalidOperationException("Encoding failed.", new ZException(ZError.GetLastErr()));
+            throw new InvalidOperationException("Encoding failed.", new ZException(ZError.GetLastError()));
         }
 
         public static unsafe bool TryEncode(ReadOnlySpan<byte> decoded, Span<byte> encoded)
@@ -134,7 +134,7 @@ namespace ZeroMQ
             if (TryDecode(encoded, decoded))
                 return decoded;
 
-            throw new InvalidOperationException("Decoding failed.", new ZException(ZError.GetLastErr()));
+            throw new InvalidOperationException("Decoding failed.", new ZException(ZError.GetLastError()));
         }
 
 

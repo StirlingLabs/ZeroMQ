@@ -7,7 +7,7 @@ namespace Examples
 {
 	// Lets us build this source without creating a library
 
-	static partial class Program
+	internal static partial class Program
 	{
 
 		public static void FLClient3(string[] args)

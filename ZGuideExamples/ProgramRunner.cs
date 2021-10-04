@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using ZeroMQ;
 using ZeroMQ.lib;
 
@@ -11,13 +13,52 @@ namespace Examples
 {
     static class ProgramRunner
     {
-        static int Main(string[] args)
+        static ProgramRunner()
         {
-            Debug.Assert(ZError.EAGAIN.Number == 11);
-            // ReSharper disable once EqualExpressionComparison
-            Debug.Assert(ZError.EAGAIN == ZError.EAGAIN);
-            Debug.Assert(ZError.EAGAIN.Equals(ZError.EAGAIN));
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) => {
+                var ex = (Exception)args.ExceptionObject;
 
+                var w = Console.Error;
+
+                w.WriteLine("UnhandledException");
+                w.WriteLine(ex.GetType().AssemblyQualifiedName);
+                w.WriteLine(ex.ToString());
+
+                var i = 0;
+                var iex = ex;
+                while ((iex = iex.InnerException) is not null)
+                {
+                    w.WriteLine($"== INNER EXCEPTION {i} ==");
+                    w.WriteLine(ex.GetType().AssemblyQualifiedName);
+                    w.WriteLine(ex.ToString());
+                }
+
+                w.Flush();
+            };
+            TaskScheduler.UnobservedTaskException += (sender, args) => {
+                var ex = (Exception)args.Exception;
+
+                var w = Console.Error;
+
+                w.WriteLine("UnhandledException");
+                w.WriteLine(ex.GetType().AssemblyQualifiedName);
+                w.WriteLine(ex.ToString());
+
+                var i = 0;
+                var iex = ex;
+                while ((iex = iex.InnerException) is not null)
+                {
+                    w.WriteLine($"== INNER EXCEPTION {i} ==");
+                    w.WriteLine(ex.GetType().AssemblyQualifiedName);
+                    w.WriteLine(ex.ToString());
+                }
+
+                w.Flush();
+            };
+        }
+
+        static int Main(string[] args)
+        {   
             var returnMain = 0; // C good
 
             var leaveOut = 0;
@@ -75,6 +116,10 @@ namespace Examples
             var command = args.Length == 0 ? "help" : args[0 + leaveOut].ToLower();
             if (command != "help")
             {
+                new Thread(Program.ConsoleKeyPressedProcLoop) { IsBackground = true }.Start();
+
+                Console.WriteLine($"ZeroMQ v{zmq.LibraryVersion}");
+
                 var method = methods.FirstOrDefault(m => m.Name.Equals(command, StringComparison.OrdinalIgnoreCase));
                 if (method != null)
                 {
@@ -87,8 +132,6 @@ namespace Examples
                         1 => new object[] { args.Skip(1 + leaveOut).ToArray() /* string[] args */ },
                         _ => parameters
                     };
-
-                    Console.WriteLine($"ZeroMQ v{zmq.LibraryVersion}");
 
                     var result = DebugStackTrace<TargetInvocationException>
                         .Invoke(method, /* static */null, parameters);

@@ -3,7 +3,7 @@ using ZeroMQ;
 
 namespace Examples
 {
-	static partial class Program
+	internal static partial class Program
 	{
 		const int SyncPub_SubscribersExpected = 3;	// We wait for 3 subscribers
 

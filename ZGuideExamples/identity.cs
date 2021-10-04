@@ -2,7 +2,7 @@
 
 namespace Examples
 {
-	static partial class Program
+	internal static partial class Program
 	{
 		public static void Identity(string[] args)
 		{

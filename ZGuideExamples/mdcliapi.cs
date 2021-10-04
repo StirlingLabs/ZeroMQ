@@ -2,6 +2,8 @@
 using System.Threading;
 using ZeroMQ;
 
+using static Examples.MdpExtensions;
+
 namespace Examples
 {
     namespace MDCliApi
@@ -45,7 +47,7 @@ namespace Examples
                 Client = new(_context, ZSocketType.REQ);
                 Client.Connect(Broker);
                 if (Verbose)
-                    $"I: connecting to broker at '{Broker}'...".DumpString();
+                    Trace($"I: connecting to broker at '{Broker}'...");
 
             }
 
@@ -172,20 +174,20 @@ namespace Examples
                         if (--retriesLeft > 0)
                         {
                             if (Verbose)
-                                "W: no reply, reconnecting...".DumpString();
+                                Trace("W: no reply, reconnecting...");
 
                             ConnectToBroker();
                         }
                         else
                         {
                             if (Verbose)
-                                "W: permanent error, abandoning".DumpString();
+                                Trace("W: permanent error, abandoning");
                             break; // Give up
                         }
                     }
                 }
                 if (canceller.IsCancellationRequested)
-                    "W: interrupt received, killing client...\n".DumpString();
+                    Trace("W: interrupt received, killing client...\n");
                 request.Dispose();
                 return null;
             }

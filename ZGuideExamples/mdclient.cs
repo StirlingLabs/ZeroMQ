@@ -6,7 +6,7 @@ using ZeroMQ;
 namespace Examples
 {
 	// Let us build this source without creating a library
-	static partial class Program
+	internal static partial class Program
 	{
 		//  Majordomo Protocol client example
 		//  Uses the mdcli API to hide all MDP aspects

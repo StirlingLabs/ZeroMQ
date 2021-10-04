@@ -35,7 +35,7 @@ namespace ZeroMQ
 
                 while (!(result = -1 != zmq.poll(natives, count, timeoutMs)))
                 {
-                    error = ZError.GetLastErr();
+                    error = ZError.GetLastError();
 
                     if (error == ZError.EINTR)
                     {
@@ -75,7 +75,7 @@ namespace ZeroMQ
 
                 while (!(result = -1 != zmq.poll(native, 1, timeoutMs)))
                 {
-                    error = ZError.GetLastErr();
+                    error = ZError.GetLastError();
 
                     if (error == ZError.EINTR)
                     {

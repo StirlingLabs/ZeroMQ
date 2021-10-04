@@ -12,6 +12,11 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <OutputType>Exe</OutputType>
     </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DefineConstants />
+    </PropertyGroup>
+    
     <ItemGroup>
         <ProjectReference Include="..\ZeroMQ.csproj">
             <SetTargetFramework>TargetFramework=$(TargetFramework)</SetTargetFramework>
@@ -26,5 +31,9 @@
             <Link>%(Filename)%(Extension)</Link>
             <Visible>false</Visible>
         </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="JetBrains.Annotations" Version="2021.2.0" PrivateAssets="all" />
     </ItemGroup>
 </Project>
