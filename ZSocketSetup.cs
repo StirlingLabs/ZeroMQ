@@ -117,7 +117,7 @@ namespace ZeroMQ
             if (_subscription == null)
                 return;
 
-            using var subscription = new ZFrame(_subscription);
+            using var subscription = ZFrame.Create(_subscription);
             _socket.Send(subscription);
         }
 

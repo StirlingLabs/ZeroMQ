@@ -60,7 +60,7 @@ namespace Examples
 						{
 							using (var output = ZMessage.Create())
 							{
-								output.Add(new(self));
+								output.Add(ZFrame.Create(self));
 
 								var outputNumber = ZFrame.Create(4);
 								outputNumber.Write(rnd.Next(10));

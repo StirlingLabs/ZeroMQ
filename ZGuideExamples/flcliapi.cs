@@ -82,8 +82,8 @@ namespace Examples
 
                 using (var message = ZMessage.Create())
                 {
-                    message.Add(new("CONNECT"));
-                    message.Add(new(endpoint));
+                    message.Add(ZFrame.Create("CONNECT"));
+                    message.Add(ZFrame.Create(endpoint));
 
                     Actor.Frontend.Send(message);
                 }
@@ -96,7 +96,7 @@ namespace Examples
                 // To implement the request method, the frontend object sends a message
                 // to the backend, specifying a command "REQUEST" and the request message:
 
-                request.Prepend(new("REQUEST"));
+                request.Prepend(ZFrame.Create("REQUEST"));
 
                 Actor.Frontend.Send(request);
 
@@ -158,7 +158,7 @@ namespace Examples
                             if (DateTime.UtcNow >= agent.Expires)
                             {
                                 // Request expired, kill it
-                                using (var outgoing = new ZFrame("FAILED"))
+                                using (var outgoing = ZFrame.Create("FAILED"))
                                     agent.Pipe.Send(outgoing);
 
                                 agent.Request.Dispose();
@@ -177,7 +177,7 @@ namespace Examples
                                         // Copy the Request, Push the Endpoint and send on Router
                                         using (var request = agent.Request.Clone())
                                         {
-                                            request.Prepend(new(server.Endpoint));
+                                            request.Prepend(ZFrame.Create(server.Endpoint));
 
                                             agent.Router.Send(request);
                                             break;
@@ -309,7 +309,7 @@ namespace Examples
                         throw new InvalidOperationException();
 
                     // Prefix request with sequence number and empty envelope
-                    msg.Prepend(new(++sequence));
+                    msg.Prepend(ZFrame.Create(++sequence));
 
                     // Take ownership of request message
                     Request = msg.Clone();
@@ -339,7 +339,7 @@ namespace Examples
                 if (seq != sequence)
                     return;
 
-                reply.Prepend(new("OK"));
+                reply.Prepend(ZFrame.Create("OK"));
 
                 Pipe.Send(reply);
 
@@ -390,8 +390,8 @@ namespace Examples
 
                 using (var outgoing = ZMessage.Create())
                 {
-                    outgoing.Add(new(Endpoint));
-                    outgoing.Add(new("PING"));
+                    outgoing.Add(ZFrame.Create(Endpoint));
+                    outgoing.Add(ZFrame.Create("PING"));
 
                     socket.Send(outgoing);
                 }

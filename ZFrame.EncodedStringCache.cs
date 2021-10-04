@@ -6,6 +6,7 @@ using System.Text;
 namespace ZeroMQ
 {
     public sealed partial class ZFrame
+        : IDisposable
     {
         private static readonly ConcurrentDictionary<Encoding, EncodedStringCache> EncodedStringCaches = new();
 

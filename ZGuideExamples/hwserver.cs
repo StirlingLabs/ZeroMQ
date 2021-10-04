@@ -44,7 +44,7 @@ namespace Examples
 						Thread.Sleep(1);
 
 						// Send
-						responder.Send(new ZFrame(name));
+						responder.Send(ZFrame.Create(name));
 					}
 				}
 			}

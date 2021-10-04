@@ -23,7 +23,7 @@ namespace Examples
             using (var session = new MajordomoClient("tcp://127.0.0.1:5555", Verbose))
             {
                 using var request  = ZMessage.Create();
-                request.Add(new("echo"));
+                request.Add(ZFrame.Create("echo"));
 
                 var reply = session.Send("mmi.service", request, canceller);
                 if (reply != null)

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using ZeroMQ.lib;
 
@@ -80,22 +82,26 @@ namespace ZeroMQ
             return false;
         }
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Proxy(ZSocket frontend, ZSocket backend)
             => Proxy(frontend, backend, null);
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Proxy(ZSocket frontend, ZSocket backend, out ZError? error)
             => Proxy(frontend, backend, null, out error);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Proxy(ZSocket frontend, ZSocket backend, ZSocket? capture)
         {
-            if (!Proxy(frontend, backend, capture, out var error))
-            {
-                if (error == ZError.ETERM)
-                {
-                    return; // Interrupted
-                }
-                throw new ZException(error);
-            }
+            if (Proxy(frontend, backend, capture, out var error))
+                return;
+
+            if (error == ZError.ETERM)
+                return; // Interrupted
+
+            throw new ZException(error);
         }
 
         public static bool Proxy(ZSocket frontend, ZSocket backend, ZSocket? capture, out ZError? error)
@@ -109,7 +115,11 @@ namespace ZeroMQ
                 if (error != ZError.EINTR)
                     return false;
 
-                error = default;
+                if (frontend.SocketPtr == default)
+                    throw new ObjectDisposedException(nameof(frontend));
+
+                if (backend.SocketPtr == default)
+                    throw new ObjectDisposedException(nameof(frontend));
             }
 
             return true;
@@ -268,7 +278,7 @@ namespace ZeroMQ
 
                 if (error != ZError.EINTR)
                     return false;
-                
+
                 // Maybe ZError.EFAULT
 
                 error = default;

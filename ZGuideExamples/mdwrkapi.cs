@@ -64,10 +64,10 @@ namespace Examples
 				using (msg = msg != null ? msg.Clone() : ZMessage.Create())
 				{
 					if (!string.IsNullOrEmpty(option))
-						msg.Prepend(new(option));
-					msg.Prepend(new(command));
-					msg.Prepend(new(MdpCommon.MDPW_WORKER));
-					msg.Prepend(new(string.Empty));
+						msg.Prepend(ZFrame.Create(option));
+					msg.Prepend(ZFrame.Create(command));
+					msg.Prepend(ZFrame.Create(MdpCommon.MDPW_WORKER));
+					msg.Prepend(ZFrame.Create(string.Empty));
 
 					if (Verbose)
 						msg.DumpZmsg("I: sending '{0:X}|{0}' to broker", command.ToMdCmd());

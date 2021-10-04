@@ -41,7 +41,7 @@ namespace Examples
 
 					// Send message to all subscribers
 					var update = $"{zipcode:D5} {temperature}";
-					using (var updateFrame = new ZFrame(update))
+					using (var updateFrame = ZFrame.Create(update))
 						publisher.Send(updateFrame);
 				}
 			}

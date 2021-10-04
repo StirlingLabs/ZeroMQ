@@ -33,7 +33,7 @@ namespace Examples
 				while (true)
 				{
 					// Send
-					using (var outgoing = new ZFrame(message))
+					using (var outgoing = ZFrame.Create(message))
 						client.Send(outgoing);
 
 					// Receive
@@ -65,7 +65,7 @@ namespace Examples
 				worker.Connect("tcp://127.0.0.1:" + Peering2_GetPort(name) + 2);
 
 				// Tell broker we're ready for work
-				worker.Send(new ZFrame("READY"));
+				worker.Send(ZFrame.Create("READY"));
 
 				// Process messages as they arrive
 				while (true)
@@ -88,7 +88,7 @@ namespace Examples
 						Thread.Sleep(1);
 
 						// Send
-						using (var outgoing = new ZFrame("OK"))
+						using (var outgoing = ZFrame.Create("OK"))
 							worker.Send(outgoing);
 					}
 				}
@@ -272,7 +272,7 @@ namespace Examples
 
 								var peer = rnd.Next(args.Length - 2) + 2;
 
-								incoming.ReplaceAt(0, new(args[peer]));
+								incoming.ReplaceAt(0, ZFrame.Create(args[peer]));
 
 								/* using (var outgoing = new ZMessage())
 								{
@@ -292,7 +292,7 @@ namespace Examples
 								var peer = workers[0];
 
 								workers.RemoveAt(0);
-								incoming.ReplaceAt(0, new(peer));
+								incoming.ReplaceAt(0, ZFrame.Create(peer));
 
 								/* using (var outgoing = new ZMessage())
 								{

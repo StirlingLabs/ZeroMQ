@@ -36,7 +36,7 @@ namespace Examples
 					syncservice.ReceiveFrame();
 
 					// - send synchronization reply
-					syncservice.Send(new ZFrame());
+					syncservice.Send(ZFrame.Create());
 				} 
 				while (--subscribers > 0);
 
@@ -45,9 +45,9 @@ namespace Examples
 				for (var i = 0; i < 20; ++i)
 				{
 					Console.WriteLine("Sending {0}...", i);
-					publisher.Send(new ZFrame(i));
+					publisher.Send(ZFrame.Create(i));
 				}
-				publisher.Send(new ZFrame("END"));
+				publisher.Send(ZFrame.Create("END"));
 			}
 		}
 	}

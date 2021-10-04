@@ -17,15 +17,20 @@ namespace ZeroMQ
     /// </summary>
     public class ZMessage : IList<ZFrame>, ICloneable, IDisposable
     {
-        private static readonly ConcurrentStack<ZMessage> FreeMessages = new();
-        private static readonly ConcurrentStack<LinkedList<ZFrame>> FreeLists = new();
-        private static readonly ConcurrentStack<LinkedListNode<ZFrame>> FreeNodes = new();
+        private static readonly IProducerConsumerCollection<ZMessage> FreeMessages
+            = new ConcurrentStack<ZMessage>();
+
+        private static readonly IProducerConsumerCollection<LinkedList<ZFrame>> FreeLists
+            = new ConcurrentQueue<LinkedList<ZFrame>>();
+
+        private static readonly IProducerConsumerCollection<LinkedListNode<ZFrame>> FreeNodes
+            = new ConcurrentQueue<LinkedListNode<ZFrame>>();
 
         public static void FlushObjectCaches()
         {
-            FreeMessages.Clear();
-            FreeLists.Clear();
-            FreeNodes.Clear();
+            while (FreeMessages.TryTake(out _)) {}
+            while (FreeLists.TryTake(out _)) {}
+            while (FreeNodes.TryTake(out _)) {}
         }
 
         private readonly object _lock = new();
@@ -36,7 +41,7 @@ namespace ZeroMQ
         private void Reset()
         {
             lock (_lock)
-                _frames = FreeLists.TryPop(out var list) ? list : new();
+                _frames = FreeLists.TryTake(out var list) ? list : new();
         }
 
         /// <summary>
@@ -45,7 +50,7 @@ namespace ZeroMQ
         /// </summary>
         public static ZMessage Create()
         {
-            if (!FreeMessages.TryPop(out var zm))
+            if (!FreeMessages.TryTake(out var zm))
                 return new();
 
             zm.Reset();
@@ -90,17 +95,17 @@ namespace ZeroMQ
                         frame.Dispose();
 
                         _frames.Remove(node);
-                        FreeNodes.Push(node);
+                        FreeNodes.TryAdd(node);
                     }
                     _frames.Clear();
-                    FreeLists.Push(_frames);
+                    FreeLists.TryAdd(_frames);
                 }
                 _frames = null;
             }
 
             if (final) return;
 
-            FreeMessages.Push(this);
+            FreeMessages.TryAdd(this);
         }
 
         public void Dismiss()
@@ -115,10 +120,10 @@ namespace ZeroMQ
                         frame.Dismiss();
 
                         _frames.Remove(node);
-                        FreeNodes.Push(node);
+                        FreeNodes.TryAdd(node);
                     }
                     _frames.Clear();
-                    FreeLists.Push(_frames);
+                    FreeLists.TryAdd(_frames);
                 }
                 _frames = null;
             }
@@ -173,7 +178,7 @@ namespace ZeroMQ
 
                 if (index == 0)
                 {
-                    if (FreeNodes.TryPop(out newNode))
+                    if (FreeNodes.TryTake(out newNode))
                     {
                         newNode.Value = item;
                         _frames.AddFirst(newNode);
@@ -185,7 +190,7 @@ namespace ZeroMQ
                 if (index == frameCount)
                 {
 
-                    if (FreeNodes.TryPop(out newNode))
+                    if (FreeNodes.TryTake(out newNode))
                     {
                         newNode.Value = item;
                         _frames.AddLast(newNode);
@@ -200,7 +205,7 @@ namespace ZeroMQ
 
                 if (node == null) throw new ArgumentOutOfRangeException(nameof(index));
 
-                if (FreeNodes.TryPop(out newNode))
+                if (FreeNodes.TryTake(out newNode))
                 {
                     newNode.Value = item;
                     _frames.AddAfter(node, newNode);
@@ -239,7 +244,7 @@ namespace ZeroMQ
                 var frame = node.Value;
 
                 _frames.Remove(node);
-                FreeNodes.Push(node);
+                FreeNodes.TryAdd(node);
 
                 if (!dispose)
                     return frame;
@@ -325,15 +330,15 @@ namespace ZeroMQ
             {
                 if (_frames == null) throw new ObjectDisposedException(nameof(ZMessage));
 
-                if (FreeNodes.TryPop(out var node))
+                if (FreeNodes.TryTake(out var node))
                 {
-                    node.Value = new();
+                    node.Value = ZFrame.Create();
                     _frames.AddFirst(node);
                 }
                 else
-                    _frames.AddFirst(new ZFrame());
+                    _frames.AddFirst(ZFrame.Create());
 
-                if (FreeNodes.TryPop(out node))
+                if (FreeNodes.TryTake(out node))
                 {
                     node.Value = frame;
                     _frames.AddFirst(node);
@@ -418,7 +423,7 @@ namespace ZeroMQ
             lock (_lock)
             {
                 {
-                    if (FreeNodes.TryPop(out var node))
+                    if (FreeNodes.TryTake(out var node))
                     {
                         node.Value = item;
                         _frames.AddLast(node);
@@ -438,7 +443,7 @@ namespace ZeroMQ
                 if (FreeNodes.Count > 0)
                     foreach (var item in items)
                     {
-                        if (FreeNodes.TryPop(out var node))
+                        if (FreeNodes.TryTake(out var node))
                         {
                             node.Value = item;
                             _frames.AddLast(node);
@@ -462,7 +467,7 @@ namespace ZeroMQ
                     node.Value.Dispose();
 
                     _frames.Remove(node);
-                    FreeNodes.Push(node);
+                    FreeNodes.TryAdd(node);
                 }
                 _frames.Clear();
             }
@@ -518,7 +523,7 @@ namespace ZeroMQ
                     node.Value = null!;
 
                     _frames.Remove(node);
-                    FreeNodes.Push(node);
+                    FreeNodes.TryAdd(node);
                 }
 
                 if (!dispose)

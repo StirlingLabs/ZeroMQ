@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Buffers;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using JetBrains.Annotations;
 
 namespace ZeroMQ.lib
@@ -19,11 +23,24 @@ namespace ZeroMQ.lib
 
         // From zmq.h (v3):
         // typedef struct {unsigned char _ [32];} zmq_msg_t;
-        private static readonly nuint sizeof_zmq_msg_t_v3 = 32;
+        internal const int sizeof_zmq_msg_t_v3 = 32;
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct msg_t_v3
+        {
+            private ulong a, b, c, d;
+        }
 
         // From zmq.h (not v4, but v4.2 and later):
         // typedef struct zmq_msg_t {unsigned char _ [64];} zmq_msg_t;
-        private static readonly nuint sizeof_zmq_msg_t_v4 = 64;
+        internal const int sizeof_zmq_msg_t_v4 = 64;
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct msg_t_v4
+        {
+            private msg_t_v3 v3;
+            private ulong a, b, c, d;
+        }
 
         public static readonly nuint sizeof_zmq_msg_t = sizeof_zmq_msg_t_v4;
 
@@ -93,16 +110,26 @@ namespace ZeroMQ.lib
         [DllImport(LibName, EntryPoint = "zmq_msg_init_size", CallingConvention = Cdecl)]
         public static extern int msg_init_size(IntPtr msg, nuint size);
 
-        [UnmanagedFunctionPointer(Cdecl)]
-        public delegate void FreeMessageDataDelegate(IntPtr data, IntPtr hint);
-
 #if NET5_0_OR_GREATER
         [SuppressGCTransition]
 #endif
-        [DllImport(LibName, EntryPoint = "zmq_msg_init_data", CallingConvention = Cdecl)]
-        public static extern int msg_init_data(IntPtr msg, IntPtr data, nuint size, FreeMessageDataDelegate? ffn, IntPtr hint);
 
 #if NET5_0_OR_GREATER
+            [DllImport(LibName, EntryPoint = "zmq_msg_init_data", CallingConvention = Cdecl)]
+            public static extern int msg_init_data(IntPtr msg, IntPtr data, nuint size,
+                    delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void> ffn, IntPtr hint);
+#else
+        [UnmanagedFunctionPointer(Cdecl)]
+        public delegate void free_fn(IntPtr data, IntPtr hint);
+
+        [DllImport(LibName, EntryPoint = "zmq_msg_init_data", CallingConvention = Cdecl)]
+        public static extern int msg_init_data(IntPtr msg, IntPtr data, nuint size,
+            free_fn ffn, IntPtr hint);
+#endif
+
+#if NET5_0_OR_GREATER
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int msg_send(IntPtr msg, IntPtr socket, ZSocketFlags flags)
             => (flags & ZSocketFlags.DontWait) != 0
                 ? msg_send_non_blocking(msg, socket, flags)
@@ -120,6 +147,8 @@ namespace ZeroMQ.lib
 #endif
 
 #if NET5_0_OR_GREATER
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int msg_recv(IntPtr msg, IntPtr socket, ZSocketFlags flags)
             => (flags & ZSocketFlags.DontWait) != 0
                 ? msg_recv_non_blocking(msg, socket, flags)
@@ -237,6 +266,8 @@ namespace ZeroMQ.lib
         public static extern int poll(void* items, int numItems, long timeout);
 
 #if NET5_0_OR_GREATER
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int send(IntPtr socket, IntPtr buf, nuint len, ZSocketFlags flags)
             => (flags & ZSocketFlags.DontWait) != 0
                 ? send_non_blocking(socket, buf, len, flags)
@@ -254,6 +285,8 @@ namespace ZeroMQ.lib
 #endif
 
 #if NET5_0_OR_GREATER
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int recv(IntPtr socket, IntPtr buf, nuint len, ZSocketFlags flags)
             => (flags & ZSocketFlags.DontWait) != 0
                 ? recv_non_blocking(socket, buf, len, flags)

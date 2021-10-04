@@ -21,7 +21,7 @@ namespace Examples
 				using (var anonymous = new ZSocket(context, ZSocketType.REQ))
 				{
 					anonymous.Connect("inproc://example");
-					anonymous.Send(new ZFrame("ROUTER uses REQ's generated 5 byte identity"));
+					anonymous.Send(ZFrame.Create("ROUTER uses REQ's generated 5 byte identity"));
 				}
 				using (var msg = sink.ReceiveMessage())
 					msg.DumpZmsg("--------------------------");
@@ -31,7 +31,7 @@ namespace Examples
 				{
 					identified.IdentityString = "PEER2";
 					identified.Connect("inproc://example");
-					identified.Send(new ZFrame("ROUTER uses REQ's socket identity"));
+					identified.Send(ZFrame.Create("ROUTER uses REQ's socket identity"));
 				}
 				using (var msg = sink.ReceiveMessage())
 					msg.DumpZmsg("--------------------------");

@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using ZeroMQ;
 
 // using System.Runtime.Remoting.Messaging;
@@ -85,11 +86,15 @@ namespace Examples
                 var maxTimeSpent = TimeSpan.FromSeconds(1);
                 for (requests = 0; sw.Elapsed <= maxTimeSpent; requests++)
                 {
-                    using var outgoing = new ZFrame("hello");
+                    using var outgoing = ZFrame.Create("hello");
+                    //$"Created hello frame 0x{outgoing.MsgPtr():X8}".DumpString();
                     client.Send(outgoing);
+                    //$"Sent hello frame 0x{outgoing.MsgPtr():X8}".DumpString();
                     using var reply = client.ReceiveFrame();
+                    //$"Got reply frame 0x{reply.MsgPtr():X8}".DumpString();
                     if (Verbose)
                         string.Format(reply.ToString()).DumpString();
+                    //$"Disposing hello frame 0x{outgoing.MsgPtr():X8} and reply frame 0x{reply.MsgPtr():X8}".DumpString();
                 }
                 sw.Stop();
                 requestsTotal += requests;
@@ -102,64 +107,92 @@ namespace Examples
                 sw.Restart();
                 requests = 0;
                 var requestsRecvd = 0;
-                TimeSpan lastBreak = default;
-                var breakInterval = TimeSpan.FromMilliseconds(15.25);
-                var asyncMaxTimeSpent = maxTimeSpent - new TimeSpan(breakInterval.Ticks / 2);
-                do
+                const long outstandingRequestsThreshold = 1000;
+                var flushInterval = TimeSpan.FromMilliseconds(1);
+                var asyncMaxTimeSpent = maxTimeSpent - new TimeSpan(flushInterval.Ticks / 2);
                 {
-                    while (sw.Elapsed <= asyncMaxTimeSpent && !WantsToExit())
+                    void AsyncSendThenRecv()
                     {
-                        using var outgoing = new ZFrame("hello");
-                        try
+                        var cts = new CancellationTokenSource(1000);
+
+                        for (;;)
                         {
-                            client.SendFrame(outgoing);
+                            // ReSharper disable once MethodSupportsCancellation
+                            //var sending = Task.Run(() => {
+                            TimeSpan lastBreak = default;
+                            for (;;)
+                            {
+                                using var outgoing = ZFrame.Create("hello");
+                                try
+                                {
+                                    client.SendFrame(outgoing);
+                                }
+                                catch (ZException ex)
+                                {
+                                    $"Will try to re-send #{requests} later".DumpString();
+                                    if (ex.Error == ZError.EAGAIN)
+                                        Thread.Sleep(1);
+                                    break;
+                                }
+                                catch (Exception ex)
+                                {
+                                    $"Failed to send #{requests}".DumpString();
+                                    ex.GetType().AssemblyQualifiedName.DumpString();
+                                    ex.Message.DumpString();
+                                    ex.StackTrace.DumpString();
+                                }
+                                ++requests;
+
+                                if (cts.IsCancellationRequested)
+                                    return;
+
+                                //if (requests % 50000 != 0)
+                                //    continue;
+                                if (sw.Elapsed - lastBreak <= flushInterval)
+                                    continue;
+                                lastBreak = sw.Elapsed;
+
+                                // ReSharper disable once LoopVariableIsNeverChangedInsideLoop
+                                if (requests - Volatile.Read(ref requestsRecvd) > outstandingRequestsThreshold)
+                                    break;
+                            }
+
+                            //});
+
+                            // ReSharper disable once MethodSupportsCancellation
+                            //var receiving = Task.Run(() => {
+                            for (; requestsRecvd < requests; requestsRecvd++)
+                            {
+                                try
+                                {
+                                    using var reply = client.ReceiveFrame();
+                                    if (Verbose)
+                                        string.Format(reply.ToString()).DumpString();
+                                }
+                                catch (ZException ex)
+                                {
+                                    $"Retrying receive #{requests}".DumpString();
+                                    requestsRecvd--;
+                                    if (ex.Error == ZError.EAGAIN)
+                                        Thread.Sleep(1);
+                                }
+                                catch (Exception ex)
+                                {
+                                    $"Failed to receive #{requests}".DumpString();
+                                    ex.GetType().AssemblyQualifiedName.DumpString();
+                                    ex.Message.DumpString();
+                                    ex.StackTrace.DumpString();
+                                }
+                            }
+                            //});
+
+                            if (cts.IsCancellationRequested)
+                                return;
                         }
-                        catch (ZException ex)
-                        {
-                            $"Retrying Send {requests}".DumpString();
-                            if (ex.Error == ZError.EAGAIN)
-                                Thread.Sleep(1);
-                            continue;
-                        }
-                        catch (Exception ex)
-                        {
-                            $"Failed Send {requests}".DumpString();
-                            ex.GetType().AssemblyQualifiedName.DumpString();
-                            ex.Message.DumpString();
-                            ex.StackTrace.DumpString();
-                        }
-                        ++requests;
-                        //if (requests % 50000 != 0)
-                        //    continue;
-                        if (sw.Elapsed - lastBreak <= breakInterval)
-                            continue;
-                        lastBreak = sw.Elapsed;
-                        break;
                     }
-                    for (; requestsRecvd < requests; requestsRecvd++)
-                    {
-                        try
-                        {
-                            using var reply = client.ReceiveFrame();
-                            if (Verbose)
-                                string.Format(reply.ToString()).DumpString();
-                        }
-                        catch (ZException ex)
-                        {
-                            $"Retrying Recv {requests}".DumpString();
-                            requests--;
-                            if (ex.Error == ZError.EAGAIN)
-                                Thread.Sleep(1);
-                        }
-                        catch (Exception ex)
-                        {
-                            $"Failed Recv {requests}".DumpString();
-                            ex.GetType().AssemblyQualifiedName.DumpString();
-                            ex.Message.DumpString();
-                            ex.StackTrace.DumpString();
-                        }
-                    }
-                } while (sw.Elapsed <= asyncMaxTimeSpent && !WantsToExit());
+                    
+                    AsyncSendThenRecv();
+                }
                 sw.Stop();
                 asyncRequestsTotal += requests;
                 asyncRequestsTotalTicks += sw.ElapsedTicks;
@@ -169,7 +202,7 @@ namespace Examples
                 $"Asynchronous round-trips: {requests} in {sw.ElapsedMilliseconds} ms => {(double)requests / sw.ElapsedTicks * Stopwatch.Frequency:F0} trips per second (avg. {(double)asyncRequestsTotal / asyncRequestsTotalTicks * Stopwatch.Frequency:F0} tps)"
                     .DumpString();
             } while (!WantsToExit());
-            using (var outgoing = new ZFrame("done"))
+            using (var outgoing = ZFrame.Create("done"))
                 pipe.SendFrame(outgoing);
         }
 

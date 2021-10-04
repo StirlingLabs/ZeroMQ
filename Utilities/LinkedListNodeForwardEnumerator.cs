@@ -44,31 +44,43 @@ namespace ZeroMQ
                 if (node is null)
                     return false;
 
-                if (node.List != list)
+                var nodeList = node.List;
+
+                if (nodeList != list)
                 {
                     List = null;
                     return false;
-                    //throw new ObjectDisposedException("Different list.");
                 }
 
                 Node = node;
                 return true;
             }
-
-            if (node.List != list)
+            else
             {
-                List = null;
-                return false;
-                //throw new ObjectDisposedException("Different list.");
+                var nodeList = node.List;
+
+                if (nodeList != list)
+                {
+                    List = null;
+                    return false;
+                }
+
+                var next = node.Next;
+
+                if (next is null)
+                    return false;
+
+                nodeList = next.List;
+
+                if (nodeList != list)
+                {
+                    List = null;
+                    return false;
+                }
+
+                Node = next;
+                return true;
             }
-
-            var next = node.Next;
-
-            if (next is null)
-                return false;
-
-            Node = next;
-            return true;
         }
 
         public void Reset()

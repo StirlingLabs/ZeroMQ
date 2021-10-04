@@ -23,7 +23,7 @@ namespace Examples
 
 				for (var n = 0; n < 10; ++n)
 				{
-					requester.Send(new ZFrame("Hello"));
+					requester.Send(ZFrame.Create("Hello"));
 
 					using (var reply = requester.ReceiveFrame())
 						Console.WriteLine("Hello {0}!", reply.ReadString());

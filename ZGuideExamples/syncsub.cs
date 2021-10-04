@@ -29,7 +29,7 @@ namespace Examples
 				syncclient.Connect("tcp://127.0.0.1:5562");
 
 				// - send a synchronization request
-				syncclient.Send(new ZFrame());
+				syncclient.Send(ZFrame.Create());
 
 				// - wait for synchronization reply
 				syncclient.ReceiveFrame();

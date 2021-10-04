@@ -29,8 +29,8 @@ namespace Examples
 					using (var message = ZMessage.Create())
 					{
 						published++;
-						message.Add(new($"A {published}"));
-						message.Add(new(" We don't like to see this."));
+						message.Add(ZFrame.Create($"A {published}"));
+						message.Add(ZFrame.Create(" We don't like to see this."));
 						Thread.Sleep(1000);
 
 						Console_WriteZMessage("Publishing ", message);
@@ -40,8 +40,8 @@ namespace Examples
 					using (var message = ZMessage.Create())
 					{
 						published++;
-						message.Add(new($"B {published}"));
-						message.Add(new(" We do like to see this."));
+						message.Add(ZFrame.Create($"B {published}"));
+						message.Add(ZFrame.Create(" We do like to see this."));
 						Thread.Sleep(1000);
 
 						Console_WriteZMessage("Publishing ", message);

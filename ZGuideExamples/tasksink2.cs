@@ -46,7 +46,7 @@ namespace Examples
 				Console.WriteLine("Total elapsed time: {0} ms", stopwatch.ElapsedMilliseconds);
 
 				// Send kill signal to workers
-				controller.Send(new ZFrame("KILL"));
+				controller.Send(ZFrame.Create("KILL"));
 			}
 		}
 	}

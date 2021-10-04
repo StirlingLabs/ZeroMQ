@@ -51,7 +51,7 @@ namespace Examples
 				{
 					using (var request = ZMessage.Create())
 					{
-						request.Add(new(name));
+						request.Add(ZFrame.Create(name));
 
 						using (var reply = client.Request(request))
 						{

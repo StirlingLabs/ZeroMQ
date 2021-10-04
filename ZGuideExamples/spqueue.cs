@@ -59,8 +59,8 @@ namespace Examples
 
 								using (var outgoing = ZMessage.Create())
 								{
-									outgoing.Add(new(client_id));
-									outgoing.Add(new());
+									outgoing.Add(ZFrame.Create(client_id));
+									outgoing.Add(ZFrame.Create());
 									outgoing.Add(incoming[4]);
 
 									// Send
@@ -102,10 +102,10 @@ namespace Examples
 
 								using (var outgoing = ZMessage.Create())
 								{
-									outgoing.Add(new(worker_id));
-									outgoing.Add(new());
-									outgoing.Add(new(client_id));
-									outgoing.Add(new());
+									outgoing.Add(ZFrame.Create(worker_id));
+									outgoing.Add(ZFrame.Create());
+									outgoing.Add(ZFrame.Create(client_id));
+									outgoing.Add(ZFrame.Create());
 									outgoing.Add(incoming[2]);
 
 									// Send

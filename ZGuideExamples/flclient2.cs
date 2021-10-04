@@ -92,8 +92,8 @@ namespace Examples
 				{
 					// Prefix request with sequence number and empty envelope
 					this.sequence++;
-					request.Prepend(new(this.sequence));
-					request.Prepend(new());
+					request.Prepend(ZFrame.Create(this.sequence));
+					request.Prepend(ZFrame.Create());
 
 					// Blast the request to all connected servers
 					for (var server = 0; server < servers; ++server)
@@ -169,7 +169,7 @@ namespace Examples
 				while (++requests < 10000)
 				{
 					using var outgoing = ZMessage.Create();
-					outgoing.Add(new("random name"));
+					outgoing.Add(ZFrame.Create("random name"));
 
 					var incoming = client.Request(outgoing);
 					if (incoming == null)

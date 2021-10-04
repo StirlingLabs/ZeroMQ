@@ -51,7 +51,7 @@ namespace Examples
 						// Send reply back to client
 						var replyText = "World";
 						Console.WriteLine(", Sending: {0}", replyText);
-						server.Send(new ZFrame(replyText));
+						server.Send(ZFrame.Create(replyText));
 					}
 				}
 			}

@@ -46,7 +46,7 @@ namespace Examples
                     Console.Write("Sending {0}...", requestText);
 
                     // Send
-                    requester.Send(new ZFrame(requestText));
+                    requester.Send(ZFrame.Create(requestText));
 
                     // Receive
                     using (var reply = requester.ReceiveFrame())

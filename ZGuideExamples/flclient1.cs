@@ -34,7 +34,7 @@ namespace Examples
 			// once:
 
 			using (var context = new ZContext())
-			using (var request = new ZFrame("Hello World"))
+			using (var request = ZFrame.Create("Hello World"))
 			{
 				ZFrame reply = null;
 

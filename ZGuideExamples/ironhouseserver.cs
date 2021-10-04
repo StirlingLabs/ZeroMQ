@@ -36,12 +36,12 @@ namespace Examples
             {
                 actor.Start();
                 // send CURVE settings to ZAuth
-                actor.Frontend.Send(new ZFrame("VERBOSE"));
+                actor.Frontend.Send(ZFrame.Create("VERBOSE"));
                 using (var msg = ZMessage.Create(new List<ZFrame>
-                    { new("ALLOW"), new("127.0.0.1") }))
+                    { ZFrame.Create("ALLOW"), ZFrame.Create("127.0.0.1") }))
                     actor.Frontend.Send(msg);
                 using (var msg = ZMessage.Create(new List<ZFrame>
-                    { new("CURVE"), new(".curve") }))
+                    { ZFrame.Create("CURVE"), ZFrame.Create(".curve") }))
                     actor.Frontend.Send(msg);
 
                 responder.CurvePublicKey = serverCert.PublicKey;
@@ -61,7 +61,7 @@ namespace Examples
                         Thread.Sleep(1);
 
                         // Send
-                        responder.Send(new ZFrame(name));
+                        responder.Send(ZFrame.Create(name));
                     }
                 }
             }

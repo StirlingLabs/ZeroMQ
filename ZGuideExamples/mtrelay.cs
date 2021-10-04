@@ -48,7 +48,7 @@ namespace Examples
 				xmitter.Connect("inproc://step3");
 
 				Console.WriteLine("Step 2 ready, signaling step 3");
-				xmitter.Send(new ZFrame("READY"));
+				xmitter.Send(ZFrame.Create("READY"));
 			}
 		}
 
@@ -60,7 +60,7 @@ namespace Examples
 				xmitter.Connect("inproc://step2");
 
 				Console.WriteLine("Step 1 ready, signaling step 2");
-				xmitter.Send(new ZFrame("READY"));
+				xmitter.Send(ZFrame.Create("READY"));
 			}
 		}
 

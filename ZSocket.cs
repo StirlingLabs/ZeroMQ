@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using JetBrains.Annotations;
 using ZeroMQ.lib;
 
@@ -294,8 +295,12 @@ namespace ZeroMQ
 
                 int length;
 
+                //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-RECV");
+                //Console.Error.Flush();
                 while (-1 == (length = zmq.recv(SocketPtr, (IntPtr)pOffset, count, flags)))
                 {
+                    //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-RECV_DONE");
+                    //Console.Error.Flush();
                     error = ZError.GetLastErr();
 
                     if (error != ZError.EINTR
@@ -339,8 +344,12 @@ namespace ZeroMQ
             {
                 var pOffset = pBuffer + offset;
 
+                //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-SEND");
+                //Console.Error.Flush();
                 while (-1 == zmq.send(SocketPtr, (IntPtr)pOffset, count, flags))
                 {
+                    //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-SEND_DONE");
+                    //Console.Error.Flush();
                     error = ZError.GetLastErr();
 
                     if (error != ZError.EINTR)
@@ -471,37 +480,8 @@ namespace ZeroMQ
                 if (framesToReceive == 1)
                     flags &= ~ZSocketFlags.More;
 
-                while (-1 == zmq.msg_recv(frame.Ptr, _socketPtr, flags))
-                {
-                    error = ZError.GetLastErr();
-
-                    if (error == ZError.EINTR)
-                    {
-                        error = default;
-                        continue;
-                    }
-
-                    if (error == ZError.ENOMEM
-                        || error == ZError.EFSM
-                        || error == ZError.ENOTSUP
-                        || error == ZError.ENOTSOCK
-                        || error == ZError.EFAULT
-                        || error == ZError.EFSM)
-                    {
-                        frame.Dispose();
-                        throw new ZException(error);
-                    }
-
-                    if (error == ZError.EAGAIN
-                        && (flags & ZSocketFlags.DontWait) == 0)
-                    {
-                        frame.Dispose();
-                        throw new ZException(error, "Was not using DontWait flag.");
-                    }
-
-                    frame.Dispose();
+                if (!frame.Receive(this, flags, out error))
                     return false;
-                }
 
                 frames ??= ZMessage.Create();
 
@@ -625,12 +605,13 @@ namespace ZeroMQ
 
             for (int i = 0, l = msg.Count; i < l; ++i)
             {
-                var frame = msg.Remove(msg[i], false);
+                var frame = msg.RemoveAt(i, false);
 
                 if (frame == null) continue;
 
                 if (i == l - 1 && !more)
                     flags &= ~ZSocketFlags.More;
+
                 if (!SendFrame(frame, flags, out error))
                     return false;
             }
@@ -749,26 +730,14 @@ namespace ZeroMQ
         {
             EnsureNotDisposed();
 
-            if (frame.IsDismissed)
-                throw new ObjectDisposedException("frame");
+            if (frame.IsClosed) throw new ObjectDisposedException("Frame was closed.");
+            if (frame.IsDisposed) throw new ObjectDisposedException("Frame was disposed.");
+            if (frame.IsDismissed) throw new InvalidOperationException("Frame was dismissed.");
 
-            error = default;
-
-            while (-1 == zmq.msg_send(frame.Ptr, _socketPtr, flags))
-            {
-                error = ZError.GetLastErr();
-
-                if (error == ZError.EINTR)
-                {
-                    error = default;
-                    continue;
-                }
-
+            if (!frame.Send(this, flags, out error))
                 return false;
-            }
 
-            // Tell IDisposable to not unallocate zmq_msg
-            frame.Dismiss();
+            //frame.Dismiss();
             return true;
         }
 
@@ -781,35 +750,21 @@ namespace ZeroMQ
 
             var more = false;
 
-            using var msg = ZFrame.CreateEmpty();
+            using var frame = ZFrame.CreateEmpty();
+
+            if (frame.IsDismissed) throw new InvalidOperationException("Message was dismissed.");
 
             do
             {
-                while (-1 == zmq.msg_recv(msg.Ptr, SocketPtr, (int)ZSocketFlags.None))
-                {
-                    error = ZError.GetLastErr();
-
-                    if (error != ZError.EINTR)
-                        return false;
-
-                    error = default;
-                }
+                if (!frame.Receive(this, ZSocketFlags.None, out error))
+                    return false;
 
                 // will have to receive more?
                 more = ReceiveMore;
 
                 // sending scope
-                while (-1 != zmq.msg_send(msg.Ptr, destination.SocketPtr, more ? ZSocketFlags.More : ZSocketFlags.None))
-                {
-                    error = ZError.GetLastErr();
-
-                    if (error != ZError.EINTR)
-                        return false;
-
-                    error = default;
-                }
-
-                // msg.Dismiss
+                if (!frame.Send(this, out error, more))
+                    return false;
 
             } while (more);
 

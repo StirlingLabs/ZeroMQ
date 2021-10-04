@@ -56,7 +56,7 @@ namespace Examples
 					}
 				}
 
-				backend.Send(new ZFrame("gone and died"));
+				backend.Send(ZFrame.Create("gone and died"));
 			}
 		}
 
@@ -74,7 +74,7 @@ namespace Examples
 				while (!canceller.IsCancellationRequested)
 				{
 					// Send current clock (msecs) to subscribers
-					if (!publisher.Send(new ZFrame(DateTime.UtcNow.ToString("s")), out var error))
+					if (!publisher.Send(ZFrame.Create(DateTime.UtcNow.ToString("s")), out var error))
 					{
 						if (error == ZError.ETERM)
 							break;	// Interrupted
@@ -112,7 +112,7 @@ namespace Examples
 				subpipe.Start();
 
 				subpipe.Frontend.ReceiveFrame();
-				pubpipe.Frontend.Send(new ZFrame("break"));
+				pubpipe.Frontend.Send(ZFrame.Create("break"));
 
 				// wait for the Thread (you'll see how fast it is)
 				pubpipe.Join(5000);

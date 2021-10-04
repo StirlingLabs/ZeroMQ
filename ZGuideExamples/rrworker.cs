@@ -53,7 +53,7 @@ namespace Examples
 
 						// Send reply back to client
 						Console.WriteLine("{0}... ", name);
-						responder.Send(new ZFrame(name));
+						responder.Send(ZFrame.Create(name));
 					}
 				}
 			}

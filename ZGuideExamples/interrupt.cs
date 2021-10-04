@@ -67,7 +67,7 @@ namespace Examples
 
 						Console.WriteLine(" Sending {0}... ", name);
 
-						if (!responder.Send(new ZFrame(name), out error))
+						if (!responder.Send(ZFrame.Create(name), out error))
 						{
 							if (error == ZError.ETERM)
 								break;	// Interrupted

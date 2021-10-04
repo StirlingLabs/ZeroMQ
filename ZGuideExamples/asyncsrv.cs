@@ -57,18 +57,15 @@ namespace Examples
 							Console.WriteLine("[CLIENT{0}] {1}", i, messageText);
 						}
 					}
-					using (var outgoing = ZMessage.Create())
-					{
-						outgoing.Add(new(client.Identity));
-						outgoing.Add(new("request " + ++requests));
+					using var outgoing = ZMessage.Create();
+					outgoing.Add(ZFrame.Create(client.Identity));
+					outgoing.Add(ZFrame.Create("request " + ++requests));
 
-						if (!client.Send(outgoing, out error))
-						{
-							if (error == ZError.ETERM)
-								return;	// Interrupted
-							throw new ZException(error);
-						}
-					}
+					if (client.Send(outgoing, out error))
+						continue;
+					if (error == ZError.ETERM)
+						return;	// Interrupted
+					throw new ZException(error);
 				}
 			}
 		}
@@ -140,8 +137,8 @@ namespace Examples
 
 							using (var response = ZMessage.Create())
 							{
-								response.Add(new(identity));
-								response.Add(new(content));
+								response.Add(ZFrame.Create(identity));
+								response.Add(ZFrame.Create(content));
 
 								if (!worker.Send(response, out error))
 								{

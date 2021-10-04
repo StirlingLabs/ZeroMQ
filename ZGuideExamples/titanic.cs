@@ -49,7 +49,7 @@ namespace Examples
 			{
 				var res = (List<byte[]>)serializer.Deserialize(reader);
 				foreach (var e in res)
-					msg.Add(new(e));
+					msg.Add(ZFrame.Create(e));
 			}
 			return (T)msg; 
 		}
@@ -109,7 +109,7 @@ namespace Examples
 
 					// Send UUID through tho message queue
 					reply = ZMessage.Create();
-					reply.Add(new(uuid.ToString()));
+					reply.Add(ZFrame.Create(uuid.ToString()));
 					if (!backendpipe.Send(reply, out var error))
 						if(error.Equals(ZError.ETERM))
 							break;
@@ -118,8 +118,8 @@ namespace Examples
 					// Now send UUID back to client
 					// Done by the mdwrk_recv() at the top of the loop
 					reply = ZMessage.Create();
-					reply.Add(new("200"));
-					reply.Add(new(uuid.ToString()));
+					reply.Add(ZFrame.Create("200"));
+					reply.Add(ZFrame.Create(uuid.ToString()));
 				}
 			}
 		}
@@ -145,15 +145,15 @@ namespace Examples
 					if (File.Exists(repfn))
 					{
 						reply = repfn.DeserializeFromXml<ZMessage>();
-						reply.Prepend(new("200"));
+						reply.Prepend(ZFrame.Create("200"));
 					}
 					else
 					{
 						reply = ZMessage.Create();
 						if(File.Exists(reqfn))
-							reply.Prepend(new("300")); //Pending
+							reply.Prepend(ZFrame.Create("300")); //Pending
 						else
-							reply.Prepend(new("400")); //Unknown
+							reply.Prepend(ZFrame.Create("400")); //Unknown
 					}
 					request.Dispose();
 				}
@@ -182,7 +182,7 @@ namespace Examples
 					File.Delete(repfn);
 					request.Dispose();
 					reply = ZMessage.Create();
-					reply.Add(new("200"));
+					reply.Add(ZFrame.Create("200"));
 				}
 			}
 		}

@@ -30,7 +30,7 @@ namespace Examples
 
 				Console.WriteLine("I: ({0}) worker ready", name);
 
-				using (var outgoing = new ZFrame("READY"))
+				using (var outgoing = ZFrame.Create("READY"))
 					worker.Send(outgoing);
 
 				var cycles = 0;

@@ -58,7 +58,7 @@ namespace Examples
 					using (var outgoing = ZMessage.Create())
 					{
 						outgoing.Add(identity);
-						outgoing.Add(new("OK"));
+						outgoing.Add(ZFrame.Create("OK"));
 
 						if (!server.Send(outgoing, out error))
 						{

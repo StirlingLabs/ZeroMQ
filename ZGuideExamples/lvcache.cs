@@ -71,8 +71,8 @@ namespace Examples
 								if (previous != null)
 								{
 									Console.WriteLine("Sending cached topic {0}", topic);
-									backend.SendMore(new(previous.Topic));
-									backend.Send(new ZFrame(previous.Current));
+									backend.SendMore(ZFrame.Create(previous.Topic));
+									backend.Send(ZFrame.Create(previous.Current));
 								}
 								else
 									Console.WriteLine("Failed to send cached topic {0}!", topic);

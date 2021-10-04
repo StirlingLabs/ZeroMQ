@@ -154,8 +154,8 @@ namespace Examples
                             //  Remove and save client return envelope and insert the
                             //  protocol header and service name, then rewrap envelope.
                             var client = msg.Unwrap();
-                            msg.Prepend(new(worker.Service.Name));
-                            msg.Prepend(new(MdpCommon.MDPC_CLIENT));
+                            msg.Prepend(ZFrame.Create(worker.Service.Name));
+                            msg.Prepend(ZFrame.Create(MdpCommon.MDPC_CLIENT));
                             msg.Wrap(client);
                             Socket.Send(msg);
                             worker.Waiting();
@@ -212,9 +212,9 @@ namespace Examples
                         var client = msg.Unwrap();
                         
                         msg.Clear();
-                        msg.Add(new(returnCode));
+                        msg.Add(ZFrame.Create(returnCode));
                         msg.Prepend(serviceFrame);
-                        msg.Prepend(new(MdpCommon.MDPC_CLIENT));
+                        msg.Prepend(ZFrame.Create(MdpCommon.MDPC_CLIENT));
 
                         msg.Wrap(client);
                         Socket.Send(msg);
@@ -449,9 +449,9 @@ namespace Examples
 
                 // Stack protocol envelope to start of message
                 if (!string.IsNullOrEmpty(option))
-                    msg.Prepend(new(option));
-                msg.Prepend(new(command));
-                msg.Prepend(new(MdpCommon.MDPW_WORKER));
+                    msg.Prepend(ZFrame.Create(option));
+                msg.Prepend(ZFrame.Create(command));
+                msg.Prepend(ZFrame.Create(MdpCommon.MDPW_WORKER));
 
                 // Stack routing envelope to start of message
                 msg.Wrap(Identity.Clone());

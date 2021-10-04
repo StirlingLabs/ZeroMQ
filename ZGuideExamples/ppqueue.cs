@@ -41,7 +41,7 @@ namespace Examples
 				set {
 					if (Identity != null)
 						Identity.Dispose();
-					Identity = new(value);
+					Identity = ZFrame.Create(value);
 				}
 			}
 
@@ -193,7 +193,7 @@ namespace Examples
 						{
 							using var outgoing = ZMessage.Create();
 							outgoing.Add(ZFrame.CopyFrom(worker.Identity));
-							outgoing.Add(new(Worker.PPP_HEARTBEAT));
+							outgoing.Add(ZFrame.Create(Worker.PPP_HEARTBEAT));
 
 							Console.WriteLine("I:   sending heartbeat ({0})", worker.IdentityString);
 							backend.Send(outgoing);

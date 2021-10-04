@@ -40,8 +40,8 @@ namespace Examples
 				// Send out all 1,000 topic messages
 				for (var topic = 0; topic < 1000; ++topic)
 				{
-					publisher.SendMore(new($"{topic:D3}"));
-					publisher.Send(new ZFrame("Save Roger"));
+					publisher.SendMore(ZFrame.Create($"{topic:D3}"));
+					publisher.Send(ZFrame.Create("Save Roger"));
 				}
 
 				// Send one random update per second
@@ -49,8 +49,8 @@ namespace Examples
 				while (true)
 				{
 					Thread.Sleep(10);
-					publisher.SendMore(new($"{rnd.Next(1000):D3}"));
-					publisher.Send(new ZFrame("Off with his head!"));
+					publisher.SendMore(ZFrame.Create($"{rnd.Next(1000):D3}"));
+					publisher.Send(ZFrame.Create("Off with his head!"));
 				}
 			}
 		}

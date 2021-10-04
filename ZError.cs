@@ -1,16 +1,101 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ZeroMQ.lib;
 
 namespace ZeroMQ
 {
-    public sealed class ZError : ZSymbol
+    public sealed class ZError
     {
-        static ZError()
+        public static bool operator ==(ZError? left, ZError? right)
+            => Equals(left, right);
+
+        public static bool operator !=(ZError? left, ZError? right)
+            => !Equals(left, right);
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ZError(string str)
+            : this(ResolveNumber<ZError>(str))
+            => Debug.Assert(str != "EAGAIN" || Number == 11);
+
+        private ZError(int errno)
+            => _num = errno;
+
+        private int _num;
+        public int Number => _num;
+
+        public string Name => _zsymbolToName.TryGetValue(this, out var result) ? result : "<unknown>";
+
+        public string? Text
         {
-            var one = ZSymbol.None;
+            get {
+                var pStr = zmq.strerror(_num);
+                return pStr == default ? null : Marshal.PtrToStringAnsi(pStr);
+            }
         }
 
-        internal static class Code
+        private static int ResolveNumber<T>(string name)
+        {
+            var type = typeof(T);
+
+            var codeType = type.GetNestedType("Code",
+                BindingFlags.Public | BindingFlags.NonPublic);
+
+            var symbolCodeField = codeType?.GetField(name);
+
+            if (symbolCodeField == null)
+                throw new ArgumentException(nameof(name),
+                    $"Missing symbol declaration for {name}.");
+
+            var value = symbolCodeField.GetValue(null);
+
+            return value switch
+            {
+                int i => i,
+                IConvertible convertible => convertible.ToInt32(null),
+                null => throw new ArgumentException(nameof(name), $"Missing symbol definition for {name}."),
+                _ => throw new ArgumentException(nameof(name), $"Invalid symbol definition for {name}.")
+            };
+
+        }
+
+        static IDictionary<ZError, string> _zsymbolToName = new Dictionary<ZError, string>();
+
+        public static IEnumerable<ZError> Find(string symbol)
+            => _zsymbolToName
+                .Where(s => s.Value != null && s.Value == symbol).Select(x => x.Key);
+
+        public static IEnumerable<ZError> Find(string ns, int num)
+            => _zsymbolToName
+                .Where(s => s.Value != null && s.Value.StartsWith(ns) && s.Key._num == num).Select(x => x.Key);
+
+        public bool Equals(ZError? other)
+            => _num == other?._num;
+
+        public override bool Equals(object? obj)
+            => Equals(this, obj);
+
+        public new static bool Equals(object? a, object? b)
+            => ReferenceEquals(a, b)
+                || a is ZError symbolA
+                && b is ZError symbolB
+                && symbolA._num == symbolB._num;
+
+        public override int GetHashCode()
+            => Number.GetHashCode();
+
+        public override string ToString()
+            => Name + "(" + Number + "): " + Text;
+
+        public static implicit operator int(ZError errnum)
+            => errnum.Number;
+
+        private static class Code
         {
             private const int HAUSNUMERO = 156384712;
 
@@ -77,7 +162,7 @@ namespace ZeroMQ
                 ETERM = HAUSNUMERO + 53,
                 EMTHREAD = HAUSNUMERO + 54;
 
-            internal static class Posix
+            private static class Posix
             {
                 // source: http://www.virtsync.com/c-error-codes-include-errno
 
@@ -102,7 +187,7 @@ namespace ZeroMQ
                     ENETRESET = 102;
             }
 
-            internal static class MacOSX
+            private static class MacOSX
             {
                 public static readonly int
                     EAGAIN = 35,
@@ -135,20 +220,17 @@ namespace ZeroMQ
         public static ZError? FromErrno(int num)
         {
             // TODO: this can be made more efficient
-            var symbol = Find("E", num).OfType<ZError>().FirstOrDefault();
-            if (symbol != null) return symbol;
+            var symbol = Find("E", num)
+                .FirstOrDefault();
+
+            if (symbol != null)
+                return symbol;
 
             // unexpected error
             return new(num);
         }
 
-        internal ZError(int errno)
-            : base(errno) { }
-
-        private ZError(string str)
-            : base(ResolveNumber<ZError>(str)) { }
-
-        public new static readonly ZError? None = default; // null
+        public static readonly ZError? None = null; // null
 
         public static readonly ZError
             // DEFAULT = new ZmqError(0),
@@ -163,7 +245,7 @@ namespace ZeroMQ
             EBADF = new(nameof(EBADF)),
             ECHILD = new(nameof(ECHILD)) // = HAUSNUMERO + 54
             ;
-        public static readonly ZError?
+        public static readonly ZError
             // DEFAULT = new ZmqError(0),
             EAGAIN = new(nameof(EAGAIN)) // = HAUSNUMERO + 54
             ;
@@ -215,7 +297,7 @@ namespace ZeroMQ
             EFSM = new(nameof(EFSM)),
             ENOCOMPATPROTO = new(nameof(ENOCOMPATPROTO)) // = HAUSNUMERO + 54
             ;
-        public static readonly ZError?
+        public static readonly ZError
             // DEFAULT = new ZmqError(0),
             ETERM = new(nameof(ETERM)) // = HAUSNUMERO + 54
             ;

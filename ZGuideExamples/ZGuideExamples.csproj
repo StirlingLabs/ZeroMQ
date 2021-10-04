@@ -3,7 +3,6 @@
     <PropertyGroup>
         <TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.0;netstandard2.1</TargetFrameworks>
         <IsPackable>false</IsPackable>
-        <OutputType>Exe</OutputType>
         <RootNamespace>ZGuideExamples</RootNamespace>
         <AssemblyName>ZGuideExamples</AssemblyName>
         <LangVersion>9</LangVersion>
@@ -11,6 +10,7 @@
         <SelfContained>false</SelfContained>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <OutputType>Exe</OutputType>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\ZeroMQ.csproj">

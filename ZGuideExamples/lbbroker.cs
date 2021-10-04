@@ -35,7 +35,7 @@ namespace Examples
 
 				using (var request = ZMessage.Create())
 				{
-					request.Add(new("Hello"));
+					request.Add(ZFrame.Create("Hello"));
 
 					// Send request
 					client.Send(request);
@@ -61,7 +61,7 @@ namespace Examples
 				worker.Connect("inproc://backend");
 
 				// Tell broker we're ready for work
-				using (var ready = new ZFrame("READY"))
+				using (var ready = ZFrame.Create("READY"))
 					worker.Send(ready);
 
 				ZMessage? request;
@@ -89,9 +89,9 @@ namespace Examples
 						// Send reply
 						using (var commit = ZMessage.Create())
 						{
-							commit.Add(new(worker_id));
-							commit.Add(new());
-							commit.Add(new("OK"));
+							commit.Add(ZFrame.Create(worker_id));
+							commit.Add(ZFrame.Create());
+							commit.Add(ZFrame.Create("OK"));
 
 							worker.Send(commit);
 						}
@@ -170,9 +170,9 @@ namespace Examples
 
 							using (var outgoing = ZMessage.Create())
 							{
-								outgoing.Add(new(client_id));
-								outgoing.Add(new());
-								outgoing.Add(new(reply));
+								outgoing.Add(ZFrame.Create(client_id));
+								outgoing.Add(ZFrame.Create());
+								outgoing.Add(ZFrame.Create(reply));
 
 								// Send
 								frontend.Send(outgoing);
@@ -203,11 +203,11 @@ namespace Examples
 
 							using (var outgoing = ZMessage.Create())
 							{
-								outgoing.Add(new(worker_queue[0]));
-								outgoing.Add(new());
-								outgoing.Add(new(client_id));
-								outgoing.Add(new());
-								outgoing.Add(new(requestText));
+								outgoing.Add(ZFrame.Create(worker_queue[0]));
+								outgoing.Add(ZFrame.Create());
+								outgoing.Add(ZFrame.Create(client_id));
+								outgoing.Add(ZFrame.Create());
+								outgoing.Add(ZFrame.Create(requestText));
 
 								// Send
 								backend.Send(outgoing);

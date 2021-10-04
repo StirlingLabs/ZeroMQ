@@ -4,7 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.ExceptionServices;
+using ZeroMQ;
+using ZeroMQ.lib;
 
 namespace Examples
 {
@@ -12,6 +13,11 @@ namespace Examples
     {
         static int Main(string[] args)
         {
+            Debug.Assert(ZError.EAGAIN.Number == 11);
+            // ReSharper disable once EqualExpressionComparison
+            Debug.Assert(ZError.EAGAIN == ZError.EAGAIN);
+            Debug.Assert(ZError.EAGAIN.Equals(ZError.EAGAIN));
+
             var returnMain = 0; // C good
 
             var leaveOut = 0;
@@ -82,6 +88,8 @@ namespace Examples
                         _ => parameters
                     };
 
+                    Console.WriteLine($"ZeroMQ v{zmq.LibraryVersion}");
+
                     var result = DebugStackTrace<TargetInvocationException>
                         .Invoke(method, /* static */null, parameters);
 
@@ -125,39 +133,6 @@ namespace Examples
 
             Console.WriteLine();
             return returnMain;
-        }
-    }
-
-
-    internal static class DebugStackTrace<TException>
-        where TException : Exception
-    {
-        [DebuggerNonUserCode]
-        [DebuggerStepThrough]
-        public static object Invoke(MethodInfo method, object target, params object[] args)
-        {
-            $"Invoking \"{method.Name}\"".DumpString();
-            try
-            {
-                return method.Invoke(target, args);
-            }
-            catch (TException te)
-            {
-                if (te.InnerException == null)
-                    throw;
-
-                ExceptionDispatchInfo.Capture(te.InnerException).Throw();
-
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine(ex.ToString());
-                // wtf
-                Debugger.Launch();
-                Debugger.Break();
-                throw;
-            }
         }
     }
 }

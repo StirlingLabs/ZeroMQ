@@ -113,13 +113,13 @@ namespace ZeroMQ
                     Info($"zauth: - ZAP reply status_code={status_code} status_text={status_text}");
 
                 using var msg = ZMessage.Create();
-                msg.Add(new("1.0"));
-                msg.Add(new(Sequence));
-                msg.Add(new(status_code));
-                msg.Add(new(status_text));
-                msg.Add(new(UserId != null ? UserId : ""));
+                msg.Add(ZFrame.Create("1.0"));
+                msg.Add(ZFrame.Create(Sequence));
+                msg.Add(ZFrame.Create(status_code));
+                msg.Add(ZFrame.Create(status_text));
+                msg.Add(ZFrame.Create(UserId != null ? UserId : ""));
                 // rc = zmsg_addmem(msg, metadata, metasize);
-                msg.Add(new(metadata));
+                msg.Add(ZFrame.Create(metadata));
                 handler.SendMessage(msg);
                 return 0;
             }
@@ -447,7 +447,7 @@ namespace ZeroMQ
                         whitelist.Add(address);
                 }
                 // 
-                sockets[PIPE].SendFrame(new(0));
+                sockets[PIPE].SendFrame(ZFrame.Create(0));
             }
             else if (command == "DENY")
             {
@@ -463,7 +463,7 @@ namespace ZeroMQ
                     if (whitelist.Contains(address))
                         whitelist.Remove(address);
                 }
-                sockets[PIPE].SendFrame(new(0));
+                sockets[PIPE].SendFrame(ZFrame.Create(0));
             }
             else if (command == "PLAIN")
             {
@@ -473,7 +473,7 @@ namespace ZeroMQ
                 var filename = frame.ReadLine();
                 if (Load(out passwords, filename) != 0 && verbose)
                     Info("zauth: could not load file=" + filename);
-                sockets[PIPE].SendFrame(new(0));
+                sockets[PIPE].SendFrame(ZFrame.Create(0));
             }
             else if (command == "CURVE")
             {
@@ -490,15 +490,15 @@ namespace ZeroMQ
                     certStore = new(location);
                     allowAny = false;
                 }
-                sockets[PIPE].SendFrame(new(0));
+                sockets[PIPE].SendFrame(ZFrame.Create(0));
             }
             else if (command == "GSSAPI")
                 //  GSSAPI authentication is not yet implemented here
-                sockets[PIPE].SendFrame(new(0));
+                sockets[PIPE].SendFrame(ZFrame.Create(0));
             else if (command == "VERBOSE")
             {
                 verbose = true;
-                sockets[PIPE].SendFrame(new(0));
+                sockets[PIPE].SendFrame(ZFrame.Create(0));
             }
             else if (command == "$TERM")
                 Terminated = true;

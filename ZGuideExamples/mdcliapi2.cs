@@ -108,9 +108,9 @@ namespace Examples
                 //  Frame 0: empty (REQ emulation)
                 //  Frame 1: "MDPCxy" (six bytes, MDP/Client x.y)
                 //  Frame 2: Service name (printable string)
-                request.Prepend(new(service));
-                request.Prepend(new(MdpCommon.MDPC_CLIENT));
-                request.Prepend(new(string.Empty));
+                request.Prepend(ZFrame.Create(service));
+                request.Prepend(ZFrame.Create(MdpCommon.MDPC_CLIENT));
+                request.Prepend(ZFrame.Create(string.Empty));
 
                 if (Verbose)
                     request.DumpZmsg("I: send request to '{0}' service:", service);

@@ -70,10 +70,10 @@ namespace ZeroMQ.Devices
                     return true; // Ignore the Empty one
 
                 // Prepend empty delimiter between Identity frame and Data frame
-                incoming.Insert(1, new());
+                incoming.Insert(1, ZFrame.Create());
 
                 // Prepend Peer-Address
-                incoming.Insert(2, new(address));
+                incoming.Insert(2, ZFrame.Create(address));
 
                 if (!BackendSocket.Send(incoming, /* ZSocketFlags.DontWait, */ out error))
                     return false;
@@ -105,18 +105,10 @@ namespace ZeroMQ.Devices
             {
                 var frame = ZFrame.CreateEmpty();
 
-                while (-1 == zmq.msg_recv(frame.Ptr, sock.SocketPtr, ZSocketFlags.More))
-                {
-                    error = ZError.GetLastErr();
+                if (frame.IsDismissed) throw new InvalidOperationException("Message was dismissed.");
 
-                    if (error != ZError.EINTR)
-                    {
-                        frame.Dispose();
-                        return false;
-                    }
-
-                    error = default;
-                }
+                if (!frame.Receive(sock, out error))
+                    return false;
 
                 message ??= ZMessage.Create();
                 message.Add(frame);
@@ -162,11 +154,11 @@ namespace ZeroMQ.Devices
                 incoming.RemoveAt(1);
 
                 // Append Identity frame
-                var identity0 = new ZFrame(identityBytes);
+                var identity0 = ZFrame.Create(identityBytes);
                 incoming.Add(identity0);
 
                 // Append STREAM's empty delimiter frame
-                incoming.Add(new());
+                incoming.Add(ZFrame.Create());
 
                 if (!SendMsg(FrontendSocket, incoming, out error))
                     return false;
@@ -175,33 +167,21 @@ namespace ZeroMQ.Devices
             return true;
         }
 
-        static bool SendMsg(ZSocket sock, ZMessage? msg, out ZError? error)
+        static bool SendMsg(ZSocket sock, ZMessage? message, out ZError? error)
         {
-            if (msg is null) throw new ArgumentNullException(nameof(msg));
+            if (message is null) throw new ArgumentNullException(nameof(message));
 
             error = ZError.None;
 
-            foreach (var frame in msg)
+            foreach (var frame in message)
             {
-                while (-1 == zmq.msg_send(frame.Ptr, sock.SocketPtr, ZSocketFlags.More))
-                {
-                    error = ZError.GetLastErr();
+                if (frame.IsDismissed) throw new InvalidOperationException("Message was dismissed.");
 
-                    if (error != ZError.EINTR)
-                        return false;
-                    error = default;
-                    /* if (error == ZError.EAGAIN)
-                    {
-                      error = default(ZError);
-                      Thread.Sleep(1);
-          
-                      continue;
-                    } */
-
-                }
+                if (!frame.Send(sock, out error))
+                    return false;
             }
 
-            msg.Dismiss();
+            message.Dismiss();
             return true;
         }
     }

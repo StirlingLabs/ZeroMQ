@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace ZeroMQ.lib
@@ -12,12 +13,19 @@ namespace ZeroMQ.lib
 
         private static readonly AllocStringNativeDelegate AllocStringNative = Ansi.AllocStringNative;
 
-        public static ZSafeHandle Alloc(nuint size)
+        public static ZSafeHandle Alloc(nuint size, bool clearMem = true)
         {
             var handle = freeHandles.TryPop(out var h) ? h : new();
             handle._ptr = Marshal.AllocHGlobal((nint)size);
             handle._isAllocated = true;
-            return handle;
+            return clearMem ? handle.ClearMemory() : handle;
+        }
+
+        public unsafe ZSafeHandle ClearMemory()
+        {
+            var p = (void*)this;
+            Unsafe.InitBlockUnaligned(p, 0, (uint)zmq.sizeof_zmq_msg_t);
+            return this;
         }
 
         public static ZSafeHandle AllocString(string str)
@@ -86,9 +94,7 @@ namespace ZeroMQ.lib
             _ptr = default;
 
             if (!final)
-            {
-                    freeHandles.Push(this);
-            }
+                freeHandles.Push(this);
         }
     }
 }

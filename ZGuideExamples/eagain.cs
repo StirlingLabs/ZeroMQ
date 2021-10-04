@@ -25,7 +25,7 @@ namespace Examples
 				{
 					Console.WriteLine("Sending {0}. message", count);
 
-					using (var outgoing = new ZFrame($"message {count}"))
+					using (var outgoing = ZFrame.Create($"message {count}"))
 					{
 						if (!mailbox.Send(outgoing, ZSocketFlags.DontWait, out var error))
 						{

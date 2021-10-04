@@ -30,7 +30,7 @@ namespace Examples
 				return null;	// Interrupted
 
 			// Tell queue we're ready for work
-			using (var outgoing = new ZFrame(Worker.PPP_READY))
+			using (var outgoing = ZFrame.Create(Worker.PPP_READY))
 				worker.Send(outgoing);
 
 			Console.WriteLine("I:        worker ready");
@@ -171,7 +171,7 @@ namespace Examples
 							heartbeat_at = DateTime.UtcNow + Worker.PPP_HEARTBEAT_INTERVAL;
 
 							Console.WriteLine("I:   sending heartbeat");
-							using (var outgoing = new ZFrame(Worker.PPP_HEARTBEAT))
+							using (var outgoing = ZFrame.Create(Worker.PPP_HEARTBEAT))
 								worker.Send(outgoing);
 						}
 					}
