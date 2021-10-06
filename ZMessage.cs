@@ -39,7 +39,13 @@ namespace ZeroMQ
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryRecycleNode(LinkedListNode<ZFrame> node)
-            => IsCachingEnabled && FreeNodes.TryAdd(node);
+        {
+            if (!IsCachingEnabled) return false;
+
+            Debug.Assert(node.List == null, "TryRecycleNode; node must not be in a list");
+            Debug.Assert(node.Value == null);
+            return FreeNodes.TryAdd(node);
+        }
 
         private static bool _isCachingEnabled = false;
 
@@ -127,13 +133,19 @@ namespace ZeroMQ
             {
                 if (_frames != null)
                 {
-                    foreach (var node in _frames.Nodes())
+                    for (var node = _frames.First; node != null;)
                     {
                         var frame = node.Value;
+                        var next = node.Next;
+
                         frame.Dispose();
 
                         _frames.Remove(node);
+                        node.Value = null!;
+
                         TryRecycleNode(node);
+
+                        node = next;
                     }
                     _frames.Clear();
                     TryRecycleList(_frames);
@@ -144,27 +156,6 @@ namespace ZeroMQ
             if (final) return;
 
             TryRecycleMessage();
-        }
-
-        public void Dismiss()
-        {
-            lock (_lock)
-            {
-                if (_frames != null)
-                {
-                    foreach (var node in _frames.Nodes())
-                    {
-                        var frame = node.Value;
-                        frame.Dismiss();
-
-                        _frames.Remove(node);
-                        TryRecycleNode(node);
-                    }
-                    _frames.Clear();
-                    TryRecycleList(_frames);
-                }
-                _frames = null;
-            }
         }
 
         public void ReplaceAt(int index, ZFrame replacement)

@@ -78,7 +78,7 @@ namespace ZeroMQ.Devices
                 if (!BackendSocket.Send(incoming, /* ZSocketFlags.DontWait, */ out error))
                     return false;
 
-                incoming.Dismiss();
+                incoming.Dispose();
 
                 return true;
             }
@@ -181,7 +181,7 @@ namespace ZeroMQ.Devices
                     return false;
             }
 
-            message.Dismiss();
+            message.Dispose();
             return true;
         }
     }

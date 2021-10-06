@@ -68,6 +68,7 @@ namespace ZeroMQ.lib
                 sizeof_zmq_msg_t = (nuint)ctx_get(ctx, ZContextOption.MSG_T_SIZE);
                 ctx_term(ctx);
 #pragma warning restore CA1806
+                Debug.Assert(sizeof_zmq_msg_t >= sizeof_zmq_msg_t_v4);
             }
         }
 

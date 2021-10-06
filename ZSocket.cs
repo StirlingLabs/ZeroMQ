@@ -41,7 +41,7 @@ namespace ZeroMQ
 
         private ZSocketType _socketType;
 
-        public bool ForceBlockingMode { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Create a <see cref="ZSocket"/> instance.
@@ -419,7 +419,7 @@ namespace ZeroMQ
             return ReceiveFrames(ref count, ref message, flags, out error);
         }
 
-        public ZFrame ReceiveFrame()
+        public ZFrame? ReceiveFrame()
         {
             var frame = ReceiveFrame(out var error);
             if (error != ZError.None)
@@ -427,21 +427,38 @@ namespace ZeroMQ
             return frame;
         }
 
-        public ZFrame ReceiveFrame(out ZError? error)
+        public ZFrame? ReceiveFrame(ZSocketFlags flags)
+        {
+            var frame = ReceiveFrame(flags, out var error);
+
+            if (error == ZError.None)
+                return frame;
+
+            if ((flags & ZSocketFlags.DontWait) != 0 && error == ZError.EAGAIN)
+                return frame;
+
+            throw new ZException(error);
+        }
+
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ZFrame? ReceiveFrame(out ZError? error)
             => ReceiveFrame(ZSocketFlags.None, out error);
 
         public ZFrame? ReceiveFrame(ZSocketFlags flags, out ZError? error)
         {
-            var frames = ReceiveFrames(1, flags & ~ZSocketFlags.More, out error);
+            flags &= ~ZSocketFlags.More;
 
-            if (frames == null) return null;
+            var frame = ZFrame.CreateEmpty();
 
-            foreach (var frame in frames)
-                return frame;
+            return frame.Receive(this, flags, out error)
+                ? frame
+                : null;
 
-            return null;
         }
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<ZFrame>? ReceiveFrames(int framesToReceive)
             => ReceiveFrames(framesToReceive, ZSocketFlags.None);
 
@@ -453,19 +470,47 @@ namespace ZeroMQ
                 : frames;
         }
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<ZFrame>? ReceiveFrames(int framesToReceive, out ZError? error)
             => ReceiveFrames(framesToReceive, ZSocketFlags.None, out error);
 
         public IEnumerable<ZFrame>? ReceiveFrames(int framesToReceive, ZSocketFlags flags, out ZError? error)
         {
-            ZMessage? frames = null;
-            while (!ReceiveFrames(ref framesToReceive, ref frames, flags, out error))
-            {
-                if (error == ZError.EAGAIN && (flags & ZSocketFlags.DontWait) == ZSocketFlags.DontWait)
-                    break;
+            LinkedList<ZFrame>? frames = null;
+
+            if (!ReceiveFrames(ref framesToReceive, ref frames, flags, out error))
                 return null;
-            }
-            return frames;
+
+            return frames != null
+                ? LinkedListNodeForwardEnumerator<ZFrame>.Create(frames)
+                : null;
+        }
+
+        public bool ReceiveFrames(ref int framesToReceive, ref LinkedList<ZFrame>? frames, ZSocketFlags flags, out ZError? error)
+        {
+            EnsureNotDisposed();
+
+            error = default;
+            flags |= ZSocketFlags.More;
+
+            do
+            {
+                var frame = ZFrame.CreateEmpty();
+
+                if (framesToReceive == 1)
+                    flags &= ~ZSocketFlags.More;
+
+                if (!frame.Receive(this, flags, out error))
+                    return false;
+
+                frames ??= new();
+
+                frames.AddLast(frame);
+
+            } while (--framesToReceive > 0 && ReceiveMore);
+
+            return true;
         }
 
         public bool ReceiveFrames(ref int framesToReceive, ref ZMessage? frames, ZSocketFlags flags, out ZError? error)
@@ -601,6 +646,8 @@ namespace ZeroMQ
 
         public virtual bool SendMessage(ZMessage msg, ZSocketFlags flags, out ZError? error)
         {
+            if (msg is null) throw new ArgumentNullException(nameof(msg));
+
             error = ZError.None;
             var more = (flags & ZSocketFlags.More) == ZSocketFlags.More;
             flags |= ZSocketFlags.More;
@@ -732,10 +779,6 @@ namespace ZeroMQ
         {
             EnsureNotDisposed();
 
-            if (frame.IsClosed) throw new ObjectDisposedException("Frame was closed.");
-            if (frame.IsDisposed) throw new ObjectDisposedException("Frame was disposed.");
-            if (frame.IsDismissed) throw new InvalidOperationException("Frame was dismissed.");
-
             if (!frame.Send(this, flags, out error))
                 return false;
 
@@ -793,6 +836,14 @@ namespace ZeroMQ
         {
             EnsureNotDisposed();
 
+            /*
+            Debug.Assert(optionValue.Length * sizeof(T) == (int)optionLength,
+                $"Expected same option value size {optionValue.Length * sizeof(T)} and length specified {optionLength}");
+
+            if (option is not ZSocketOption.IMMEDIATE and not ZSocketOption.RCVMORE)
+                Console.WriteLine($"Trying to get {option} size {optionLength}");
+            */
+
             fixed (void* pOptionValue = optionValue)
             {
                 while (-1 == zmq.getsockopt(_socketPtr, (int)option, (IntPtr)pOptionValue, ref optionLength))
@@ -801,8 +852,16 @@ namespace ZeroMQ
 
                     if (error != ZError.EINTR)
                         throw new ZException(error);
+
                 }
             }
+
+            /*
+#if NET5_0_OR_GREATER
+            if (option is not ZSocketOption.IMMEDIATE and not ZSocketOption.RCVMORE)
+                Console.WriteLine($"Got {option} size {optionLength}: 0x{Convert.ToHexString(MemoryMarshal.AsBytes(optionValue))}");
+#endif
+            */
 
             return true;
         }
@@ -890,19 +949,24 @@ namespace ZeroMQ
         public unsafe bool GetOption<T>(ZSocketOption option, out T value)
             where T : unmanaged
         {
+#if !NET5_0_OR_GREATER || !NETSTANDARD2_1_OR_GREATER
             value = default;
+#else
+            Unsafe.SkipInit(out item);
+#endif
 
             var optionLength = (nuint)sizeof(T);
 
-            T optionValue = default;
-
 #if NETSTANDARD2_0
-            var optionValueSpan = new Span<T>(&optionValue, 1);
+            fixed (T* pValue = &value)
+            {
+                var optionValueSpan = new Span<T>(pValue, 1);
+                return GetOption(option, optionValueSpan, ref optionLength);
+            }
 #else
-            var optionValueSpan = MemoryMarshal.CreateSpan(ref optionValue, 1);
-#endif
-
+            var optionValueSpan = MemoryMarshal.CreateSpan(ref value, 1);
             return GetOption(option, optionValueSpan, ref optionLength);
+#endif
 
         }
 
@@ -1448,5 +1512,8 @@ namespace ZeroMQ
             get => GetOption<ZSocketType>(ZSocketOption.TYPE);
             set => SetOption(ZSocketOption.TYPE, value);
         }
+
+        public override string ToString()
+            => Name ?? LastEndpoint ?? nameof(ZSocket);
     }
 }

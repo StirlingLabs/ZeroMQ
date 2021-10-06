@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace ZeroMQ
 {
-    internal sealed class LinkedListNodeForwardEnumerator<T> : IEnumerator<LinkedListNode<T>>, IEnumerator<T>
+    internal sealed class LinkedListNodeForwardEnumerator<T> : IEnumerator<LinkedListNode<T>>, IEnumerator<T>, IEnumerable<T>
     {
         public static readonly ConcurrentStack<LinkedListNodeForwardEnumerator<T>> Recycled = new();
 
@@ -120,5 +120,11 @@ namespace ZeroMQ
             List = null!;
             Recycled.Push(this);
         }
+
+        public IEnumerator<T> GetEnumerator()
+            => this;
+
+        IEnumerator IEnumerable.GetEnumerator()
+            => GetEnumerator();
     }
 }

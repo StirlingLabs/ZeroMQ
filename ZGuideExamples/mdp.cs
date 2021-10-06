@@ -72,7 +72,9 @@ namespace Examples
         {
             if (str == null) return;
             if (Program.Quiet) return;
-            Console.WriteLine($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - {str}");
+            var err = Console.Error;
+            err.WriteLine($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - {str}");
+            err.Flush();
         }
 
         [StringFormatMethod("str")]
@@ -81,13 +83,15 @@ namespace Examples
         {
             if (str == null) return;
             if (Program.Quiet) return;
+            var err = Console.Error;
             if (args == null)
-                Console.WriteLine($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - {str}");
+                err.WriteLine($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - {str}");
             else
             {
-                Console.Write($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - ");
-                Console.WriteLine(str, args);
+                err.Write($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - ");
+                err.WriteLine(str, args);
             }
+            err.Flush();
         }
 
         [Conditional("TRACE")]
@@ -95,14 +99,18 @@ namespace Examples
         {
             if (str == null) return;
             if (Program.Quiet) return;
-            Console.WriteLine($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - {str}");
+            var err = Console.Error;
+            err.WriteLine($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - {str}");
+            err.Flush();
         }
 
         public static void Info(FormattableString? str)
         {
             if (str == null) return;
             if (Program.Quiet) return;
-            Console.WriteLine($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - {str}");
+            var err = Console.Error;
+            err.WriteLine($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - {str}");
+            err.Flush();
         }
 
         [StringFormatMethod("str")]
@@ -110,7 +118,9 @@ namespace Examples
         {
             if (str == null) return;
             //if (Program.Quiet) return;
-            Console.WriteLine($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - {str}");
+            var err = Console.Error;
+            err.WriteLine($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - {str}");
+            err.Flush();
         }
 
         [StringFormatMethod("str")]
@@ -118,13 +128,15 @@ namespace Examples
         {
             if (str == null) return;
             //if (Program.Quiet) return;
+            var err = Console.Error;
             if (args == null)
-                Console.WriteLine($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - {str}");
+                err.WriteLine($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - {str}");
             else
             {
-                Console.Write($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - ");
-                Console.WriteLine(str, args);
+                err.Write($"[{DateTime.Now:yyyy-MM-ddTHH:mm:ss:fffffff zzz}] - ");
+                err.WriteLine(str, args);
             }
+            err.Flush();
         }
 
         /// <summary>

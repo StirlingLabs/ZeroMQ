@@ -14,6 +14,14 @@ namespace ZeroMQ
 {
     public sealed class ZError : IEquatable<ZError>, IComparable<ZError>
     {
+        static ZError()
+        {
+            // force beforefieldinit semantics
+            GC.KeepAlive(new());
+        }
+
+        static readonly ConcurrentDictionary<int, ZError> NumToError = new();
+
         public static readonly ZError?
             None = null; // null
 
@@ -77,14 +85,13 @@ namespace ZeroMQ
             ETERM = new(nameof(ETERM)),
             EMTHREAD = new(nameof(EMTHREAD));
 
-
-        static readonly ConcurrentDictionary<int, ZError> NumToError = new();
-
-        private ZError(int errno, string name)
+        private ZError(int errno, string name, bool map = true)
         {
             Number = errno;
             _lazyText = new(() => StrErrorInternal(Number));
             Name = name;
+            if (map)
+                NumToError[Number] = this;
         }
 
         private ZError(string s) : this(ZErrorCode.ReverseLookup(s), s) { }
@@ -137,7 +144,10 @@ namespace ZeroMQ
             => FromNumber(zmq.errno());
 
         public static ZError? FromNumber(int num)
-            => NumToError.GetOrAdd(num, n => new(n, "UnknownErrorCode_" + n));
+            => num == 0
+                ? null
+                : NumToError.GetOrAdd(num,
+                    n => new(n, ZErrorCode.Lookup(n) ?? $"UnknownErrorCode_{n}", false));
     }
 
     [UsedImplicitly]
@@ -163,6 +173,34 @@ namespace ZeroMQ
             value = Enum.TryParse<Common>(name, out var eCommon) ? (int)eCommon : -1;
 
             return value;
+        }
+
+        internal static string? Lookup(int num)
+        {
+            string? name = null;
+
+#if NET5_0_OR_GREATER
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                name = Enum.GetName((MacOSX)num);
+
+            if (name == null
+                && (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                    || RuntimeInformation.IsOSPlatform(OSPlatform.OSX)))
+                name = Enum.GetName((Posix)num);
+
+            return name ?? Enum.GetName((Common)num);
+#else
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                name = Enum.GetName(typeof(MacOSX), num);
+
+            if (name == null
+                && (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                    || RuntimeInformation.IsOSPlatform(OSPlatform.OSX)))
+                name = Enum.GetName(typeof(Posix), num);
+
+            return name ?? Enum.GetName(typeof(Common), num);
+#endif
+
         }
 
 

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace ZeroMQ.lib
 {
@@ -15,16 +17,19 @@ namespace ZeroMQ.lib
 
         public static ZSafeHandle Alloc(nuint size, bool clearMem = true)
         {
+            Debug.Assert(size >= 0, "Alloc; size >= 0");
             var handle = freeHandles.TryPop(out var h) ? h : new();
             handle._ptr = Marshal.AllocHGlobal((nint)size);
             handle._isAllocated = true;
-            return clearMem ? handle.ClearMemory() : handle;
+            return clearMem ? handle.ClearMemory(size) : handle;
         }
 
-        public unsafe ZSafeHandle ClearMemory()
+        public unsafe ZSafeHandle ClearMemory(nuint size)
         {
             var p = (void*)this;
-            Unsafe.InitBlockUnaligned(p, 0, (uint)zmq.sizeof_zmq_msg_t);
+            Debug.Assert(p != default, "can't zero a null pointer");
+            Unsafe.InitBlockUnaligned(p, 0, (uint)size);
+            Interlocked.MemoryBarrier();
             return this;
         }
 
