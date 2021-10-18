@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using ZeroMQ.lib;
 
 namespace ZeroMQ.Monitoring
@@ -41,7 +42,7 @@ namespace ZeroMQ.Monitoring
         /// Spawns a <see cref="ZSocketType.PAIR"/> socket that publishes all events for
         /// the specified socket over the inproc transport at the given endpoint.
         /// </summary>
-        public static bool Monitor(this ZSocket socket, string endpoint, ZMonitorEvents eventsToMonitor, out ZError? error)
+        public static unsafe bool Monitor(this ZSocket socket, string endpoint, ZMonitorEvents eventsToMonitor, out ZError? error)
         {
             if (socket == null)
                 throw new ArgumentNullException(nameof(socket));
@@ -54,19 +55,20 @@ namespace ZeroMQ.Monitoring
 
             error = ZError.None;
 
-            using var endpointPtr = ZSafeHandle.AllocString(endpoint);
-
-            while (-1 == zmq.socket_monitor(socket.SocketPtr, endpointPtr, (int)eventsToMonitor))
+            fixed (void* pEncodingBytes = EncodedStringCache.For(Encoding.UTF8, endpoint))
             {
-                error = ZError.GetLastError();
+                while (-1 == zmq.socket_monitor(socket.SocketPtr, (IntPtr)pEncodingBytes, (int)eventsToMonitor))
+                {
+                    error = ZError.GetLastError();
 
-                if (error != ZError.EINTR)
-                    return false;
+                    if (error != ZError.EINTR)
+                        return false;
 
-                error = default;
+                    error = default;
 
+                }
+                return true;
             }
-            return true;
         }
     }
 }

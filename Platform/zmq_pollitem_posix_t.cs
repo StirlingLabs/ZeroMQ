@@ -11,7 +11,7 @@ namespace ZeroMQ.lib
         private short events;
         private short readyEvents;
 
-        public zmq_pollitem_posix_t(IntPtr socket, ZPoll pollEvents)
+        public zmq_pollitem_posix_t(IntPtr socket, ZPollEventTypes pollEvents)
         {
             if (socket == default)
                 throw new ArgumentException("Expected a valid socket handle.", nameof(socket));
@@ -19,7 +19,7 @@ namespace ZeroMQ.lib
             socketPtr = socket;
             fileDescriptor = 0;
             events = (short)pollEvents;
-            readyEvents = (short)ZPoll.None;
+            readyEvents = (short)ZPollEventTypes.None;
         }
 
         public IntPtr SocketPtr

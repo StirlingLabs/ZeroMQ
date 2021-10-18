@@ -234,7 +234,7 @@ namespace ZeroMQ
                 while (!Canceller.IsCancellationRequested)
                 {
 
-                    if (!(isValid = sockets.Poll(polls, ZPoll.In, ref lastMessageFrames, out error, PollingInterval)))
+                    if (!(isValid = sockets.Poll(polls, ZPollEventTypes.In, ref lastMessageFrames, out error, PollingInterval)))
                     {
 
                         if (error == ZError.EAGAIN)

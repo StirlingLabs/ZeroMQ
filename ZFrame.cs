@@ -7,9 +7,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using JetBrains.Annotations;
@@ -20,7 +22,7 @@ namespace ZeroMQ
     /// <summary>
     /// A single part message, sent or received via a <see cref="ZSocket"/>.
     /// </summary>
-    public sealed partial class ZFrame : ICloneable
+    public sealed partial class ZFrame : ICloneable, IDisposable
     {
         public static readonly nuint MinimumFrameSize = zmq.sizeof_zmq_msg_t;
 
@@ -30,19 +32,8 @@ namespace ZeroMQ
         private int _stateFlags;
         private nuint _length;
         private nuint _position;
-        private volatile ZSafeHandle? _msg_handle;
+        private IntPtr _msg;
 
-        private IntPtr _msg
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _msg_handle;
-        }
-
-        private static readonly IProducerConsumerCollection<ZSafeHandle> FreeMsgs
-            = new ConcurrentQueue<ZSafeHandle>();
-
-        //private static readonly IProducerConsumerCollection<ZFrame> FreeFrames
-        //    = new ConcurrentQueue<ZFrame>();
 
         private static bool _isCachingEnabled = false;
 
@@ -71,63 +62,7 @@ namespace ZeroMQ
             }
         }
 
-        public static void FlushObjectCaches()
-        {
-            while (FreeMsgs.TryTake(out var handle))
-                handle.Dispose();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if NETSTANDARD2_0
-        private static bool TryReclaimMsg(out ZSafeHandle? m)
-#else
-        private static bool TryReclaimMsg([NotNullWhen(true)] out ZSafeHandle? m)
-#endif
-        {
-            if (!FreeMsgs.TryTake(out m))
-                return false;
-            Debug.Assert(m.Ptr != default, "Reclaimed a null pointer");
-            m.ClearMemory((uint)zmq.sizeof_zmq_msg_t);
-            return true;
-        }
-
-
-        /* not sure why this is breaking...
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if NETSTANDARD2_0
-        private static bool TryReclaimFrame(out ZFrame? f)
-#else
-        private static bool TryReclaimFrame([NotNullWhen(true)] out ZFrame? f)
-#endif
-        {
-            if (!FreeFrames.TryTake(out f))
-                return false;
-            lock (f._lock)
-            {
-                f._msg_handle = TryReclaimMsg(out var m)
-                    ? m
-                    : ZSafeHandle.Alloc(zmq.sizeof_zmq_msg_t);
-                f.DisposeCaller = null;
-                f.DismissCaller = null;
-                f.CloseCaller = null;
-                f._position = 0;
-                f._length = 0;
-                Interlocked.Exchange(ref f._stateFlags, 0);
-                return true;
-            }
-        }
-        */
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool TryReclaimFrame(out ZFrame? f)
-        {
-            f = null;
-            return false;
-        }
-
-        private ZFrame()
-            => _msg_handle = TryReclaimMsg(out var m)
-                ? m
-                : ZSafeHandle.Alloc(zmq.sizeof_zmq_msg_t);
+        public static void FlushObjectCaches() { }
 
 
         public static ZFrame FromStream(Stream stream, nint i, nuint l)
@@ -167,22 +102,22 @@ namespace ZeroMQ
         public static ZFrame CopyFrom(ZFrame frame)
             => frame.Clone();
 
+        [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ZFrame Create()
-        {
-            ZFrame r = TryReclaimFrame(out var f) ? f : new();
-            r.CreateNative(0);
-            Debug.Assert(r._msg != default, "Missing message after CreateNative 0");
-            r._length = 0;
-            r._position = 0;
-            return r;
-        }
+            => CreateEmpty();
+
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ZFrame(IntPtr msg)
+            => _msg = msg;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ZFrame Create(nuint size)
         {
             if (size < 0) throw new ArgumentOutOfRangeException(nameof(size));
-            ZFrame r = TryReclaimFrame(out var f) ? f : new();
+            //ZFrame r = TryReclaimFrame(out var f) ? f : new();
+            var r = new ZFrame(zmq.AllocNative(zmq.sizeof_zmq_msg_t));
             r.CreateNative(size);
             Debug.Assert(r._msg != default, "Missing message after CreateNative N");
             r._length = size;
@@ -190,36 +125,32 @@ namespace ZeroMQ
             return r;
         }
 
+        [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ZFrame Create(byte[] data)
-        {
-            var size = (nuint)data.Length;
-            if (size == 0) return CreateEmpty();
-            ZFrame r = TryReclaimFrame(out var f) ? f : new();
-            r.CreatePinned(data);
-            Debug.Assert(r._msg != default, "Missing message after CreatePinned");
-            r._length = size;
-            r._position = 0;
-            return r;
-        }
+            => Create(data, 0, (nuint)data.Length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ZFrame Create(byte[] data, nuint offset, nuint count)
+        public static ZFrame Create(byte[] data, nuint offset, nuint length)
         {
-            if (count == 0) return CreateEmpty();
-            ZFrame r = TryReclaimFrame(out var f) ? f : new();
-            r.CreateNative(count);
+            if (length == 0) return CreateEmpty();
+            //ZFrame r = TryReclaimFrame(out var f) ? f : new();
+            ZFrame r = new(zmq.AllocNative(zmq.sizeof_zmq_msg_t));
+            r.CreateNative(length);
             Debug.Assert(r._msg != default, "Missing message after CreateNative M");
-            r._length = count;
+            r._length = length;
             r._position = 0;
-            r.Write(data, (int)offset, (int)count);
+            r.Write(data, (int)offset, (int)length);
             return r;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ZFrame Create(string str, Encoding encoding)
         {
-            ZFrame r = TryReclaimFrame(out var f) ? f : new();
+            //ZFrame r = TryReclaimFrame(out var f) ? f : new();
+            ZFrame r = new(zmq.AllocNative(zmq.sizeof_zmq_msg_t));
+            r._length = 0;
+            r._position = 0;
             r.WriteStringNative(str, encoding, true);
             Debug.Assert(r._msg != default, "Missing message after WriteStringNative");
             return r;
@@ -235,7 +166,8 @@ namespace ZeroMQ
             where T : unmanaged
         {
             var size = (nuint)sizeof(T);
-            ZFrame r = TryReclaimFrame(out var f) ? f : new();
+            //ZFrame r = TryReclaimFrame(out var f) ? f : new();
+            ZFrame r = new(zmq.AllocNative(zmq.sizeof_zmq_msg_t));
             r.CreateNative(size);
             Debug.Assert(r._msg != default, "Missing message after CreateNative G");
             r._length = size;
@@ -247,7 +179,8 @@ namespace ZeroMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ZFrame CreateEmpty()
         {
-            ZFrame r = TryReclaimFrame(out var f) ? f : new();
+            //ZFrame r = TryReclaimFrame(out var f) ? f : new();
+            ZFrame r = new(zmq.AllocNative(zmq.sizeof_zmq_msg_t));
             r.CreateEmptyNative();
             Debug.Assert(r._msg != default, "Missing message after CreateEmptyNative");
             r._length = 0;
@@ -258,30 +191,26 @@ namespace ZeroMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void CreateEmptyNative()
         {
-            Debug.Assert(!IsUnavailable, "CreateEmptyNative; Should not be unavailable");
-
             lock (_lock)
             {
-                while (-1 == zmq.msg_init(_msg))
-                {
-                    var error = ZError.GetLastError();
+                Debug.Assert(_msg != default, "CreateEmptyNative; _msg is missing");
+                Debug.Assert(!IsUnavailable, "CreateEmptyNative; Should not be unavailable");
 
-                    if (error == ZError.EINTR)
-                        continue;
+                if (0 == zmq.msg_init(_msg))
+                    return;
 
-                    throw new ZException(error, "zmq_msg_init");
-                }
+                var error = ZError.GetLastError();
+                throw new ZException(error, "zmq_msg_init");
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void CreateNative(nuint size)
         {
-            Debug.Assert(!IsUnavailable, "CreateNative; Should not be unavailable");
-
             lock (_lock)
             {
                 Debug.Assert(_msg != default, "CreateNative; _msg is missing");
+                Debug.Assert(!IsUnavailable, "CreateNative; Should not be unavailable");
                 while (-1 == zmq.msg_init_size(_msg, size))
                 {
                     var error = ZError.GetLastError();
@@ -298,16 +227,17 @@ namespace ZeroMQ
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void CreatePinned(byte[] data)
+        internal void CreatePinned(byte[] data, nuint offset, nuint length)
         {
             if (data is null) throw new ArgumentNullException(nameof(data));
             var size = (nuint)data.Length;
             if (size == 0) throw new ArgumentException("Array must not be empty.", nameof(data));
-            CreatePinned(GCHandle.Alloc(data, GCHandleType.Pinned), size);
+            Debug.Assert(_msg != default, "CreatePinned(byte[]); _msg is missing");
+            CreatePinned(GCHandle.Alloc(data, GCHandleType.Pinned), offset, length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal unsafe void CreatePinned(GCHandle pin, nuint size)
+        internal unsafe void CreatePinned(GCHandle pin, nuint offset, nuint length)
         {
             Debug.Assert(!IsUnavailable, "CreatePinned; Should not be unavailable");
 
@@ -318,18 +248,19 @@ namespace ZeroMQ
             //Console.Error.WriteLine($"[{CallStackHelpers.GetCallStackDepth()}] ZFrame.CreatePinned(GCH 0x{(IntPtr)pin:X8}, {size})");
 
 #if NET5_0_OR_GREATER
-            var pBytes = (IntPtr)Unsafe.AsPointer(ref MemoryMarshal.GetArrayDataReference(bytes));
+            var pBytes = (IntPtr)Unsafe.AsPointer(ref MemoryMarshal.GetArrayDataReference(bytes)) + (nint)offset;
 #else
             var pBytes = (IntPtr)Unsafe.AsPointer(ref bytes[0]);
 #endif
             lock (_lock)
             {
                 Debug.Assert(_msg != default, "CreatePinned; _msg is missing");
+                Debug.Assert(!IsUnavailable, "CreatePinned; Should not be unavailable");
 
 #if NET5_0_OR_GREATER
-                while (-1 == zmq.msg_init_data(_msg, pBytes, size, &PinnedGcHandleFreeCallback, GCHandle.ToIntPtr(pin)))
+                while (-1 == zmq.msg_init_data(_msg, pBytes, length, &PinnedGcHandleFreeCallback, GCHandle.ToIntPtr(pin)))
 #else
-                while (-1 == zmq.msg_init_data(_msg, pBytes, size, PinnedGcHandleFreeCallback, GCHandle.ToIntPtr(pin)))
+                while (-1 == zmq.msg_init_data(_msg, pBytes, length, PinnedGcHandleFreeCallback, GCHandle.ToIntPtr(pin)))
 #endif
                 {
                     var error = ZError.GetLastError();
@@ -409,16 +340,23 @@ namespace ZeroMQ
                 IsDisposed = true;
 
 #if TRACE
-                var sf = new StackFrame(1, true);
                 DisposeCaller = new()
                 {
-                    MetadataToken = sf.GetMethod()?.MetadataToken ?? 0,
-                    FilePath = sf.GetFileName(),
-                    LineNumber = sf.GetFileLineNumber()
+                    MetadataToken = 0,
+                    FilePath = "IDispose implementation",
+                    LineNumber = -1
                 };
 #endif
 
+                /*try
+                {*/
                 Close();
+                /*}
+                catch
+                {
+                    if (Debugger.IsAttached)
+                        Debugger.Break();
+                }*/
 
                 if (!TryRecycleFrame())
                 {
@@ -458,7 +396,15 @@ namespace ZeroMQ
                     };
                 }
 
-                Close();
+                try
+                {
+                    Close();
+                }
+                catch
+                {
+                    if (Debugger.IsAttached)
+                        Debugger.Break();
+                }
 
                 if (!TryRecycleFrame())
                 {
@@ -509,20 +455,24 @@ namespace ZeroMQ
 
                 Close();
 
+                /*
                 if (!TryRecycleMsg())
                     _msg_handle?.Dispose();
 
-                _msg_handle = null;
+                _msg_handle = null;*/
+
+                zmq.FreeNative(Interlocked.Exchange(ref _msg, default));
             }
         }
 
 
+        /*
         [MustUseReturnValue]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool TryRecycleMsg()
             => IsCachingEnabled
-                && _msg_handle != null
-                && FreeMsgs.TryAdd(_msg_handle);
+                && _msg != default
+                && FreeMsgs.TryAdd(_msg);*/
 
         [MustUseReturnValue]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -998,29 +948,25 @@ namespace ZeroMQ
                         //charCount = dec.GetChars(bytes, remaining, chars, charCount, true);
                         charCount = encoding.GetChars(bytes, remaining, chars, charCount);
 
-                        int i = -1, z = 0;
-                        while (i < charCount)
-                        {
-                            ++i;
+                        _position += (nuint)encoding.GetByteCount(chars, charCount);
 
-                            if (chars[i] != '\0')
-                                continue;
-
-                            charCount = i;
-                            ++z;
-
-                            break;
-                        }
-
-                        //var enc = encoding.GetEncoder();
-                        //_position += (nuint)enc.GetByteCount(chars, charCount + z, true);
-                        _position += (nuint)encoding.GetByteCount(chars, charCount + z);
+                        if (chars[charCount - 1] != '\0' && chars[charCount] == '\0')
+                            _position += 1;
 
                         if (charCount == 0)
                             value = string.Empty;
+
                         else
                         {
+#if NETSTANDARD2_0
                             string s = new(chars, 0, charCount);
+#else
+                            string s = string.Create(charCount, (p: (IntPtr)chars, charCount), (charSpan, o) => {
+                                var pChars = (char*)o.p;
+                                fixed (char* pCharSpan = charSpan)
+                                    Unsafe.CopyBlockUnaligned(pCharSpan, pChars, (uint)(o.charCount * 2));
+                            });
+#endif
                             value = string.IsInterned(s) ?? s;
                         }
 
@@ -1252,12 +1198,9 @@ namespace ZeroMQ
             if (create)
             {
                 //Console.Error.WriteLine($"[{CallStackHelpers.GetCallStackDepth()}] WriteStringNative({str}, {encoding.EncodingName}, {create})");
-                var cache = EncodedStringCaches.GetOrAdd(encoding, EncodedStringCache.Factory);
-
-                var bytes = cache.Get(str);
-
-                var size = (nuint)bytes.LongLength;
-                CreatePinned(bytes);
+                var bytes = EncodedStringCache.For(encoding, str);
+                var size = (nuint)bytes.LongLength - 1;
+                CreatePinned(bytes, 0, size);
                 _length = size;
                 _position = _length;
             }
@@ -1270,9 +1213,8 @@ namespace ZeroMQ
                     throw new InvalidOperationException();
 
                 var charCount = str.Length;
-                var enc = encoding.GetEncoder();
                 fixed (char* strP = str)
-                    byteCount = (uint)enc.GetBytes(strP, charCount, Data() + _position, (int)byteCount, true);
+                    byteCount = (uint)encoding.GetBytes(strP, charCount, Data() + _position, (int)byteCount);
 
                 _position += byteCount;
             }
@@ -1439,13 +1381,13 @@ namespace ZeroMQ
 
         public void CopyZeroTo(ZFrame other)
         {
-            UnavailableCheck();
-
-            // zmq.msg_copy(dest, src)
-
             lock (_lock)
             lock (other._lock)
             {
+                UnavailableCheck();
+
+                // zmq.msg_copy(dest, src)
+
                 Debug.Assert(_msg != default, "CopyZeroTo; _msg is missing");
                 while (-1 == zmq.msg_copy(other._msg, _msg))
                 {
@@ -1466,13 +1408,13 @@ namespace ZeroMQ
 
         public void MoveZeroTo(ZFrame other)
         {
-            UnavailableCheck();
-
-            // zmq.msg_copy(dest, src)
-
             lock (_lock)
             lock (other._lock)
             {
+                UnavailableCheck();
+
+                // zmq.msg_copy(dest, src)
+
                 Debug.Assert(_msg != default, "MoveZeroTo; _msg is missing");
                 while (-1 == zmq.msg_move(other._msg, _msg))
                 {
@@ -1508,7 +1450,7 @@ namespace ZeroMQ
             UnavailableCheck();
 #endif
             error = ZError.ENOENT;
-            if (IsDismissed || IsClosed || IsDisposed) return -1;
+            if (IsUnavailable) return -1;
 
             error = ZError.None;
 
@@ -1535,7 +1477,7 @@ namespace ZeroMQ
                 : result;
         }
 
-        public string? GetOption(string property, out ZError? error)
+        public unsafe string? GetOption(string property, out ZError? error)
         {
 #if TRACE
             UnavailableCheck();
@@ -1545,11 +1487,15 @@ namespace ZeroMQ
 
             error = ZError.None;
 
-            using var propertyPtr = ZSafeHandle.AllocString(property);
+            var propertyBytes = EncodedStringCache.For(Encoding.UTF8, property);
 
             IntPtr resultPtr;
             Debug.Assert(_msg != default, "GetOption; _msg is missing");
-            lock (_lock) resultPtr = zmq.msg_gets(_msg, propertyPtr);
+            lock (_lock)
+            {
+                fixed (void* pPropertyStr = propertyBytes)
+                    resultPtr = zmq.msg_gets(_msg, (IntPtr)pPropertyStr);
+            }
 
             if (default == resultPtr)
             {
@@ -1600,9 +1546,10 @@ namespace ZeroMQ
 
         internal bool Receive(ZSocket sock, ZSocketFlags flags, out ZError? error)
         {
-            UnavailableCheck();
             lock (_lock)
+            lock (sock._lock)
             {
+                UnavailableCheck();
 
                 Debug.Assert(_msg != default, "Receive; _msg is missing");
 
@@ -1626,7 +1573,7 @@ namespace ZeroMQ
                 }
 
 #if NETSTANDARD2_0
-            Thread.Sleep(1);
+                Thread.Sleep(1);
 #else
                 Interlocked.MemoryBarrierProcessWide();
 #endif
@@ -1649,9 +1596,10 @@ namespace ZeroMQ
 
         internal bool Send(ZSocket sock, ZSocketFlags flags, out ZError? error)
         {
-            UnavailableCheck();
             lock (_lock)
+            lock (sock._lock)
             {
+                UnavailableCheck();
 
                 Debug.Assert(_msg != default, "Send; _msg is missing");
 
@@ -1693,5 +1641,35 @@ namespace ZeroMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal bool Send(ZSocket sock, out ZError? error, bool more = true)
             => Send(sock, more ? ZSocketFlags.More : default, out error);
+
+        public bool TryGetRoutingId(out uint id)
+        {
+            UnavailableCheck();
+            lock (_lock)
+            {
+                id = zmq.routing_id(_msg);
+
+                return id != 0;
+            }
+        }
+
+        public bool TrySetRoutingId(uint id)
+        {
+            UnavailableCheck();
+            if (id == 0) throw new ArgumentOutOfRangeException(nameof(id), "Routing IDs must be > 0.");
+            lock (_lock)
+            {
+                while (-1 == zmq.msg_set_routing_id(_msg, id))
+                {
+                    var error = ZError.GetLastError();
+
+                    if (error == ZError.EINTR)
+                        continue;
+
+                    throw new ZException(error);
+                }
+                return true;
+            }
+        }
     }
 }

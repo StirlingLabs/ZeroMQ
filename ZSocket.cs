@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -18,6 +19,8 @@ namespace ZeroMQ
     [PublicAPI]
     public class ZSocket : IDisposable
     {
+        public static readonly ConcurrentDictionary<IntPtr, WeakReference<ZSocket>> Active = new();
+
         /// <summary>
         /// Create a <see cref="ZSocket"/> instance.
         /// </summary>
@@ -40,6 +43,7 @@ namespace ZeroMQ
         private IntPtr _socketPtr;
 
         private ZSocketType _socketType;
+        public readonly object _lock = new();
 
         public string? Name { get; set; }
 
@@ -83,7 +87,10 @@ namespace ZeroMQ
             error = default;
 
             if (default != (_socketPtr = zmq.socket(_context.ContextPtr, (int)_socketType)))
+            {
+                Active.TryAdd(_socketPtr, new(this));
                 return true;
+            }
 
             error = ZError.GetLastError();
             return false;
@@ -107,13 +114,18 @@ namespace ZeroMQ
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
+            lock (_lock)
+            {
+                Active.TryRemove(_socketPtr, out _);
+                //if (disposing)
                 Close(out _);
+            }
         }
 
         /// <summary>
         /// Close the current socket.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Close()
         {
             if (!Close(out var error))
@@ -125,16 +137,18 @@ namespace ZeroMQ
         /// </summary>
         public bool Close(out ZError? error)
         {
-            error = ZError.None;
-            if (_socketPtr == default) return true;
-
-            if (-1 == zmq.close(_socketPtr))
+            lock (_lock)
             {
+                error = ZError.None;
+                var ptr = Interlocked.Exchange(ref _socketPtr, default);
+                if (ptr == default) return true;
+
+                if (-1 != zmq.close(ptr))
+                    return true;
+
                 error = ZError.GetLastError();
                 return false;
             }
-            _socketPtr = default;
-            return true;
         }
 
         public ZContext Context => _context;
@@ -160,21 +174,24 @@ namespace ZeroMQ
         /// Bind the specified endpoint.
         /// </summary>
         /// <param name="endpoint">A string consisting of a transport and an address, formatted as <c><em>transport</em>://<em>address</em></c>.</param>
-        public bool Bind(string endpoint, out ZError? error)
+        public unsafe bool Bind(string endpoint, out ZError? error)
         {
-            EnsureNotDisposed();
+            lock (_lock)
+            {
+                EnsureNotDisposed();
 
-            error = default;
+                error = default;
 
-            if (string.IsNullOrWhiteSpace(endpoint))
-                throw new ArgumentException("IsNullOrWhiteSpace", nameof(endpoint));
+                if (string.IsNullOrWhiteSpace(endpoint))
+                    throw new ArgumentException("IsNullOrWhiteSpace", nameof(endpoint));
 
-            using var endpointPtr = ZSafeHandle.AllocString(endpoint);
-            if (-1 != zmq.bind(_socketPtr, endpointPtr))
-                return true;
+                fixed (void* pEncodingBytes = EncodedStringCache.For(Encoding.UTF8, endpoint))
+                    if (-1 != zmq.bind(_socketPtr, (IntPtr)pEncodingBytes))
+                        return true;
 
-            error = ZError.GetLastError();
-            return false;
+                error = ZError.GetLastError();
+                return false;
+            }
         }
 
         /// <summary>
@@ -191,21 +208,24 @@ namespace ZeroMQ
         /// Unbind the specified endpoint.
         /// </summary>
         /// <param name="endpoint">A string consisting of a transport and an address, formatted as <c><em>transport</em>://<em>address</em></c>.</param>
-        public bool Unbind(string endpoint, out ZError? error)
+        public unsafe bool Unbind(string endpoint, out ZError? error)
         {
-            EnsureNotDisposed();
+            lock (_lock)
+            {
+                EnsureNotDisposed();
 
-            error = default;
+                error = default;
 
-            if (string.IsNullOrWhiteSpace(endpoint))
-                throw new ArgumentException("IsNullOrWhiteSpace", nameof(endpoint));
+                if (string.IsNullOrWhiteSpace(endpoint))
+                    throw new ArgumentException("IsNullOrWhiteSpace", nameof(endpoint));
 
-            using var endpointPtr = ZSafeHandle.AllocString(endpoint);
-            if (-1 != zmq.unbind(_socketPtr, endpointPtr))
-                return true;
+                fixed (void* pEncodingBytes = EncodedStringCache.For(Encoding.UTF8, endpoint))
+                    if (-1 != zmq.unbind(_socketPtr, (IntPtr)pEncodingBytes))
+                        return true;
 
-            error = ZError.GetLastError();
-            return false;
+                error = ZError.GetLastError();
+                return false;
+            }
         }
 
         /// <summary>
@@ -222,21 +242,24 @@ namespace ZeroMQ
         /// Connect the specified endpoint.
         /// </summary>
         /// <param name="endpoint">A string consisting of a transport and an address, formatted as <c><em>transport</em>://<em>address</em></c>.</param>
-        public bool Connect(string endpoint, out ZError? error)
+        public unsafe bool Connect(string endpoint, out ZError? error)
         {
-            EnsureNotDisposed();
+            lock (_lock)
+            {
+                EnsureNotDisposed();
 
-            error = default;
+                error = default;
 
-            if (string.IsNullOrWhiteSpace(endpoint))
-                throw new ArgumentException("IsNullOrWhiteSpace", nameof(endpoint));
+                if (string.IsNullOrWhiteSpace(endpoint))
+                    throw new ArgumentException("IsNullOrWhiteSpace", nameof(endpoint));
 
-            using var endpointPtr = ZSafeHandle.AllocString(endpoint);
-            if (-1 != zmq.connect(_socketPtr, endpointPtr))
-                return true;
+                fixed (void* pEncodingBytes = EncodedStringCache.For(Encoding.UTF8, endpoint))
+                    if (-1 != zmq.connect(_socketPtr, (IntPtr)pEncodingBytes))
+                        return true;
 
-            error = ZError.GetLastError();
-            return false;
+                error = ZError.GetLastError();
+                return false;
+            }
         }
 
         /// <summary>
@@ -252,21 +275,24 @@ namespace ZeroMQ
         /// Disconnect the specified endpoint.
         /// </summary>
         /// <param name="endpoint">A string consisting of a transport and an address, formatted as <c><em>transport</em>://<em>address</em></c>.</param>
-        public bool Disconnect(string endpoint, out ZError? error)
+        public unsafe bool Disconnect(string endpoint, out ZError? error)
         {
-            EnsureNotDisposed();
+            lock (_lock)
+            {
+                EnsureNotDisposed();
 
-            error = default;
+                error = default;
 
-            if (string.IsNullOrWhiteSpace(endpoint))
-                throw new ArgumentException("IsNullOrWhiteSpace", nameof(endpoint));
+                if (string.IsNullOrWhiteSpace(endpoint))
+                    throw new ArgumentException("IsNullOrWhiteSpace", nameof(endpoint));
 
-            using var endpointPtr = ZSafeHandle.AllocString(endpoint);
-            if (-1 != zmq.disconnect(_socketPtr, endpointPtr))
-                return true;
+                fixed (void* pEncodingBytes = EncodedStringCache.For(Encoding.UTF8, endpoint))
+                    if (-1 != zmq.disconnect(_socketPtr, (IntPtr)pEncodingBytes))
+                        return true;
 
-            error = ZError.GetLastError();
-            return false;
+                error = ZError.GetLastError();
+                return false;
+            }
         }
 
         /// <summary>
@@ -285,41 +311,45 @@ namespace ZeroMQ
         /// </summary>
         public unsafe int ReceiveBytes(Span<byte> buffer, nuint offset, nuint count, ZSocketFlags flags, out ZError? error)
         {
-            EnsureNotDisposed();
-
-            error = ZError.None;
 
             // int zmq_recv(void* socket, void* buf, size_t len, int flags);
 
-            fixed (byte* pBuffer = buffer)
+            lock (_lock)
             {
-                var pOffset = pBuffer + offset;
+                EnsureNotDisposed();
 
-                int length;
+                error = ZError.None;
 
-                //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-RECV");
-                //Console.Error.Flush();
-                while (-1 == (length = zmq.recv(SocketPtr, (IntPtr)pOffset, count, flags)))
+                fixed (byte* pBuffer = buffer)
                 {
-                    //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-RECV_DONE");
+                    var pOffset = pBuffer + offset;
+
+                    int length;
+
+                    //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-RECV");
                     //Console.Error.Flush();
-                    error = ZError.GetLastError();
+                    while (-1 == (length = zmq.recv(SocketPtr, (IntPtr)pOffset, count, flags)))
+                    {
+                        //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-RECV_DONE");
+                        //Console.Error.Flush();
+                        error = ZError.GetLastError();
 
-                    if (error != ZError.EINTR
-                        || error == ZError.ETERM
-                        || error == ZError.EAGAIN)
-                        break;
+                        if (error != ZError.EINTR
+                            || error == ZError.ETERM
+                            || error == ZError.EAGAIN)
+                            break;
 
-                    if (error == ZError.ENOMEM
-                        || error == ZError.EFSM
-                        || error == ZError.ENOTSUP
-                        || error == ZError.EFSM)
-                        throw new ZException(error);
+                        if (error == ZError.ENOMEM
+                            || error == ZError.EFSM
+                            || error == ZError.ENOTSUP
+                            || error == ZError.EFSM)
+                            throw new ZException(error);
 
-                    error = default;
+                        error = default;
+                    }
+
+                    return length;
                 }
-
-                return length;
             }
         }
 
@@ -336,31 +366,34 @@ namespace ZeroMQ
         /// </summary>
         public unsafe bool SendBytes(ReadOnlySpan<byte> buffer, nuint offset, nuint count, ZSocketFlags flags, out ZError? error)
         {
-            EnsureNotDisposed();
-
-            error = ZError.None;
-
-            // int zmq_send (void *socket, void *buf, size_t len, int flags);
-
-            fixed (byte* pBuffer = buffer)
+            lock (_lock)
             {
-                var pOffset = pBuffer + offset;
+                EnsureNotDisposed();
 
-                //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-SEND");
-                //Console.Error.Flush();
-                while (-1 == zmq.send(SocketPtr, (IntPtr)pOffset, count, flags))
+                error = ZError.None;
+
+                // int zmq_send (void *socket, void *buf, size_t len, int flags);
+
+                fixed (byte* pBuffer = buffer)
                 {
-                    //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-SEND_DONE");
+                    var pOffset = pBuffer + offset;
+
+                    //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-SEND");
                     //Console.Error.Flush();
-                    error = ZError.GetLastError();
+                    while (-1 == zmq.send(SocketPtr, (IntPtr)pOffset, count, flags))
+                    {
+                        //Console.Error.WriteLine($"{Thread.CurrentThread.ManagedThreadId}-SEND_DONE");
+                        //Console.Error.Flush();
+                        error = ZError.GetLastError();
 
-                    if (error != ZError.EINTR)
-                        return false;
+                        if (error != ZError.EINTR)
+                            return false;
 
-                    error = default;
+                        error = default;
+                    }
                 }
+                return true;
             }
-            return true;
         }
 
         /// <summary>
@@ -515,28 +548,31 @@ namespace ZeroMQ
 
         public bool ReceiveFrames(ref int framesToReceive, ref ZMessage? frames, ZSocketFlags flags, out ZError? error)
         {
-            EnsureNotDisposed();
-
-            error = default;
-            flags |= ZSocketFlags.More;
-
-            do
+            lock (_lock)
             {
-                var frame = ZFrame.CreateEmpty();
+                EnsureNotDisposed();
 
-                if (framesToReceive == 1)
-                    flags &= ~ZSocketFlags.More;
+                error = default;
+                flags |= ZSocketFlags.More;
 
-                if (!frame.Receive(this, flags, out error))
-                    return false;
+                do
+                {
+                    var frame = ZFrame.CreateEmpty();
 
-                frames ??= ZMessage.Create();
+                    if (framesToReceive == 1)
+                        flags &= ~ZSocketFlags.More;
 
-                frames.Add(frame);
+                    if (!frame.Receive(this, flags, out error))
+                        return false;
 
-            } while (--framesToReceive > 0 && ReceiveMore);
+                    frames ??= ZMessage.Create();
 
-            return true;
+                    frames.Add(frame);
+
+                } while (--framesToReceive > 0 && ReceiveMore);
+
+                return true;
+            }
         }
 
 
@@ -816,11 +852,11 @@ namespace ZeroMQ
             return true;
         }
 
-        private bool GetOption(ZSocketOption option, IntPtr optionValue, ref nuint optionLength)
+        private unsafe bool GetOption(ZSocketOption option, IntPtr optionValue, ref nuint optionLength)
         {
             EnsureNotDisposed();
 
-            while (-1 == zmq.getsockopt(_socketPtr, (int)option, optionValue, ref optionLength))
+            while (-1 == zmq.getsockopt(_socketPtr, (int)option, optionValue, (nuint*)Unsafe.AsPointer(ref optionLength)))
             {
                 var error = ZError.GetLastError();
 
@@ -846,7 +882,7 @@ namespace ZeroMQ
 
             fixed (void* pOptionValue = optionValue)
             {
-                while (-1 == zmq.getsockopt(_socketPtr, (int)option, (IntPtr)pOptionValue, ref optionLength))
+                while (-1 == zmq.getsockopt(_socketPtr, (int)option, (IntPtr)pOptionValue, (nuint*)Unsafe.AsPointer(ref optionLength)))
                 {
                     var error = ZError.GetLastError();
 
@@ -1036,13 +1072,13 @@ namespace ZeroMQ
                 return SetOption(option, (IntPtr)pValue, optionLength);
         }
 
-        public bool SetOption(ZSocketOption option, string? value)
+        public unsafe bool SetOption(ZSocketOption option, string? value)
         {
             if (value == null) return SetOptionNull(option);
 
-            using var optionValue = ZSafeHandle.AllocString(value, out var optionLength);
-
-            return SetOption(option, optionValue, optionLength);
+            var valueBytes = EncodedStringCache.For(Encoding.UTF8, value);
+            fixed (void* pValue = valueBytes)
+                return SetOption(option, (IntPtr)pValue, (nuint)valueBytes.Length);
         }
 
         public unsafe bool SetOption<T>(ZSocketOption option, T value)

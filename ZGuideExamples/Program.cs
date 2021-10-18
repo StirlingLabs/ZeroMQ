@@ -113,9 +113,7 @@ namespace Examples
             AppDomain.CurrentDomain.ProcessExit += (_, _) => {
                 keyPressedLoopThread.Interrupt();
                 if (!keyPressedLoopThread.Join(1000))
-#pragma warning disable 618
-                    keyPressedLoopThread.Abort();
-#pragma warning restore 618
+                    keyPressedLoopThread.IsBackground = true;
             };
             try
             {

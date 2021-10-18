@@ -2,9 +2,9 @@ namespace ZeroMQ
 {
     public sealed class ZPollItem
     {
-        public ZPoll Events;
+        public ZPollEventTypes Events;
 
-        public ZPoll ReadyEvents;
+        public ZPollEventTypes ReadyEvents;
 
         public delegate bool ReceiveDelegate(ZSocket socket, out ZMessage? message, out ZError? error);
 
@@ -23,7 +23,7 @@ namespace ZeroMQ
         public static bool DefaultSendMessage(ZSocket socket, ZMessage? message, out ZError? error)
             => socket.Send(message, out error);
 
-        private ZPollItem(ZPoll events)
+        private ZPollItem(ZPollEventTypes events)
             => Events = events;
 
         public static ZPollItem Create(ReceiveDelegate receiveMessage)
@@ -35,8 +35,8 @@ namespace ZeroMQ
         public static ZPollItem Create(ReceiveDelegate? receiveMessage, SendDelegate? sendMessage)
         {
             var pollItem = new ZPollItem(
-                (receiveMessage != null ? ZPoll.In : ZPoll.None)
-                | (sendMessage != null ? ZPoll.Out : ZPoll.None))
+                (receiveMessage != null ? ZPollEventTypes.In : ZPollEventTypes.None)
+                | (sendMessage != null ? ZPollEventTypes.Out : ZPollEventTypes.None))
             {
                 ReceiveMessage = receiveMessage,
                 SendMessage = sendMessage

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>net5.0;net6.0;netcoreapp3.1;netstandard2.0;netstandard2.1</TargetFrameworks>
+        <TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.0;netstandard2.1</TargetFrameworks>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <RootNamespace>ZeroMQ</RootNamespace>
         <AssemblyName>ZeroMQ</AssemblyName>
@@ -12,6 +12,9 @@
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>git@github.com:StirlingLabs/ZeroMQ.git</RepositoryUrl>
         <Version>4.3.0</Version>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DefineConstants />
     </PropertyGroup>
 
     <ItemGroup>
@@ -29,6 +32,7 @@
     <ItemGroup Condition="$(TargetFramework.Equals('netstandard2.0'))">
         <PackageReference Include="System.Memory" Version="4.5.4" />
         <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3" />
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0.0" />
     </ItemGroup>
     <ItemGroup Condition="$(TargetFramework.Equals('netstandard2.1'))">
         <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />

@@ -11,7 +11,7 @@ namespace ZeroMQ
         {
             internal static unsafe bool PollMany(
                 IEnumerable<ZSocket> sockets,
-                IEnumerable<ZPollItem> items, ZPoll pollEvents,
+                IEnumerable<ZPollItem> items, ZPollEventTypes pollEvents,
                 out ZError? error, TimeSpan? timeout = null)
             {
                 error = default;
@@ -30,7 +30,7 @@ namespace ZeroMQ
 
                     native->SocketPtr = socket.SocketPtr;
                     native->Events = (short)(item.Events & pollEvents);
-                    native->ReadyEvents = (short)ZPoll.None;
+                    native->ReadyEvents = (short)ZPollEventTypes.None;
                 }
 
                 while (!(result = -1 != zmq.poll(natives, count, timeoutMs)))
@@ -50,7 +50,7 @@ namespace ZeroMQ
                     var item = items.ElementAt(i);
                     var native = natives + i;
 
-                    item.ReadyEvents = (ZPoll)native->ReadyEvents;
+                    item.ReadyEvents = (ZPollEventTypes)native->ReadyEvents;
                 }
                 // }
 
@@ -59,7 +59,7 @@ namespace ZeroMQ
 
             internal static unsafe bool PollSingle(
                 ZSocket socket,
-                ZPollItem item, ZPoll pollEvents,
+                ZPollItem item, ZPollEventTypes pollEvents,
                 out ZError? error, TimeSpan? timeout = null)
             {
                 error = default;
@@ -71,7 +71,7 @@ namespace ZeroMQ
 
                 native->SocketPtr = socket.SocketPtr;
                 native->Events = (short)(item.Events & pollEvents);
-                native->ReadyEvents = (short)ZPoll.None;
+                native->ReadyEvents = (short)ZPollEventTypes.None;
 
                 while (!(result = -1 != zmq.poll(native, 1, timeoutMs)))
                 {
@@ -85,7 +85,7 @@ namespace ZeroMQ
                     break;
                 }
 
-                item.ReadyEvents = (ZPoll)native->ReadyEvents;
+                item.ReadyEvents = (ZPollEventTypes)native->ReadyEvents;
                 //}
 
                 return result;

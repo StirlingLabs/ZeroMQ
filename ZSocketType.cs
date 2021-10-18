@@ -1,4 +1,6 @@
-﻿namespace ZeroMQ
+﻿using System;
+
+namespace ZeroMQ
 {
     public enum ZSocketType
     {
@@ -77,6 +79,17 @@
         /// </summary>
         /// <remarks>
         /// </remarks>
-        STREAM
+        STREAM,
+        
+        SERVER,
+        CLIENT,
+        RADIO,
+        DISH,
+        GATHER,
+        SCATTER,
+        DGRAM,
+        PEER,
+        CHANNEL
+
     }
 }

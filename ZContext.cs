@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using ZeroMQ.lib;
 
 namespace ZeroMQ
@@ -64,22 +65,17 @@ namespace ZeroMQ
             => Dispose(false);
 
         private IntPtr _contextPtr;
+        private readonly object _lock = new();
 
         /// <summary>
         /// Gets a handle to the native ZeroMQ context.
         /// </summary>
         public IntPtr ContextPtr => _contextPtr;
 
-        public static bool Has(string capability)
+        public static unsafe bool Has(string capability)
         {
-            using (var capabilityPtr = ZSafeHandle.AllocString(capability))
-            {
-                if (0 < zmq.has(capabilityPtr))
-                {
-                    return true;
-                }
-            }
-            return false;
+            fixed (void* pCapabilityBytes = EncodedStringCache.For(Encoding.UTF8, capability))
+                return 0 != zmq.has((IntPtr)pCapabilityBytes);
         }
 
         [DebuggerStepThrough]
@@ -104,33 +100,78 @@ namespace ZeroMQ
             throw new ZException(error);
         }
 
-        public static bool Proxy(ZSocket frontend, ZSocket backend, ZSocket? capture, out ZError? error)
+        private static bool ProxyInternal(ZSocket frontend, ZSocket backend, out ZError? error)
         {
             error = ZError.None;
 
-            while (-1 == zmq.proxy(frontend.SocketPtr, backend.SocketPtr, capture?.SocketPtr ?? default))
+            lock (frontend._lock)
+            lock (backend._lock)
             {
-                error = ZError.GetLastError();
 
-                if (error != ZError.EINTR)
-                    return false;
+                while (-1 == zmq.proxy(frontend.SocketPtr, backend.SocketPtr, default))
+                {
+                    error = ZError.GetLastError();
 
-                if (frontend.SocketPtr == default)
-                    throw new ObjectDisposedException(nameof(frontend));
+                    if (error != ZError.EINTR)
+                        return false;
 
-                if (backend.SocketPtr == default)
-                    throw new ObjectDisposedException(nameof(frontend));
+                    if (frontend.SocketPtr == default)
+                        throw new ObjectDisposedException(nameof(frontend));
+
+                    if (backend.SocketPtr == default)
+                        throw new ObjectDisposedException(nameof(frontend));
+                }
             }
 
             return true;
         }
 
+        private static bool ProxyInternal(ZSocket frontend, ZSocket backend, ZSocket capture, out ZError? error)
+        {
+            error = ZError.None;
+
+            lock (frontend._lock)
+            lock (backend._lock)
+            lock (capture._lock)
+            {
+
+                while (-1 == zmq.proxy(frontend.SocketPtr, backend.SocketPtr, capture.SocketPtr))
+                {
+                    error = ZError.GetLastError();
+
+                    if (error != ZError.EINTR)
+                        return false;
+
+                    if (frontend.SocketPtr == default)
+                        throw new ObjectDisposedException(nameof(frontend));
+
+                    if (backend.SocketPtr == default)
+                        throw new ObjectDisposedException(nameof(frontend));
+                }
+            }
+
+            return true;
+        }
+
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Proxy(ZSocket frontend, ZSocket backend, ZSocket? capture, out ZError? error)
+            => capture is null
+                ? ProxyInternal(frontend, backend, out error)
+                : ProxyInternal(frontend, backend, capture, out error);
+
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ProxySteerable(ZSocket frontend, ZSocket backend, ZSocket control)
             => ProxySteerable(frontend, backend, null, control);
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool ProxySteerable(ZSocket frontend, ZSocket backend, ZSocket control, out ZError? error)
             => ProxySteerable(frontend, backend, null, control, out error);
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ProxySteerable(ZSocket frontend, ZSocket backend, ZSocket? capture, ZSocket control)
         {
             if (ProxySteerable(frontend, backend, capture, control, out var error))
@@ -142,52 +183,95 @@ namespace ZeroMQ
             throw new ZException(error);
         }
 
-        public static bool ProxySteerable(ZSocket frontend, ZSocket backend, ZSocket? capture, ZSocket control, out ZError? error)
+        private static bool ProxySteerableInternal(ZSocket frontend, ZSocket backend, ZSocket control, out ZError? error)
         {
             error = ZError.None;
 
-            while (-1 == zmq.proxy_steerable(frontend.SocketPtr, backend.SocketPtr, capture?.SocketPtr ?? default,
-                control?.SocketPtr ?? default))
+            lock (frontend._lock)
+            lock (backend._lock)
+            lock (control._lock)
             {
-                error = ZError.GetLastError();
+                while (-1 == zmq.proxy_steerable(frontend.SocketPtr, backend.SocketPtr, default, control.SocketPtr))
+                {
+                    error = ZError.GetLastError();
 
-                if (error != ZError.EINTR)
-                    return false;
+                    if (error != ZError.EINTR)
+                        return false;
 
-                error = default;
+                    error = default;
+                }
+                return true;
             }
-            return true;
         }
+
+        public static bool ProxySteerableInternal(ZSocket frontend, ZSocket backend, ZSocket capture, ZSocket control, out ZError? error)
+        {
+            error = ZError.None;
+
+            lock (frontend._lock)
+            lock (backend._lock)
+            lock (capture._lock)
+            lock (control._lock)
+            {
+                while (-1 == zmq.proxy_steerable(frontend.SocketPtr, backend.SocketPtr, capture.SocketPtr, control.SocketPtr))
+                {
+                    error = ZError.GetLastError();
+
+                    if (error != ZError.EINTR)
+                        return false;
+
+                    error = default;
+                }
+                return true;
+            }
+        }
+
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool ProxySteerable(ZSocket frontend, ZSocket backend, ZSocket? capture, ZSocket? control, out ZError? error)
+            => control is null
+                ? Proxy(frontend, backend, capture, out error)
+                : capture is not null
+                    ? ProxySteerableInternal(frontend, backend, capture, control, out error)
+                    : ProxySteerableInternal(frontend, backend, control, out error);
 
         public void SetOption(ZContextOption option, int optionValue)
         {
-            EnsureNotDisposed();
+            lock (_lock)
+            {
+                if (_contextPtr == default)
+                    throw new ObjectDisposedException(GetType().FullName);
 
-            var rc = zmq.ctx_set(_contextPtr, option, optionValue);
-            if (rc != -1)
-                return;
+                var rc = zmq.ctx_set(_contextPtr, option, optionValue);
+                if (rc != -1)
+                    return;
 
-            var error = ZError.GetLastError();
+                var error = ZError.GetLastError();
 
-            if (error == ZError.EINVAL)
-                throw new ArgumentOutOfRangeException($"The requested option optionName \"{option}\" is invalid.");
+                if (error == ZError.EINVAL)
+                    throw new ArgumentOutOfRangeException($"The requested option optionName \"{option}\" is invalid.");
 
-            throw new ZException(error);
+                throw new ZException(error);
+            }
         }
 
         public int GetOption(ZContextOption option)
         {
-            EnsureNotDisposed();
+            lock (_lock)
+            {
+                if (_contextPtr == default)
+                    throw new ObjectDisposedException(GetType().FullName);
 
-            var rc = zmq.ctx_get(_contextPtr, option);
-            if (rc != -1)
-                return rc;
-            var error = ZError.GetLastError();
+                var rc = zmq.ctx_get(_contextPtr, option);
+                if (rc != -1)
+                    return rc;
+                var error = ZError.GetLastError();
 
-            if (error == ZError.EINVAL)
-                throw new ArgumentOutOfRangeException($"The requested option optionName \"{option}\" is invalid.");
+                if (error == ZError.EINVAL)
+                    throw new ArgumentOutOfRangeException($"The requested option optionName \"{option}\" is invalid.");
 
-            throw new ZException(error);
+                throw new ZException(error);
+            }
         }
 
         /// <summary>
@@ -222,36 +306,38 @@ namespace ZeroMQ
         /// </summary>
         public void Shutdown()
         {
-            if (!Shutdown(out var error))
-            {
+            if (!TryShutdown(out var error))
                 throw new ZException(error);
-            }
         }
 
         /// <summary>
         /// Shutdown the ZeroMQ context.
         /// </summary>
-        public bool Shutdown(out ZError? error)
+        public bool TryShutdown(out ZError? error)
         {
-            error = default;
-
-            if (_contextPtr == default)
-                return true;
-
-            while (-1 == zmq.ctx_shutdown(_contextPtr))
+            lock (_lock)
             {
-                error = ZError.GetLastError();
-
-                if (error != ZError.EINTR)
-                    return false;
-
-                // Maybe ZError.EFAULT
-
                 error = default;
-            }
 
-            // don't _contextPtr = default(IntPtr);
-            return true;
+                var ptr = _contextPtr;
+
+                if (ptr == default) return true;
+
+                while (-1 == zmq.ctx_shutdown(ptr))
+                {
+                    error = ZError.GetLastError();
+
+                    if (error != ZError.EINTR)
+                        return false;
+
+                    // Maybe ZError.EFAULT
+
+                    error = default;
+                }
+
+                // don't _contextPtr = default(IntPtr);
+                return true;
+            }
         }
 
         /// <summary>
@@ -268,24 +354,25 @@ namespace ZeroMQ
         /// </summary>
         public bool Terminate(out ZError? error)
         {
-            error = ZError.None;
-            if (_contextPtr == default)
-                return true;
-
-            while (-1 == zmq.ctx_term(_contextPtr))
+            lock (_lock)
             {
-                error = ZError.GetLastError();
+                error = ZError.None;
+                var ptr = Interlocked.Exchange(ref _contextPtr, default);
+                if (ptr == default) return true;
 
-                if (error != ZError.EINTR)
-                    return false;
+                while (-1 == zmq.ctx_term(ptr))
+                {
+                    error = ZError.GetLastError();
 
-                // Maybe ZError.EFAULT
+                    if (error != ZError.EINTR)
+                        return false;
 
-                error = default;
+                    // Maybe ZError.EFAULT
+
+                    error = default;
+                }
+                return true;
             }
-
-            _contextPtr = default;
-            return true;
         }
 
         public void Dispose()
@@ -295,15 +382,6 @@ namespace ZeroMQ
         }
 
         void Dispose(bool disposing)
-        {
-            if (disposing)
-                Terminate(out var error);
-        }
-
-        private void EnsureNotDisposed()
-        {
-            if (_contextPtr == default)
-                throw new ObjectDisposedException(GetType().FullName);
-        }
+            => Terminate(out var error);
     }
 }

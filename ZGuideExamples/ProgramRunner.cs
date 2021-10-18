@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -47,6 +48,13 @@ namespace Examples
         }
         static ProgramRunner()
         {
+            #if !NETSTANDARD
+            ProfileOptimization.SetProfileRoot(Environment.CurrentDirectory);
+            ProfileOptimization.StartProfile("ZGuideExamples.ClrJitProfile");
+            #endif
+            GCSettings.LatencyMode = GCLatencyMode.LowLatency;
+            
+            //StackTracer.stack_tracer_init();
 
             AppDomain.CurrentDomain.UnhandledException += (_, args) => {
                 var ex = (Exception)args.ExceptionObject;
@@ -102,6 +110,10 @@ namespace Examples
                 w.WriteLine("== EXCEPTION HANDLER STACK ==");
                 WriteMinimalStackTrace(w);
             };
+
+            /*AppDomain.CurrentDomain.ProcessExit += (_, _) => {
+                StackTracer.stack_tracer_cleanup();
+            };*/
         }
 
         static int Main(string[] args)

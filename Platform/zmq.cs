@@ -76,6 +76,7 @@ namespace ZeroMQ.lib
             => new($"libzmq version not supported. Required version {requiredVersion}");
 
         public static readonly Version LibraryVersion;
+        private static readonly bool IsLlp64 = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
 #if NET5_0_OR_GREATER
         [SuppressGCTransition]
@@ -251,7 +252,7 @@ namespace ZeroMQ.lib
         [SuppressGCTransition]
 #endif
         [DllImport(LibName, EntryPoint = "zmq_getsockopt", CallingConvention = Cdecl)]
-        public static extern int getsockopt(IntPtr socket, int optionName, IntPtr optionValue, ref nuint optionLen);
+        public static extern int getsockopt(IntPtr socket, int optionName, IntPtr optionValue, nuint* optionLen);
 
 #if NET5_0_OR_GREATER
         [SuppressGCTransition]
@@ -277,8 +278,19 @@ namespace ZeroMQ.lib
         [DllImport(LibName, EntryPoint = "zmq_disconnect", CallingConvention = Cdecl)]
         public static extern int disconnect(IntPtr socket, IntPtr endpoint);
 
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int poll(void* items, int numItems, long timeout)
+            => IsLlp64
+                ? poll_llp64(items, numItems, checked((int)timeout))
+                : poll_lp64(items, numItems, timeout);
+
+
         [DllImport(LibName, EntryPoint = "zmq_poll", CallingConvention = Cdecl)]
-        public static extern int poll(void* items, int numItems, long timeout);
+        public static extern int poll_llp64(void* items, int numItems, int timeout);
+
+        [DllImport(LibName, EntryPoint = "zmq_poll", CallingConvention = Cdecl)]
+        public static extern int poll_lp64(void* items, int numItems, long timeout);
 
 #if NET5_0_OR_GREATER
         [DebuggerStepThrough]
@@ -363,5 +375,172 @@ namespace ZeroMQ.lib
 #endif
         [DllImport(LibName, EntryPoint = "zmq_strerror", CallingConvention = Cdecl)]
         public static extern IntPtr strerror(int errNum);
+
+#if NET5_0_OR_GREATER
+        [SuppressGCTransition]
+#endif
+        [DllImport(LibName, EntryPoint = "zmq_msg_set_routing_id", CallingConvention = Cdecl)]
+        public static extern int msg_set_routing_id(IntPtr message, uint routing_id);
+
+#if NET5_0_OR_GREATER
+        [SuppressGCTransition]
+#endif
+        [DllImport(LibName, EntryPoint = "zmq_msg_routing_id", CallingConvention = Cdecl)]
+        public static extern uint routing_id(IntPtr message);
+
+
+#if NET5_0_OR_GREATER
+        [SuppressGCTransition]
+#endif
+        [DllImport(LibName, EntryPoint = "zmq_poller_new", CallingConvention = Cdecl)]
+        public static extern IntPtr poller_new();
+
+#if NET5_0_OR_GREATER
+        [SuppressGCTransition]
+#endif
+        [DllImport(LibName, EntryPoint = "zmq_poller_destroy", CallingConvention = Cdecl)]
+        public static extern int poller_destroy(IntPtr* poller);
+
+#if NET5_0_OR_GREATER
+        [SuppressGCTransition]
+#endif
+        [DllImport(LibName, EntryPoint = "zmq_poller_add", CallingConvention = Cdecl)]
+        public static extern int poller_add(IntPtr poller, IntPtr socket, IntPtr userData, ZPollEventTypes events);
+
+#if NET5_0_OR_GREATER
+        [SuppressGCTransition]
+#endif
+        [DllImport(LibName, EntryPoint = "zmq_poller_modify", CallingConvention = Cdecl)]
+        public static extern int poller_modify(IntPtr poller, IntPtr socket, ZPollEventTypes events);
+
+#if NET5_0_OR_GREATER
+        [SuppressGCTransition]
+#endif
+        [DllImport(LibName, EntryPoint = "zmq_poller_remove", CallingConvention = Cdecl)]
+        public static extern int poller_remove(IntPtr poller, IntPtr socket);
+
+#if NET5_0_OR_GREATER
+        [SuppressGCTransition]
+#endif
+        [DllImport(LibName, EntryPoint = "zmq_poller_add_fd", CallingConvention = Cdecl)]
+        public static extern int poller_add_fd(IntPtr poller, int fd, IntPtr userData, ZPollEventTypes events);
+
+#if NET5_0_OR_GREATER
+        [SuppressGCTransition]
+#endif
+        [DllImport(LibName, EntryPoint = "zmq_poller_modify_fd", CallingConvention = Cdecl)]
+        public static extern int poller_modify_fd(IntPtr poller, int fd, ZPollEventTypes events);
+
+#if NET5_0_OR_GREATER
+        [SuppressGCTransition]
+#endif
+        [DllImport(LibName, EntryPoint = "zmq_poller_remove_fd", CallingConvention = Cdecl)]
+        public static extern int poller_remove_fd(IntPtr poller, int fd);
+
+
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int poller_wait(IntPtr poller, IntPtr @event, long timeout)
+            => timeout is >= 0 and <= 10
+                ? IsLlp64
+                    ? poller_wait_short_llp64(poller, @event, checked((int)timeout))
+                    : poller_wait_short_lp64(poller, @event, timeout)
+                : IsLlp64
+                    ? poller_wait_long_llp64(poller, @event, checked((int)timeout))
+                    : poller_wait_long_lp64(poller, @event, timeout);
+
+#if NET5_0_OR_GREATER
+        [SuppressGCTransition]
+#endif
+        [DllImport(LibName, EntryPoint = "zmq_poller_wait", CallingConvention = Cdecl)]
+        private static extern int poller_wait_short_llp64(IntPtr poller, IntPtr events, int timeout);
+
+        [DllImport(LibName, EntryPoint = "zmq_poller_wait", CallingConvention = Cdecl)]
+        private static extern int poller_wait_long_llp64(IntPtr poller, IntPtr events, int timeout);
+
+#if NET5_0_OR_GREATER
+        [SuppressGCTransition]
+#endif
+        [DllImport(LibName, EntryPoint = "zmq_poller_wait", CallingConvention = Cdecl)]
+        private static extern int poller_wait_short_lp64(IntPtr poller, IntPtr events, long timeout);
+
+        [DllImport(LibName, EntryPoint = "zmq_poller_wait", CallingConvention = Cdecl)]
+        private static extern int poller_wait_long_lp64(IntPtr poller, IntPtr events, long timeout);
+
+
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int poller_wait_all(IntPtr poller, IntPtr events, int nEvents, long timeout)
+            => timeout is >= 0 and <= 10
+                ? IsLlp64
+                    ? poller_wait_all_short_llp64(poller, events, nEvents, checked((int)timeout))
+                    : poller_wait_all_short_lp64(poller, events, nEvents, timeout)
+                : IsLlp64
+                    ? poller_wait_all_long_llp64(poller, events, nEvents, checked((int)timeout))
+                    : poller_wait_all_long_lp64(poller, events, nEvents, timeout);
+
+#if NET5_0_OR_GREATER
+        [SuppressGCTransition]
+#endif
+        [DllImport(LibName, EntryPoint = "zmq_poller_wait_all", CallingConvention = Cdecl)]
+        private static extern int poller_wait_all_short_llp64(IntPtr poller, IntPtr events, int nEvents, int timeout);
+
+        [DllImport(LibName, EntryPoint = "zmq_poller_wait_all", CallingConvention = Cdecl)]
+        private static extern int poller_wait_all_long_llp64(IntPtr poller, IntPtr events, int nEvents, int timeout);
+
+#if NET5_0_OR_GREATER
+        [SuppressGCTransition]
+#endif
+        [DllImport(LibName, EntryPoint = "zmq_poller_wait_all", CallingConvention = Cdecl)]
+        private static extern int poller_wait_all_short_lp64(IntPtr poller, IntPtr events, int nEvents, long timeout);
+
+        [DllImport(LibName, EntryPoint = "zmq_poller_wait_all", CallingConvention = Cdecl)]
+        private static extern int poller_wait_all_long_lp64(IntPtr poller, IntPtr events, int nEvents, long timeout);
+
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal readonly struct poller_event_t
+        {
+            public readonly IntPtr socket;
+            public readonly int fd;
+            public readonly IntPtr user_data;
+            public readonly ZPollEventTypes events;
+        }
+
+
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IntPtr AllocNative(nuint size)
+        {
+            //var p = AllocNativeUnsafe(size);
+            //Unsafe.InitBlock((void*)p, 0, (uint)size);
+            //return p;
+            var p = calloc(1, size);
+            //GC.AddMemoryPressure((long)(size + 16));
+            return p;
+        }
+
+        [DllImport("msvcrt", EntryPoint = "malloc", SetLastError = true)]
+        public static extern IntPtr malloc(nuint size);
+
+        [DllImport("msvcrt", EntryPoint = "calloc", SetLastError = true)]
+        public static extern IntPtr calloc(nuint number, nuint size);
+
+        [DllImport("msvcrt", EntryPoint = "free", SetLastError = true)]
+        public static extern void free(IntPtr ptr);
+
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IntPtr AllocNativeUnsafe(nuint size)
+        {
+            var p = malloc(size);
+            //GC.AddMemoryPressure((long)(size + 16));
+            return p;
+        }
+
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void FreeNative(IntPtr ptr)
+            => free(ptr);
     }
 }

@@ -11,7 +11,7 @@ namespace ZeroMQ.lib
         private short events;
         private short readyEvents;
 
-        public zmq_pollitem_windows_t(IntPtr socket, ZPoll pollEvents)
+        public zmq_pollitem_windows_t(IntPtr socket, ZPollEventTypes pollEvents)
         {
             if (socket == default)
             {
