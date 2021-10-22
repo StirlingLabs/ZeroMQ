@@ -1,5 +1,12 @@
 ﻿using System;
 using System.Buffers;
+using System.Buffers.Text;
+using System.Diagnostics;
+using System.Linq;
+using System.Net;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
 using ZeroMQ.lib;
 
 namespace ZeroMQ.Devices
@@ -93,8 +100,8 @@ namespace ZeroMQ.Devices
         static bool ReceiveMsg(ZSocket sock, ref ZMessage? message, out string address, out ZError? error)
         {
             error = ZError.None;
-            // address = IPAddress.None;
-            address = string.Empty;
+
+            string? addressStr = null;
 
             // STREAM: read frames: identity, body
 
@@ -108,7 +115,10 @@ namespace ZeroMQ.Devices
                 if (frame.IsDismissed) throw new InvalidOperationException("Message was dismissed.");
 
                 if (!frame.Receive(sock, out error))
+                {
+                    address = "";
                     return false;
+                }
 
                 message ??= ZMessage.Create();
                 message.Add(frame);
@@ -116,7 +126,8 @@ namespace ZeroMQ.Devices
                 if (receiveCount != 2)
                     continue;
 
-                if (default != (address = frame.GetOption("Peer-Address", out error)!))
+                var metadata = frame.GetMetadata("Peer-Address", out error);
+                if (null != (addressStr = zmq.ReadUtf8String(metadata)))
                     continue;
 
                 // just ignore
@@ -124,6 +135,8 @@ namespace ZeroMQ.Devices
                 address = string.Empty;
 
             } while (--receiveCount > 0);
+
+            address = addressStr ?? "";
 
             return true;
         }

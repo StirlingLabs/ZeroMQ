@@ -34,6 +34,8 @@ namespace ZeroMQ
         private nuint _position;
         private IntPtr _msg;
 
+        // descendent frames that need to not be disposed until after this one
+        private LinkedList<ZFrame>? _descendents;
 
         private static bool _isCachingEnabled = false;
 
@@ -145,6 +147,36 @@ namespace ZeroMQ
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ZFrame Create(ReadOnlySpan<byte> data)
+        {
+            var length = (nuint)data.Length;
+            if (length == 0) return CreateEmpty();
+            //ZFrame r = TryReclaimFrame(out var f) ? f : new();
+            ZFrame r = new(zmq.AllocNative(zmq.sizeof_zmq_msg_t));
+            r.CreateNative(length);
+            Debug.Assert(r._msg != default, "Missing message after CreateNative S");
+            r._length = length;
+            r._position = 0;
+            r.Write(data);
+            return r;
+        }
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ZFrame Create(ReadOnlyMemory<byte> data)
+        {
+            var length = (nuint)data.Length;
+            if (length == 0) return CreateEmpty();
+            //ZFrame r = TryReclaimFrame(out var f) ? f : new();
+            ZFrame r = new(zmq.AllocNative(zmq.sizeof_zmq_msg_t));
+            r.CreatePinned(data);
+            Debug.Assert(r._msg != default, "Missing message after CreatePinned M");
+            r._length = length;
+            r._position = length;
+            return r;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ZFrame Create(string str, Encoding encoding)
         {
             //ZFrame r = TryReclaimFrame(out var f) ? f : new();
@@ -224,6 +256,79 @@ namespace ZeroMQ
                     throw new ZException(error, "zmq_msg_init_size");
                 }
             }
+        }
+
+        public static int _pinHandleCounter32 = 0;
+        public static long _pinHandleCounter64 = 0;
+
+        private static ConcurrentDictionary<long, MemoryHandle> _pinnedMemoryHandles = new();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal unsafe void CreatePinned(ReadOnlyMemory<byte> data)
+        {
+            if (data.IsEmpty) throw new ArgumentException("Data is empty.", nameof(data));
+            var size = (nuint)data.Length;
+            if (size == 0) throw new ArgumentException("Array must not be empty.", nameof(data));
+            Debug.Assert(_msg != default, "CreatePinned(byte[]); _msg is missing");
+            if (MemoryMarshal.TryGetArray(data, out var seg))
+            {
+                CreatePinned(GCHandle.Alloc(seg.Array, GCHandleType.Pinned), (nuint)seg.Offset, (nuint)seg.Count);
+            }
+            else
+            {
+                var n = sizeof(nuint) == 4
+                    ? Interlocked.Increment(ref _pinHandleCounter32)
+                    : Interlocked.Increment(ref _pinHandleCounter64);
+
+                var pin = data.Pin();
+
+                if (!_pinnedMemoryHandles.TryAdd(n, pin))
+                    Debug.Fail("Pinned memory counter looped into a collision?!");
+
+                Debug.Assert(!IsUnavailable, "CreatePinned; Should not be unavailable");
+
+                //Console.Error.WriteLine($"[{CallStackHelpers.GetCallStackDepth()}] ZFrame.CreatePinned(GCH 0x{(IntPtr)pin:X8}, {size})");
+
+                var pBytes = (IntPtr)pin.Pointer;
+
+                lock (_lock)
+                {
+                    Debug.Assert(_msg != default, "CreatePinned; _msg is missing");
+                    Debug.Assert(!IsUnavailable, "CreatePinned; Should not be unavailable");
+
+#if NET5_0_OR_GREATER
+                    while (-1 == zmq.msg_init_data(_msg, pBytes, size, &PinnedMemoryHandleFreeCallback, (IntPtr)n))
+#else
+                    while (-1 == zmq.msg_init_data(_msg, pBytes, size, PinnedMemoryHandleFreeCallback, (IntPtr)n))
+#endif
+                    {
+                        var error = ZError.GetLastError();
+
+                        if (error == ZError.EINTR)
+                            continue;
+
+                        if (error == ZError.ENOMEM)
+                            throw new OutOfMemoryException("zmq_msg_init_data");
+
+                        throw new ZException(error, "zmq_msg_init_data");
+                    }
+                }
+            }
+        }
+
+#if NET6_0_OR_GREATER
+        [SuppressGCTransition]
+        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "ZeroMQ.ZFrame.PinnedGcHandleFreeCallback")]
+#elif NET5_0_OR_GREATER
+        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "ZeroMQ.ZFrame.PinnedGcHandleFreeCallback")]
+#endif
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void PinnedMemoryHandleFreeCallback(IntPtr dataAddr, IntPtr n)
+        {
+            if (!_pinnedMemoryHandles.TryGetValue((long)n, out var pin))
+                throw new InvalidOperationException($"Tried to free unknown memory handle; #{n} 0x{dataAddr:X8}");
+
+            pin.Dispose();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -866,13 +971,18 @@ namespace ZeroMQ
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string? ReadString(Encoding encoding)
-            => ReadString( /* byteCount */ GetLength() - _position, encoding);
+            => ReadString(GetAvailableBytes(), encoding);
+        public nuint GetAvailableBytes()
+        {
+            var length = GetLength();
+            return _position >= length ? 0 : length - _position;
+        }
 
         [MustUseReturnValue]
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryReadString(Encoding encoding, out string? value)
-            => TryReadString( /* byteCount */ GetLength() - _position, encoding, out value);
+            => TryReadString(GetAvailableBytes(), encoding, out value);
 
         [MustUseReturnValue]
         [DebuggerStepThrough]
@@ -912,7 +1022,7 @@ namespace ZeroMQ
 #endif
                 }
 
-                var remaining = checked((int)Math.Min(byteCount, Math.Max(0, GetLength() - _position)));
+                var remaining = checked((int)Math.Min(byteCount, Math.Max(0, GetAvailableBytes())));
 
                 if (remaining == 0)
                 {
@@ -950,8 +1060,13 @@ namespace ZeroMQ
 
                         _position += (nuint)encoding.GetByteCount(chars, charCount);
 
-                        if (chars[charCount - 1] != '\0' && chars[charCount] == '\0')
-                            _position += 1;
+                        if (chars[charCount - 1] != '\0')
+                        {
+                            if (chars[charCount] == '\0')
+                                _position += 1;
+                        }
+                        else
+                            --charCount;
 
                         if (charCount == 0)
                             value = string.Empty;
@@ -983,16 +1098,16 @@ namespace ZeroMQ
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string? ReadLine()
-            => ReadLine(GetLength() - _position, ZContext.Encoding);
+            => ReadLine(GetAvailableBytes(), ZContext.Encoding);
 
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string? ReadLine(Encoding encoding)
-            => ReadLine(GetLength() - _position, encoding);
+            => ReadLine(GetAvailableBytes(), encoding);
 
         public string? ReadLine(nuint byteCount, Encoding encoding)
         {
-            var remaining = checked((int)Math.Min(byteCount, Math.Max(0, GetLength() - _position)));
+            var remaining = checked((int)Math.Min(byteCount, Math.Max(0, GetAvailableBytes())));
 
             if (remaining == 0)
                 return string.Empty;
@@ -1200,23 +1315,48 @@ namespace ZeroMQ
                 //Console.Error.WriteLine($"[{CallStackHelpers.GetCallStackDepth()}] WriteStringNative({str}, {encoding.EncodingName}, {create})");
                 var bytes = EncodedStringCache.For(encoding, str);
                 var size = (nuint)bytes.LongLength - 1;
+                Debug.Assert(bytes[size] == 0);
                 CreatePinned(bytes, 0, size);
                 _length = size;
                 _position = _length;
             }
             else
             {
-                //Console.Error.WriteLine($"[{CallStackHelpers.GetCallStackDepth()}] Writing {str}");
-                var byteCount = checked((uint)encoding.GetByteCount(str));
-                if (_position + byteCount > GetLength())
-                    // fail if frame is too small
-                    throw new InvalidOperationException();
+                lock (_lock)
+                {
+                    //Console.Error.WriteLine($"[{CallStackHelpers.GetCallStackDepth()}] Writing {str}");
+                    var byteCount = checked((uint)encoding.GetByteCount(str));
+                    var length = GetLength();
+                    var needed = _position + byteCount;
+                    if (needed > length)
+                    {
+                        var newFrame = Create(needed);
 
-                var charCount = str.Length;
-                fixed (char* strP = str)
-                    byteCount = (uint)encoding.GetBytes(strP, charCount, Data() + _position, (int)byteCount);
+                        Unsafe.CopyBlock(
+                            ref newFrame.DataRef(),
+                            ref DataRef(),
+                            (uint)length);
 
-                _position += byteCount;
+                        (newFrame._msg, _msg) = (_msg, newFrame._msg);
+
+                        newFrame._length = _length;
+                        _length = needed;
+
+                        Debug.Assert(GetLength() == needed);
+
+                        _descendents ??= new();
+
+                        // prevent gc from cleaning it up until after this msg is freed
+                        _descendents.AddLast(newFrame);
+                        //length = needed;
+                    }
+
+                    var charCount = str.Length;
+                    fixed (char* strP = str)
+                        byteCount = (uint)encoding.GetBytes(strP, charCount, Data() + _position, (int)byteCount);
+
+                    _position += byteCount;
+                }
             }
         }
 
@@ -1466,18 +1606,25 @@ namespace ZeroMQ
             return -1;
         }
 
-        public string? GetOption(string property)
+        public ReadOnlySpan<byte> GetMetadata(string property)
         {
-            string? result;
-            if (null != (result = GetOption(property, out var error)))
-                return result;
-
-            return error != ZError.None
-                ? throw new ZException(error)
-                : result;
+            var metadata = GetMetadata(property, out var error);
+            return error == ZError.None ? metadata : throw new ZException(error);
         }
 
-        public unsafe string? GetOption(string property, out ZError? error)
+        public bool TryGetMetadata(string property, out ReadOnlySpan<byte> metadata)
+        {
+            metadata = GetMetadata(property, out var error);
+
+            if (error == ZError.EINVAL)
+                return false;
+
+            return metadata == default
+                ? throw new ZException(error)
+                : false;
+        }
+
+        public unsafe ReadOnlySpan<byte> GetMetadata(string property, out ZError? error)
         {
 #if TRACE
             UnavailableCheck();
@@ -1490,7 +1637,7 @@ namespace ZeroMQ
             var propertyBytes = EncodedStringCache.For(Encoding.UTF8, property);
 
             IntPtr resultPtr;
-            Debug.Assert(_msg != default, "GetOption; _msg is missing");
+            Debug.Assert(_msg != default, "GetMetadata; _msg is missing");
             lock (_lock)
             {
                 fixed (void* pPropertyStr = propertyBytes)
@@ -1500,10 +1647,12 @@ namespace ZeroMQ
             if (default == resultPtr)
             {
                 error = ZError.GetLastError();
-                return null;
+                return default;
             }
-            var result = Marshal.PtrToStringAnsi(resultPtr);
-            return result;
+
+            var pBytes = (byte*)resultPtr;
+
+            return new(pBytes, zmq.GetByteStringLength(pBytes, 256));
         }
 
         #region ICloneable implementation
@@ -1583,7 +1732,7 @@ namespace ZeroMQ
 #if !NET5_0_OR_GREATER || !NETSTANDARD2_1_OR_GREATER
                 error = default;
 #else
-            Unsafe.SkipInit(out error);
+                Unsafe.SkipInit(out error);
 #endif
                 return true;
             }
@@ -1631,7 +1780,7 @@ namespace ZeroMQ
 #if !NET5_0_OR_GREATER || !NETSTANDARD2_1_OR_GREATER
                 error = default;
 #else
-            Unsafe.SkipInit(out error);
+                Unsafe.SkipInit(out error);
 #endif
                 return true;
             }
@@ -1642,6 +1791,7 @@ namespace ZeroMQ
         internal bool Send(ZSocket sock, out ZError? error, bool more = true)
             => Send(sock, more ? ZSocketFlags.More : default, out error);
 
+        [MustUseReturnValue]
         public bool TryGetRoutingId(out uint id)
         {
             UnavailableCheck();
@@ -1653,6 +1803,7 @@ namespace ZeroMQ
             }
         }
 
+        [MustUseReturnValue]
         public bool TrySetRoutingId(uint id)
         {
             UnavailableCheck();
@@ -1669,6 +1820,98 @@ namespace ZeroMQ
                     throw new ZException(error);
                 }
                 return true;
+            }
+        }
+
+        private static int _maxGroupIdLength = 255;
+
+        [MustUseReturnValue]
+#if NETSTANDARD2_0
+        public unsafe bool TryGetGroupId(out string? id)
+#else
+        public unsafe bool TryGetGroupId([NotNullWhen(true)] out string? id)
+#endif
+        {
+            if (!zmq.HasGroupFunctions) throw new NotSupportedException();
+
+            UnavailableCheck();
+            lock (_lock)
+            {
+                var p = zmq_msg_group.msg_group(_msg);
+
+                if (p == default)
+                {
+
+#if !NET5_0_OR_GREATER || !NETSTANDARD2_1_OR_GREATER
+                    id = default;
+#else
+                    Unsafe.SkipInit(out id);
+#endif
+                    return false;
+                }
+                var pBytes = (byte*)p;
+
+                var l = zmq.GetByteStringLength(pBytes, _maxGroupIdLength);
+                var s = Encoding.UTF8.GetString(pBytes, l);
+                id = string.IsInterned(s) ?? s;
+                return true;
+            }
+        }
+
+        /// <remarks>
+        /// If you get EINVAL, the id is probably too long.
+        /// Try 14 characters (14 utf-8 bytes) or less.
+        /// </remarks>
+        [MustUseReturnValue]
+#if NETSTANDARD2_0
+        public unsafe bool TrySetGroupId(string id, out ZError? error)
+#else
+        public unsafe bool TrySetGroupId(string id, [NotNullWhen(false)] out ZError? error)
+#endif
+        {
+            if (!zmq.HasGroupFunctions) throw new NotSupportedException();
+
+            if (id.Length > _maxGroupIdLength)
+            {
+                error = ZError.EINVAL;
+                return false;
+            }
+
+            UnavailableCheck();
+
+            if (id is null) throw new ArgumentNullException(nameof(id));
+
+            lock (_lock)
+            {
+                var idBytes = EncodedStringCache.For(Encoding.UTF8, id);
+                fixed (void* p = idBytes)
+                {
+                    while (-1 == zmq_msg_group.msg_set_group(_msg, (IntPtr)p))
+                    {
+                        error = ZError.GetLastError();
+
+                        if (error == ZError.EINVAL)
+                        {
+                            _maxGroupIdLength = id.Length - 1;
+                            return false;
+                        }
+
+                        if (error == ZError.EINTR)
+                            continue;
+
+                        if (error == null)
+                            error = ZError.EFAULT;
+
+                        return false;
+                    }
+
+#if !NET5_0_OR_GREATER || !NETSTANDARD2_1_OR_GREATER
+                    error = default;
+#else
+                    Unsafe.SkipInit(out error);
+#endif
+                    return true;
+                }
             }
         }
     }

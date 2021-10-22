@@ -1494,10 +1494,16 @@ namespace ZeroMQ
             set => SetOption(ZSocketOption.XPUB_VERBOSE, value ? 1 : 0);
         }
 
-        public string? ZAPDomain
+        public string? ZapDomain
         {
             get => GetOptionString(ZSocketOption.ZAP_DOMAIN);
             set => SetOption(ZSocketOption.ZAP_DOMAIN, value);
+        }
+
+        public bool ZapEnforceDomain
+        {
+            get => GetOptionInt32(ZSocketOption.ZAP_ENFORCE_DOMAIN) == 1;
+            set => SetOption(ZSocketOption.ZAP_ENFORCE_DOMAIN, value ? 1 : 0);
         }
 
         /// <summary>

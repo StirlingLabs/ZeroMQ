@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using JetBrains.Annotations;
 
@@ -17,9 +18,9 @@ namespace ZeroMQ.lib
     public static unsafe class zmq
     {
         // Use a const for the library name
-        private const string LibName = "libzmq";
+        internal const string LibName = "libzmq";
 
-        private const CallingConvention Cdecl = CallingConvention.Cdecl;
+        internal const CallingConvention Cdecl = CallingConvention.Cdecl;
 
         // From zmq.h (v3):
         // typedef struct {unsigned char _ [32];} zmq_msg_t;
@@ -50,6 +51,8 @@ namespace ZeroMQ.lib
             set => lazy_sizeof_zmq_msg_t = value;
         }
 
+        public static readonly bool HasGroupFunctions;
+
         // The static constructor prepares static readonly fields
         static zmq()
         {
@@ -69,6 +72,28 @@ namespace ZeroMQ.lib
                 ctx_term(ctx);
 #pragma warning restore CA1806
                 Debug.Assert(sizeof_zmq_msg_t >= sizeof_zmq_msg_t_v4);
+            }
+
+            // feature test for zmq_msg_*group* functions
+            for (;;)
+            {
+                try
+                {
+                    var msg = AllocNative(sizeof_zmq_msg_t);
+                    if (-1 == msg_init(msg))
+                        break;
+                    zmq_msg_group.msg_group(msg);
+                    msg_close(msg);
+                    FreeNative(msg);
+                }
+                catch (TypeLoadException)
+                {
+                    HasGroupFunctions = false;
+                    break;
+                }
+
+                HasGroupFunctions = true;
+                break;
             }
         }
 
@@ -388,7 +413,6 @@ namespace ZeroMQ.lib
         [DllImport(LibName, EntryPoint = "zmq_msg_routing_id", CallingConvention = Cdecl)]
         public static extern uint routing_id(IntPtr message);
 
-
 #if NET5_0_OR_GREATER
         [SuppressGCTransition]
 #endif
@@ -542,5 +566,28 @@ namespace ZeroMQ.lib
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FreeNative(IntPtr ptr)
             => free(ptr);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int GetByteStringLength(byte* p, int max)
+        {
+            for (var i = 0; i < max; ++i)
+                if (p[i] == 0)
+                    return i;
+            return max;
+        }
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe string? ReadUtf8String(ReadOnlySpan<byte> span)
+        {
+            // ReSharper disable once ConvertIfStatementToReturnStatement
+            if (span == default) return null;
+#if NETSTANDARD2_0
+            var pBytes = (byte*)Unsafe.AsPointer(ref Unsafe.AsRef(span.GetPinnableReference()));
+            return Encoding.UTF8.GetString(pBytes, span.Length);
+#else
+            return Encoding.UTF8.GetString(span);
+#endif
+        }
     }
 }
